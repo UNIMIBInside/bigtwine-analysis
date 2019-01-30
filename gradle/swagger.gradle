@@ -8,8 +8,8 @@ openApiGenerate {
     generatorName = "spring"
     inputSpec = "$rootDir/src/main/resources/swagger/api.yml".toString()
     outputDir = "$buildDir/openapi".toString()
-    apiPackage = "it.unimib.disco.bigtwine.web.api"
-    modelPackage = "it.unimib.disco.bigtwine.web.api.model"
+    apiPackage = "it.unimib.disco.bigtwine.services.analysis.web.api"
+    modelPackage = "it.unimib.disco.bigtwine.services.analysis.web.api.model"
     apiFilesConstrainedTo = [""]
     modelFilesConstrainedTo = [""]
     supportingFilesConstrainedTo = ["ApiUtil.java"]

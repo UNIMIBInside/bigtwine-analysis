@@ -47,21 +47,22 @@ dependencyManagement {
 
 defaultTasks 'bootRun'
 
-group = 'it.unimib.disco.bigtwine'
+group = 'it.unimib.disco.bigtwine.services'
 version = '0.0.1-SNAPSHOT'
 
 description = ''
 
 bootWar {
-   mainClassName = 'it.unimib.disco.bigtwine.AnalysisApp'
+   mainClassName = 'it.unimib.disco.bigtwine.services.analysis.AnalysisApp'
 }
 
 war {
-
+    enabled = true
+    classifier = 'original'
 }
 
 springBoot {
-    mainClassName = 'it.unimib.disco.bigtwine.AnalysisApp'
+    mainClassName = 'it.unimib.disco.bigtwine.services.analysis.AnalysisApp'
     buildInfo()
 }
 
@@ -207,6 +208,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-library"
     testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
+    compile project(':commons')
 }
 
 task cleanResources(type: Delete) {
@@ -220,6 +222,7 @@ wrapper {
 task stage(dependsOn: 'bootWar') {
 }
 
+bootWar.dependsOn war
 compileJava.dependsOn processResources
 processResources.dependsOn cleanResources,bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources

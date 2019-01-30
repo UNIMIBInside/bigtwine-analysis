@@ -1,1 +1,5 @@
 rootProject.name = 'analysis'
+
+include ':commons'
+project(':commons').projectDir = new File("../../commons")
+
