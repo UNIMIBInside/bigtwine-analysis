@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
+import it.unimib.disco.bigtwine.services.analysis.security.authentication.SamAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,8 @@ public class TokenProvider {
     private final Logger log = LoggerFactory.getLogger(TokenProvider.class);
 
     private static final String AUTHORITIES_KEY = "auth";
+
+    private static final String USER_ID_KEY = "userId";
 
     private Key key;
 
@@ -92,9 +95,19 @@ public class TokenProvider {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
+        final String userId;
+        Object userIdObj = claims.get(USER_ID_KEY);
+        if (userIdObj != null) {
+            userId = userIdObj.toString();
+            log.debug("Claim--> {}", userId);
+        } else {
+            userId = null;
+            log.debug("No user id in token");
+        }
+
         User principal = new User(claims.getSubject(), "", authorities);
 
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        return new SamAuthenticationToken(principal, token, authorities, userId);
     }
 
     public boolean validateToken(String authToken) {

@@ -1,5 +1,6 @@
 package it.unimib.disco.bigtwine.services.analysis.security;
 
+import it.unimib.disco.bigtwine.services.analysis.security.authentication.SamAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -72,5 +73,21 @@ public final class SecurityUtils {
             .map(authentication -> authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(authority)))
             .orElse(false);
+    }
+
+    /**
+     * If an user is logged in, this method return his user id
+     * @return user id or null if the user is not logged in or if error occurred while parsing the JWT
+     */
+    public static Optional<String> getUserId() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(securityContext.getAuthentication())
+            .map(authentication -> {
+                if (authentication instanceof SamAuthenticationToken) {
+                    SamAuthenticationToken samAuthenticationToken = (SamAuthenticationToken) authentication;
+                    return samAuthenticationToken.getUserId();
+                }
+                return null;
+            });
     }
 }
