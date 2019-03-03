@@ -195,6 +195,7 @@ components:
   schemas:
     AnalysisStatusEnum:
       type: string
+      default: READY
       enum:
         - READY
         - STARTED
@@ -204,6 +205,7 @@ components:
         - FAILED
     AnalysisVisibilityEnum:
       type: string
+      default: PUBLIC
       enum:
         - PRIVATE
         - PUBLIC
@@ -224,7 +226,7 @@ components:
         inputType:
           type: string
           enum:
-            - STREAM
+            - QUERY
             - DOCUMENT
         ownerId:
           type: string
@@ -239,6 +241,14 @@ components:
         documentId:
           type: string
           nullable: true
+        createDate:
+          type: string
+          format: date-time
+          readOnly: true
+        updateDate:
+          type: string
+          format: date-time
+          readOnly: true
     AnalysisStatusHistoryDTO:
       type: object
       properties:
@@ -254,6 +264,7 @@ components:
           type: string
         date:
           type: string
+          format: date-time
     AnalysisResultDTO:
       type: object
       properties:
