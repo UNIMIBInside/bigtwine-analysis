@@ -1,0 +1,210 @@
+package it.unimib.disco.bigtwine.services.analysis.domain;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import javax.validation.constraints.*;
+
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Objects;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
+
+/**
+ * A Analysis.
+ */
+@Document(collection = "analysis")
+public class Analysis implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    private String id;
+
+    @NotNull
+    @Field("type")
+    private AnalysisType type;
+
+    @NotNull
+    @Field("input_type")
+    private AnalysisInputType inputType;
+
+    @NotNull
+    @Field("status")
+    private AnalysisStatus status;
+
+    @NotNull
+    @Field("visibility")
+    private AnalysisVisibility visibility;
+
+    @NotNull
+    @Field("owner_id")
+    private String ownerId;
+
+    @NotNull
+    @Field("create_date")
+    private Instant createDate;
+
+    @Field("query")
+    private String query;
+
+    @Field("document_id")
+    private String documentId;
+
+    // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public AnalysisType getType() {
+        return type;
+    }
+
+    public Analysis type(AnalysisType type) {
+        this.type = type;
+        return this;
+    }
+
+    public void setType(AnalysisType type) {
+        this.type = type;
+    }
+
+    public AnalysisInputType getInputType() {
+        return inputType;
+    }
+
+    public Analysis inputType(AnalysisInputType inputType) {
+        this.inputType = inputType;
+        return this;
+    }
+
+    public void setInputType(AnalysisInputType inputType) {
+        this.inputType = inputType;
+    }
+
+    public AnalysisStatus getStatus() {
+        return status;
+    }
+
+    public Analysis status(AnalysisStatus status) {
+        this.status = status;
+        return this;
+    }
+
+    public void setStatus(AnalysisStatus status) {
+        this.status = status;
+    }
+
+    public AnalysisVisibility getVisibility() {
+        return visibility;
+    }
+
+    public Analysis visibility(AnalysisVisibility visibility) {
+        this.visibility = visibility;
+        return this;
+    }
+
+    public void setVisibility(AnalysisVisibility visibility) {
+        this.visibility = visibility;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public Analysis ownerId(String ownerId) {
+        this.ownerId = ownerId;
+        return this;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public Instant getCreateDate() {
+        return createDate;
+    }
+
+    public Analysis createDate(Instant createDate) {
+        this.createDate = createDate;
+        return this;
+    }
+
+    public void setCreateDate(Instant createDate) {
+        this.createDate = createDate;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public Analysis query(String query) {
+        this.query = query;
+        return this;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public Analysis documentId(String documentId) {
+        this.documentId = documentId;
+        return this;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Analysis analysis = (Analysis) o;
+        if (analysis.getId() == null || getId() == null) {
+            return false;
+        }
+        return Objects.equals(getId(), analysis.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getId());
+    }
+
+    @Override
+    public String toString() {
+        return "Analysis{" +
+            "id=" + getId() +
+            ", type='" + getType() + "'" +
+            ", inputType='" + getInputType() + "'" +
+            ", status='" + getStatus() + "'" +
+            ", visibility='" + getVisibility() + "'" +
+            ", ownerId='" + getOwnerId() + "'" +
+            ", createDate='" + getCreateDate() + "'" +
+            ", query='" + getQuery() + "'" +
+            ", documentId='" + getDocumentId() + "'" +
+            "}";
+    }
+}

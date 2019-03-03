@@ -1,0 +1,70 @@
+{
+    "name": "Analysis",
+    "fields": [
+        {
+            "fieldName": "type",
+            "fieldType": "AnalysisType",
+            "fieldValues": "TWITTER_NEEL",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "inputType",
+            "fieldType": "AnalysisInputType",
+            "fieldValues": "QUERY,DOCUMENT",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "status",
+            "fieldType": "AnalysisStatus",
+            "fieldValues": "READY,STARTED,STOPPED,COMPLETED,CANCELLED,FAILED",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "visibility",
+            "fieldType": "AnalysisVisibility",
+            "fieldValues": "PRIVATE,PUBLIC",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "ownerId",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "createDate",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "query",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "documentId",
+            "fieldType": "String"
+        }
+    ],
+    "relationships": [],
+    "changelogDate": "20190219210930",
+    "entityTableName": "analysis",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "clientRootFolder": "analysis",
+    "applications": "*",
+    "microserviceName": "analysis"
+}

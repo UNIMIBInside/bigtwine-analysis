@@ -1,0 +1,57 @@
+enum AnalysisStatus {
+	READY,
+    STARTED,
+    STOPPED,
+    COMPLETED,
+    CANCELLED,
+    FAILED
+}
+
+enum AnalysisType {
+	TWITTER_NEEL
+}
+
+enum AnalysisInputType {
+	QUERY,
+    DOCUMENT
+}
+
+enum AnalysisVisibility {
+	PRIVATE,
+	PUBLIC
+}
+
+enum AnalysisErrorCode {
+	GENERIC
+}
+
+entity AnalysisStatusHistory {
+	newStatus AnalysisStatus required
+    oldStatus AnalysisStatus
+    userId String
+	errorCode AnalysisErrorCode
+    message String
+    date Instant required
+}
+
+@service(serviceClass)
+entity Analysis {
+	type AnalysisType required
+    inputType AnalysisInputType required
+    status AnalysisStatus required
+    visibility AnalysisVisibility required
+    ownerId String required
+    createDate Instant required
+    query String
+    documentId String
+}
+
+entity NeelProcessedTweet {
+    saveDate Instant required
+}
+
+relationship ManyToOne {
+	AnalysisStatusHistory{analysis} to Analysis
+    NeelProcessedTweet{analysis} to Analysis
+}
+

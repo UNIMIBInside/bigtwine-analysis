@@ -1,0 +1,30 @@
+{
+    "name": "NeelProcessedTweet",
+    "fields": [
+        {
+            "fieldName": "saveDate",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "relationshipName": "analysis",
+            "otherEntityName": "analysis",
+            "otherEntityField": "id"
+        }
+    ],
+    "changelogDate": "20190219210931",
+    "entityTableName": "neel_processed_tweet",
+    "dto": "no",
+    "pagination": "no",
+    "service": "no",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "clientRootFolder": "analysis",
+    "applications": "*",
+    "microserviceName": "analysis"
+}
