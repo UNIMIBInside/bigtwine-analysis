@@ -53,6 +53,10 @@ public class Analysis implements Serializable {
     @Field("create_date")
     private Instant createDate;
 
+    @NotNull
+    @Field("update_date")
+    private Instant updateDate;
+
     @Field("query")
     private String query;
 
@@ -146,6 +150,19 @@ public class Analysis implements Serializable {
         this.createDate = createDate;
     }
 
+    public Instant getUpdateDate() {
+        return updateDate;
+    }
+
+    public Analysis updateDate(Instant updateDate) {
+        this.updateDate = updateDate;
+        return this;
+    }
+
+    public void setUpdateDate(Instant updateDate) {
+        this.updateDate = updateDate;
+    }
+
     public String getQuery() {
         return query;
     }
@@ -203,6 +220,7 @@ public class Analysis implements Serializable {
             ", visibility='" + getVisibility() + "'" +
             ", ownerId='" + getOwnerId() + "'" +
             ", createDate='" + getCreateDate() + "'" +
+            ", updateDate='" + getUpdateDate() + "'" +
             ", query='" + getQuery() + "'" +
             ", documentId='" + getDocumentId() + "'" +
             "}";

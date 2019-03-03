@@ -48,6 +48,13 @@
             ]
         },
         {
+            "fieldName": "updateDate",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
             "fieldName": "query",
             "fieldType": "String"
         },

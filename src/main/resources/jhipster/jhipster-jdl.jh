@@ -42,6 +42,7 @@ entity Analysis {
     visibility AnalysisVisibility required
     ownerId String required
     createDate Instant required
+    updateDate Instant required
     query String
     documentId String
 }

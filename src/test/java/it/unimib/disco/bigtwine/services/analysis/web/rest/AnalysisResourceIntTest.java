@@ -63,6 +63,9 @@ public class AnalysisResourceIntTest {
     private static final Instant DEFAULT_CREATE_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATE_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
+    private static final Instant DEFAULT_UPDATE_DATE = Instant.ofEpochMilli(0L);
+    private static final Instant UPDATED_UPDATE_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
     private static final String DEFAULT_QUERY = "AAAAAAAAAA";
     private static final String UPDATED_QUERY = "BBBBBBBBBB";
 
@@ -117,6 +120,7 @@ public class AnalysisResourceIntTest {
             .visibility(DEFAULT_VISIBILITY)
             .ownerId(DEFAULT_OWNER_ID)
             .createDate(DEFAULT_CREATE_DATE)
+            .updateDate(DEFAULT_UPDATE_DATE)
             .query(DEFAULT_QUERY)
             .documentId(DEFAULT_DOCUMENT_ID);
         return analysis;
@@ -148,6 +152,7 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getVisibility()).isEqualTo(DEFAULT_VISIBILITY);
         assertThat(testAnalysis.getOwnerId()).isEqualTo(DEFAULT_OWNER_ID);
         assertThat(testAnalysis.getCreateDate()).isEqualTo(DEFAULT_CREATE_DATE);
+        assertThat(testAnalysis.getUpdateDate()).isEqualTo(DEFAULT_UPDATE_DATE);
         assertThat(testAnalysis.getQuery()).isEqualTo(DEFAULT_QUERY);
         assertThat(testAnalysis.getDocumentId()).isEqualTo(DEFAULT_DOCUMENT_ID);
     }
@@ -273,6 +278,23 @@ public class AnalysisResourceIntTest {
     }
 
     @Test
+    public void checkUpdateDateIsRequired() throws Exception {
+        int databaseSizeBeforeTest = analysisRepository.findAll().size();
+        // set the field null
+        analysis.setUpdateDate(null);
+
+        // Create the Analysis, which fails.
+
+        restAnalysisMockMvc.perform(post("/api/analyses")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(analysis)))
+            .andExpect(status().isBadRequest());
+
+        List<Analysis> analysisList = analysisRepository.findAll();
+        assertThat(analysisList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
     public void getAllAnalyses() throws Exception {
         // Initialize the database
         analysisRepository.save(analysis);
@@ -288,6 +310,7 @@ public class AnalysisResourceIntTest {
             .andExpect(jsonPath("$.[*].visibility").value(hasItem(DEFAULT_VISIBILITY.toString())))
             .andExpect(jsonPath("$.[*].ownerId").value(hasItem(DEFAULT_OWNER_ID.toString())))
             .andExpect(jsonPath("$.[*].createDate").value(hasItem(DEFAULT_CREATE_DATE.toString())))
+            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(DEFAULT_UPDATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].query").value(hasItem(DEFAULT_QUERY.toString())))
             .andExpect(jsonPath("$.[*].documentId").value(hasItem(DEFAULT_DOCUMENT_ID.toString())));
     }
@@ -308,6 +331,7 @@ public class AnalysisResourceIntTest {
             .andExpect(jsonPath("$.visibility").value(DEFAULT_VISIBILITY.toString()))
             .andExpect(jsonPath("$.ownerId").value(DEFAULT_OWNER_ID.toString()))
             .andExpect(jsonPath("$.createDate").value(DEFAULT_CREATE_DATE.toString()))
+            .andExpect(jsonPath("$.updateDate").value(DEFAULT_UPDATE_DATE.toString()))
             .andExpect(jsonPath("$.query").value(DEFAULT_QUERY.toString()))
             .andExpect(jsonPath("$.documentId").value(DEFAULT_DOCUMENT_ID.toString()));
     }
@@ -335,6 +359,7 @@ public class AnalysisResourceIntTest {
             .visibility(UPDATED_VISIBILITY)
             .ownerId(UPDATED_OWNER_ID)
             .createDate(UPDATED_CREATE_DATE)
+            .updateDate(UPDATED_UPDATE_DATE)
             .query(UPDATED_QUERY)
             .documentId(UPDATED_DOCUMENT_ID);
 
@@ -353,6 +378,7 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getVisibility()).isEqualTo(UPDATED_VISIBILITY);
         assertThat(testAnalysis.getOwnerId()).isEqualTo(UPDATED_OWNER_ID);
         assertThat(testAnalysis.getCreateDate()).isEqualTo(UPDATED_CREATE_DATE);
+        assertThat(testAnalysis.getUpdateDate()).isEqualTo(UPDATED_UPDATE_DATE);
         assertThat(testAnalysis.getQuery()).isEqualTo(UPDATED_QUERY);
         assertThat(testAnalysis.getDocumentId()).isEqualTo(UPDATED_DOCUMENT_ID);
     }
