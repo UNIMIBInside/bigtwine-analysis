@@ -3,12 +3,14 @@ package it.unimib.disco.bigtwine.services.analysis.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
+import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.errors.BadRequestAlertException;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.util.HeaderUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -44,6 +46,7 @@ public class AnalysisStatusHistoryResource {
      */
     @PostMapping("/analysis-status-histories")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<AnalysisStatusHistory> createAnalysisStatusHistory(@Valid @RequestBody AnalysisStatusHistory analysisStatusHistory) throws URISyntaxException {
         log.debug("REST request to save AnalysisStatusHistory : {}", analysisStatusHistory);
         if (analysisStatusHistory.getId() != null) {
@@ -66,6 +69,7 @@ public class AnalysisStatusHistoryResource {
      */
     @PutMapping("/analysis-status-histories")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<AnalysisStatusHistory> updateAnalysisStatusHistory(@Valid @RequestBody AnalysisStatusHistory analysisStatusHistory) throws URISyntaxException {
         log.debug("REST request to update AnalysisStatusHistory : {}", analysisStatusHistory);
         if (analysisStatusHistory.getId() == null) {
@@ -84,6 +88,7 @@ public class AnalysisStatusHistoryResource {
      */
     @GetMapping("/analysis-status-histories")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public List<AnalysisStatusHistory> getAllAnalysisStatusHistories() {
         log.debug("REST request to get all AnalysisStatusHistories");
         return analysisStatusHistoryRepository.findAll();
@@ -97,6 +102,7 @@ public class AnalysisStatusHistoryResource {
      */
     @GetMapping("/analysis-status-histories/{id}")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<AnalysisStatusHistory> getAnalysisStatusHistory(@PathVariable String id) {
         log.debug("REST request to get AnalysisStatusHistory : {}", id);
         Optional<AnalysisStatusHistory> analysisStatusHistory = analysisStatusHistoryRepository.findById(id);
@@ -111,6 +117,7 @@ public class AnalysisStatusHistoryResource {
      */
     @DeleteMapping("/analysis-status-histories/{id}")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteAnalysisStatusHistory(@PathVariable String id) {
         log.debug("REST request to delete AnalysisStatusHistory : {}", id);
 

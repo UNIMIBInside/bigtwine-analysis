@@ -2,6 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.errors.BadRequestAlertException;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.util.HeaderUtil;
@@ -9,6 +10,7 @@ import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -44,6 +46,7 @@ public class AnalysisResource {
      */
     @PostMapping("/analyses")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> createAnalysis(@Valid @RequestBody Analysis analysis) throws URISyntaxException {
         log.debug("REST request to save Analysis : {}", analysis);
         if (analysis.getId() != null) {
@@ -66,6 +69,7 @@ public class AnalysisResource {
      */
     @PutMapping("/analyses")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> updateAnalysis(@Valid @RequestBody Analysis analysis) throws URISyntaxException {
         log.debug("REST request to update Analysis : {}", analysis);
         if (analysis.getId() == null) {
@@ -84,6 +88,7 @@ public class AnalysisResource {
      */
     @GetMapping("/analyses")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public List<Analysis> getAllAnalyses() {
         log.debug("REST request to get all Analyses");
         return analysisService.findAll();
@@ -97,6 +102,7 @@ public class AnalysisResource {
      */
     @GetMapping("/analyses/{id}")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> getAnalysis(@PathVariable String id) {
         log.debug("REST request to get Analysis : {}", id);
         Optional<Analysis> analysis = analysisService.findOne(id);
@@ -111,6 +117,7 @@ public class AnalysisResource {
      */
     @DeleteMapping("/analyses/{id}")
     @Timed
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteAnalysis(@PathVariable String id) {
         log.debug("REST request to delete Analysis : {}", id);
         analysisService.delete(id);
