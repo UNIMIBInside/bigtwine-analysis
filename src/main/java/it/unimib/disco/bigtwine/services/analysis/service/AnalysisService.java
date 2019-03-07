@@ -1,14 +1,21 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
+import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
+import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Service Implementation for managing Analysis.
@@ -19,9 +26,14 @@ public class AnalysisService {
     private final Logger log = LoggerFactory.getLogger(AnalysisService.class);
 
     private final AnalysisRepository analysisRepository;
+    private final AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
-    public AnalysisService(AnalysisRepository analysisRepository) {
+    private final AnalysisStatusValidator analysisStatusValidator;
+
+    public AnalysisService(AnalysisRepository analysisRepository, AnalysisStatusHistoryRepository analysisStatusHistoryRepository, AnalysisStatusValidator analysisStatusValidator) {
         this.analysisRepository = analysisRepository;
+        this.analysisStatusHistoryRepository = analysisStatusHistoryRepository;
+        this.analysisStatusValidator = analysisStatusValidator;
     }
 
     /**
@@ -43,6 +55,26 @@ public class AnalysisService {
     public List<Analysis> findAll() {
         log.debug("Request to get all Analyses");
         return analysisRepository.findAll();
+    }
+
+    /**
+     * Get all the analyses of an user.
+     *
+     * @return the list of entities
+     */
+    public List<Analysis> findByOwner(String owner) {
+        log.debug("Request to get all Analyses of an user");
+        return analysisRepository.findByOwner(owner);
+    }
+
+    /**
+     * Get all the analyses of an user (paged).
+     *
+     * @return the list of entities
+     */
+    public Page<Analysis> findByOwner(String owner, Pageable page) {
+        log.debug("Request to get all Analyses of an user");
+        return analysisRepository.findByOwner(owner, page);
     }
 
 
