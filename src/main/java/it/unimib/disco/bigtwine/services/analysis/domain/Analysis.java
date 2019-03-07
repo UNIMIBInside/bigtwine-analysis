@@ -3,7 +3,7 @@ package it.unimib.disco.bigtwine.services.analysis.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+
 import javax.validation.constraints.*;
 
 import java.io.Serializable;
@@ -26,6 +26,9 @@ public class Analysis implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static final AnalysisStatus DEFAULT_STATUS = AnalysisStatus.READY;
+    public static final AnalysisVisibility DEFAULT_VISIBILITY = AnalysisVisibility.PUBLIC;
+
     @Id
     private String id;
 
@@ -47,7 +50,7 @@ public class Analysis implements Serializable {
 
     @NotNull
     @Field("owner_id")
-    private String ownerId;
+    private String owner;
 
     @NotNull
     @Field("create_date")
@@ -124,17 +127,17 @@ public class Analysis implements Serializable {
         this.visibility = visibility;
     }
 
-    public String getOwnerId() {
-        return ownerId;
+    public String getOwner() {
+        return owner;
     }
 
     public Analysis ownerId(String ownerId) {
-        this.ownerId = ownerId;
+        this.owner = ownerId;
         return this;
     }
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public Instant getCreateDate() {
@@ -218,7 +221,7 @@ public class Analysis implements Serializable {
             ", inputType='" + getInputType() + "'" +
             ", status='" + getStatus() + "'" +
             ", visibility='" + getVisibility() + "'" +
-            ", ownerId='" + getOwnerId() + "'" +
+            ", owner='" + getOwner() + "'" +
             ", createDate='" + getCreateDate() + "'" +
             ", updateDate='" + getUpdateDate() + "'" +
             ", query='" + getQuery() + "'" +

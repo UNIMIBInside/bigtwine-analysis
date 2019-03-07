@@ -15,6 +15,6 @@ import java.util.List;
 @SuppressWarnings("unused")
 @Repository
 public interface AnalysisRepository extends MongoRepository<Analysis, String> {
-    List<Analysis> findByOwnerId(String ownerId);
-    Page<Analysis> findByOwnerId(String ownerId, Pageable page);
+    List<Analysis> findByOwner(String owner);
+    Page<Analysis> findByOwner(String owner, Pageable page);
 }

@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
@@ -47,12 +46,12 @@ public class AnalysisRepositoryIntTest {
 
     @Test
     public void findByOwner() {
-        List<Analysis> analyses = this.analysisRepository.findByOwnerId("user-1");
+        List<Analysis> analyses = this.analysisRepository.findByOwner("user-1");
 
         assertNotNull(analyses);
         assertEquals(1, analyses.size());
 
-        analyses = this.analysisRepository.findByOwnerId("user-2");
+        analyses = this.analysisRepository.findByOwner("user-2");
 
         assertNotNull(analyses);
         assertEquals(0, analyses.size());
@@ -61,7 +60,7 @@ public class AnalysisRepositoryIntTest {
     @Test
     public void findByOwnerPaged() {
         Pageable page = PageRequest.of(1, 2);
-        Page<Analysis> analyses = this.analysisRepository.findByOwnerId("user-1", page);
+        Page<Analysis> analyses = this.analysisRepository.findByOwner("user-1", page);
 
         assertNotNull(analyses);
         assertEquals(2, analyses.getTotalPages());

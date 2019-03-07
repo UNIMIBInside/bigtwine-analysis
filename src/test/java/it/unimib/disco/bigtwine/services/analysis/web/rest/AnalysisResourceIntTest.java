@@ -150,7 +150,7 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getInputType()).isEqualTo(DEFAULT_INPUT_TYPE);
         assertThat(testAnalysis.getStatus()).isEqualTo(DEFAULT_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(DEFAULT_VISIBILITY);
-        assertThat(testAnalysis.getOwnerId()).isEqualTo(DEFAULT_OWNER_ID);
+        assertThat(testAnalysis.getOwner()).isEqualTo(DEFAULT_OWNER_ID);
         assertThat(testAnalysis.getCreateDate()).isEqualTo(DEFAULT_CREATE_DATE);
         assertThat(testAnalysis.getUpdateDate()).isEqualTo(DEFAULT_UPDATE_DATE);
         assertThat(testAnalysis.getQuery()).isEqualTo(DEFAULT_QUERY);
@@ -247,7 +247,7 @@ public class AnalysisResourceIntTest {
     public void checkOwnerIdIsRequired() throws Exception {
         int databaseSizeBeforeTest = analysisRepository.findAll().size();
         // set the field null
-        analysis.setOwnerId(null);
+        analysis.setOwner(null);
 
         // Create the Analysis, which fails.
 
@@ -376,7 +376,7 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getInputType()).isEqualTo(UPDATED_INPUT_TYPE);
         assertThat(testAnalysis.getStatus()).isEqualTo(UPDATED_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(UPDATED_VISIBILITY);
-        assertThat(testAnalysis.getOwnerId()).isEqualTo(UPDATED_OWNER_ID);
+        assertThat(testAnalysis.getOwner()).isEqualTo(UPDATED_OWNER_ID);
         assertThat(testAnalysis.getCreateDate()).isEqualTo(UPDATED_CREATE_DATE);
         assertThat(testAnalysis.getUpdateDate()).isEqualTo(UPDATED_UPDATE_DATE);
         assertThat(testAnalysis.getQuery()).isEqualTo(UPDATED_QUERY);
