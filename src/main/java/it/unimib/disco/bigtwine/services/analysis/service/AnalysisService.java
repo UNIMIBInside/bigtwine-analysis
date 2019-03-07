@@ -41,9 +41,36 @@ public class AnalysisService {
      *
      * @param analysis the entity to save
      * @return the persisted entity
+     * @throws InvalidAnalysisStatusException Restituisce errore se lo stato non è associabile all'analisi
      */
     public Analysis save(Analysis analysis) {
         log.debug("Request to save Analysis : {}", analysis);
+        Optional<Analysis> oldAnalysis = analysis.getId() != null ? this.findOne(analysis.getId()) : Optional.empty();
+        boolean isUpdate = oldAnalysis.isPresent();
+
+        if (isUpdate) {
+            boolean isStatusChanged = oldAnalysis.get().getStatus() != analysis.getStatus();
+            boolean statusChangeAllowed = this.analysisStatusValidator.validate(oldAnalysis.get().getStatus(), analysis.getStatus());
+            if (isStatusChanged && !statusChangeAllowed) {
+                throw new InvalidAnalysisStatusException(oldAnalysis.get().getStatus(), analysis.getStatus());
+            }
+        }else {
+            if (analysis.getCreateDate() == null) {
+                analysis.setCreateDate(Instant.now());
+            }
+
+            if (analysis.getStatus() == null) {
+                analysis.setStatus(Analysis.DEFAULT_STATUS);
+            }
+
+            if (analysis.getVisibility() == null) {
+                analysis.setVisibility(Analysis.DEFAULT_VISIBILITY);
+            }
+        }
+
+        analysis.setUpdateDate(Instant.now());
+
+
         return analysisRepository.save(analysis);
     }
 
