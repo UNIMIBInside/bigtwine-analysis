@@ -10,6 +10,7 @@ paths:
       description: ""
       operationId: createAnalysisV1
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -17,12 +18,14 @@ paths:
       responses:
         '201':
           description: 'Analysis created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDTO'
         '400':
           description: 'Invalid input'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        default:
-          description: 'Default error sample response'
       tags:
         - 'Analysis'
     get:
@@ -30,8 +33,8 @@ paths:
       description: ""
       operationId: listAnalysesV1
       parameters:
-        - $ref: '#/components/parameters/offsetParam'
-        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
       responses:
         '200':
           description: ""
@@ -81,12 +84,11 @@ paths:
       description: ""
       operationId: patchAnalysisV1
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              properties:
-                status:
-                  $ref: '#/components/schemas/AnalysisStatusEnum'
+              $ref: '#/components/schemas/AnalysisUpdatableDTO'
       responses:
         '204':
           description: "Analysis updated"
@@ -134,9 +136,6 @@ paths:
       summary: 'Get the status history of an analysis'
       description: ""
       operationId: getAnalysisHistoryV1
-      parameters:
-        - $ref: '#/components/parameters/offsetParam'
-        - $ref: '#/components/parameters/limitParam'
       responses:
         '200':
           description: ""
@@ -170,8 +169,8 @@ paths:
       description: ""
       operationId: getTwitterNeelAnalysisResultsV1
       parameters:
-        - $ref: '#/components/parameters/offsetParam'
-        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
       responses:
         '200':
           description: ""
@@ -214,7 +213,6 @@ components:
       required:
         - type
         - inputType
-        - ownerId
       properties:
         id:
           type: string
@@ -228,7 +226,7 @@ components:
           enum:
             - QUERY
             - DOCUMENT
-        ownerId:
+        owner:
           type: string
           readOnly: true
         status:
@@ -249,6 +247,12 @@ components:
           type: string
           format: date-time
           readOnly: true
+    AnalysisUpdatableDTO:
+      properties:
+        status:
+          $ref: '#/components/schemas/AnalysisStatusEnum'
+        visibility:
+          $ref: '#/components/schemas/AnalysisVisibilityEnum'
     AnalysisStatusHistoryDTO:
       type: object
       properties:
@@ -367,27 +371,27 @@ components:
         coordinates:
           $ref: '#/components/schemas/CoordinatesDTO'
   parameters:
-    limitParam:
-      name: limit
+    pageSizeParam:
+      name: pageSize
       in: query
-      description: 'How many items to return at one time (max 100)'
+      description: 'How many items to return per page (max 100)'
       required: false
       schema:
         type: integer
         format: int32
-        minimum: 0
+        minimum: 1
         maximum: 100
         default: 100
-    offsetParam:
-      name: offset
+    pageParam:
+      name: page
       in: query
-      description: 'The offset from which start to fetch items'
+      description: 'The page from which start to fetch items'
       required: false
       schema:
         type: integer
         format: int32
-        minimum: 0
-        default: 0
+        minimum: 1
+        default: 1
   responses:
     UnauthorizedError:
       description: JWT token is missing or invalid
