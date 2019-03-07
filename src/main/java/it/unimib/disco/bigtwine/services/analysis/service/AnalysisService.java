@@ -125,4 +125,15 @@ public class AnalysisService {
         log.debug("Request to delete Analysis : {}", id);
         analysisRepository.deleteById(id);
     }
+
+    /**
+     * Restituisce la lista di tutti i cambi di stato dell'analisi indicata
+     *
+     * @param id the id of the entity
+     * @return A change list of the analysis status
+     */
+    public List<AnalysisStatusHistory> getStatusHistory(String id) {
+        return this.analysisStatusHistoryRepository.findByAnalysisId(id, Sort.by(Sort.Direction.DESC, "date"));
+    }
+
 }
