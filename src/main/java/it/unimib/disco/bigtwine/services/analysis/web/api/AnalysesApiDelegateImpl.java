@@ -21,14 +21,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
 
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
+    private final Logger log = LoggerFactory.getLogger(AnalysesApiDelegateImpl.class);
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
 
@@ -98,18 +101,29 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new UnauthorizedException();
         }
 
-        try {
-            Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
-            a.setOwner(ownerId);
-            a = this.analysisService.save(a);
-            AnalysisDTO savedAnalysis = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(a);
+        Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
+        a.setOwner(ownerId);
 
-            return ResponseEntity
-                    .created(new URI("/api/public/analyses/" + a.getId()))
-                    .body(savedAnalysis);
-        }catch (Exception e) {
+        try {
+            a = this.analysisService.save(a);
+        }catch (ValidationException e) {
             throw new BadRequestException(e.getMessage());
         }
+
+        AnalysisDTO savedAnalysis = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(a);
+        URI entityLocation;
+
+        try {
+            entityLocation = new URI("/api/public/analyses/" + a.getId());
+        }catch(URISyntaxException e) {
+            // Must not happen
+            log.error("Cannot create entity URI", e);
+            throw new RuntimeException("Cannot create entity URI");
+        }
+
+        return ResponseEntity
+            .created(entityLocation)
+            .body(savedAnalysis);
     }
 
     @Override
