@@ -131,7 +131,7 @@ public class Analysis implements Serializable {
         return owner;
     }
 
-    public Analysis ownerId(String ownerId) {
+    public Analysis owner(String ownerId) {
         this.owner = ownerId;
         return this;
     }
