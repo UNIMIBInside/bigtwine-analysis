@@ -33,8 +33,8 @@ public class AnalysisStatusHistory implements Serializable {
     @Field("old_status")
     private AnalysisStatus oldStatus;
 
-    @Field("user_id")
-    private String userId;
+    @Field("user")
+    private String user;
 
     @Field("error_code")
     private AnalysisErrorCode errorCode;
@@ -86,17 +86,17 @@ public class AnalysisStatusHistory implements Serializable {
         this.oldStatus = oldStatus;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getUser() {
+        return user;
     }
 
-    public AnalysisStatusHistory userId(String userId) {
-        this.userId = userId;
+    public AnalysisStatusHistory user(String userId) {
+        this.user = userId;
         return this;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUser(String user) {
+        this.user = user;
     }
 
     public AnalysisErrorCode getErrorCode() {
@@ -178,7 +178,7 @@ public class AnalysisStatusHistory implements Serializable {
             "id=" + getId() +
             ", newStatus='" + getNewStatus() + "'" +
             ", oldStatus='" + getOldStatus() + "'" +
-            ", userId='" + getUserId() + "'" +
+            ", user='" + getUser() + "'" +
             ", errorCode='" + getErrorCode() + "'" +
             ", message='" + getMessage() + "'" +
             ", date='" + getDate() + "'" +

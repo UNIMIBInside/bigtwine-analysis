@@ -264,7 +264,7 @@ components:
           type: string
         errorCode:
           type: integer
-        userId:
+        user:
           type: string
         date:
           type: string

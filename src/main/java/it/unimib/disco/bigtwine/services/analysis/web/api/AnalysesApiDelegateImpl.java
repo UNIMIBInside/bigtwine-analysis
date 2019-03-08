@@ -71,8 +71,10 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             analysis.setVisibility(newVisibility);
         }
 
+        AnalysisStatus oldStatus = analysis.getStatus();
+        AnalysisStatus newStatus = null;
         if (status != null) {
-            AnalysisStatus newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
+            newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
 
             analysis.setStatus(newStatus);
         }
@@ -81,6 +83,18 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             analysis = analysisService.save(analysis);
         } catch (InvalidAnalysisStatusException e) {
             throw new BadRequestException(e.getMessage());
+        }
+
+        if (newStatus != null) {
+            AnalysisStatusHistory statusHistory = new AnalysisStatusHistory()
+                .oldStatus(oldStatus)
+                .newStatus(newStatus)
+                .user(ownerId)
+                .message("User status update request")
+                .date(analysis.getUpdateDate())
+                .analysis(analysis);
+
+            this.analysisService.saveStatusHistory(statusHistory);
         }
 
         AnalysisDTO updatedAnalysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);

@@ -32,7 +32,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisErrorCode;
 /**
  * Test class for the AnalysisStatusHistoryResource REST controller.
@@ -102,7 +101,7 @@ public class AnalysisStatusHistoryResourceIntTest {
         AnalysisStatusHistory analysisStatusHistory = new AnalysisStatusHistory()
             .newStatus(DEFAULT_NEW_STATUS)
             .oldStatus(DEFAULT_OLD_STATUS)
-            .userId(DEFAULT_USER_ID)
+            .user(DEFAULT_USER_ID)
             .errorCode(DEFAULT_ERROR_CODE)
             .message(DEFAULT_MESSAGE)
             .date(DEFAULT_DATE);
@@ -131,7 +130,7 @@ public class AnalysisStatusHistoryResourceIntTest {
         AnalysisStatusHistory testAnalysisStatusHistory = analysisStatusHistoryList.get(analysisStatusHistoryList.size() - 1);
         assertThat(testAnalysisStatusHistory.getNewStatus()).isEqualTo(DEFAULT_NEW_STATUS);
         assertThat(testAnalysisStatusHistory.getOldStatus()).isEqualTo(DEFAULT_OLD_STATUS);
-        assertThat(testAnalysisStatusHistory.getUserId()).isEqualTo(DEFAULT_USER_ID);
+        assertThat(testAnalysisStatusHistory.getUser()).isEqualTo(DEFAULT_USER_ID);
         assertThat(testAnalysisStatusHistory.getErrorCode()).isEqualTo(DEFAULT_ERROR_CODE);
         assertThat(testAnalysisStatusHistory.getMessage()).isEqualTo(DEFAULT_MESSAGE);
         assertThat(testAnalysisStatusHistory.getDate()).isEqualTo(DEFAULT_DATE);
@@ -201,7 +200,7 @@ public class AnalysisStatusHistoryResourceIntTest {
             .andExpect(jsonPath("$.[*].id").value(hasItem(analysisStatusHistory.getId())))
             .andExpect(jsonPath("$.[*].newStatus").value(hasItem(DEFAULT_NEW_STATUS.toString())))
             .andExpect(jsonPath("$.[*].oldStatus").value(hasItem(DEFAULT_OLD_STATUS.toString())))
-            .andExpect(jsonPath("$.[*].userId").value(hasItem(DEFAULT_USER_ID.toString())))
+            .andExpect(jsonPath("$.[*].user").value(hasItem(DEFAULT_USER_ID.toString())))
             .andExpect(jsonPath("$.[*].errorCode").value(hasItem(DEFAULT_ERROR_CODE.toString())))
             .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE.toString())))
             .andExpect(jsonPath("$.[*].date").value(hasItem(DEFAULT_DATE.toString())));
@@ -219,7 +218,7 @@ public class AnalysisStatusHistoryResourceIntTest {
             .andExpect(jsonPath("$.id").value(analysisStatusHistory.getId()))
             .andExpect(jsonPath("$.newStatus").value(DEFAULT_NEW_STATUS.toString()))
             .andExpect(jsonPath("$.oldStatus").value(DEFAULT_OLD_STATUS.toString()))
-            .andExpect(jsonPath("$.userId").value(DEFAULT_USER_ID.toString()))
+            .andExpect(jsonPath("$.user").value(DEFAULT_USER_ID.toString()))
             .andExpect(jsonPath("$.errorCode").value(DEFAULT_ERROR_CODE.toString()))
             .andExpect(jsonPath("$.message").value(DEFAULT_MESSAGE.toString()))
             .andExpect(jsonPath("$.date").value(DEFAULT_DATE.toString()));
@@ -244,7 +243,7 @@ public class AnalysisStatusHistoryResourceIntTest {
         updatedAnalysisStatusHistory
             .newStatus(UPDATED_NEW_STATUS)
             .oldStatus(UPDATED_OLD_STATUS)
-            .userId(UPDATED_USER_ID)
+            .user(UPDATED_USER_ID)
             .errorCode(UPDATED_ERROR_CODE)
             .message(UPDATED_MESSAGE)
             .date(UPDATED_DATE);
@@ -260,7 +259,7 @@ public class AnalysisStatusHistoryResourceIntTest {
         AnalysisStatusHistory testAnalysisStatusHistory = analysisStatusHistoryList.get(analysisStatusHistoryList.size() - 1);
         assertThat(testAnalysisStatusHistory.getNewStatus()).isEqualTo(UPDATED_NEW_STATUS);
         assertThat(testAnalysisStatusHistory.getOldStatus()).isEqualTo(UPDATED_OLD_STATUS);
-        assertThat(testAnalysisStatusHistory.getUserId()).isEqualTo(UPDATED_USER_ID);
+        assertThat(testAnalysisStatusHistory.getUser()).isEqualTo(UPDATED_USER_ID);
         assertThat(testAnalysisStatusHistory.getErrorCode()).isEqualTo(UPDATED_ERROR_CODE);
         assertThat(testAnalysisStatusHistory.getMessage()).isEqualTo(UPDATED_MESSAGE);
         assertThat(testAnalysisStatusHistory.getDate()).isEqualTo(UPDATED_DATE);

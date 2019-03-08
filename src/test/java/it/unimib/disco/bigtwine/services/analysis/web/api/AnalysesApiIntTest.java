@@ -2,11 +2,13 @@ package it.unimib.disco.bigtwine.services.analysis.web.api;
 
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisStatusEnum;
@@ -42,6 +44,9 @@ public class AnalysesApiIntTest {
 
     @Autowired
     private AnalysisRepository analysisRepository;
+
+    @Autowired
+    private AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
     private MockMvc restApiMvc;
 
@@ -310,5 +315,36 @@ public class AnalysesApiIntTest {
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser-1")
+    public void testCreateStatusHistory() throws Exception {
+        Analysis analysis = this.createAnalysis()
+            .owner("testuser-1")
+            .status(AnalysisStatus.READY);
+        analysis = this.analysisRepository.save(analysis);
+
+        AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
+            .status(AnalysisStatusEnum.STARTED);
+
+        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
+            .andExpect(status().isOk());
+
+        Analysis testAnalysis = this.analysisRepository.findById(analysis.getId()).orElse(null);
+        assertThat(testAnalysis).isNotNull();
+
+        List<AnalysisStatusHistory> statusHistory = this.analysisStatusHistoryRepository
+            .findByAnalysisId(testAnalysis.getId());
+
+        assertThat(statusHistory).hasSize(1);
+
+        AnalysisStatusHistory lastStatusHistory = statusHistory.get(statusHistory.size() - 1);
+
+        assertThat(lastStatusHistory.getOldStatus()).isEqualTo(AnalysisStatus.READY);
+        assertThat(lastStatusHistory.getNewStatus()).isEqualTo(AnalysisStatus.STARTED);
+        assertThat(lastStatusHistory.getUser()).isEqualTo("testuser-1");
     }
 }

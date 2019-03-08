@@ -28,7 +28,7 @@ enum AnalysisErrorCode {
 entity AnalysisStatusHistory {
 	newStatus AnalysisStatus required
     oldStatus AnalysisStatus
-    userId String
+    user String
 	errorCode AnalysisErrorCode
     message String
     date Instant required

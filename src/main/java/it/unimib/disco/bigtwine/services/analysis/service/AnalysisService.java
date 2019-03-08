@@ -39,8 +39,9 @@ public class AnalysisService {
     }
 
     /**
+     * Imposta i parametri predefiniti dell'analisis in caso siano null
      *
-     * @param analysis
+     * @param analysis L'analisi da impostare
      */
     private void setupAnalysisDefaults(Analysis analysis) {
         if (analysis.getCreateDate() == null) {
@@ -176,6 +177,10 @@ public class AnalysisService {
      */
     public List<AnalysisStatusHistory> getStatusHistory(String id) {
         return this.analysisStatusHistoryRepository.findByAnalysisId(id, Sort.by(Sort.Direction.DESC, "date"));
+    }
+
+    public void saveStatusHistory(AnalysisStatusHistory statusHistory) {
+        this.analysisStatusHistoryRepository.save(statusHistory);
     }
 
 }
