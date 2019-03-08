@@ -6,6 +6,7 @@ import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
+import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisInputProvidedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.*;
 
@@ -37,39 +39,79 @@ public class AnalysisService {
     }
 
     /**
+     *
+     * @param analysis
+     */
+    private void setupAnalysisDefaults(Analysis analysis) {
+        if (analysis.getCreateDate() == null) {
+            analysis.setCreateDate(Instant.now());
+        }
+
+        if (analysis.getStatus() == null) {
+            analysis.setStatus(Analysis.DEFAULT_STATUS);
+        }
+
+        if (analysis.getVisibility() == null) {
+            analysis.setVisibility(Analysis.DEFAULT_VISIBILITY);
+        }
+    }
+
+    /**
+     * Valida un'analisi e lancia eccezioni in caso di errori
+     *
+     * @param analysis Oggetto da validare
+     * @throws InvalidAnalysisStatusException Eccezione lanciata in caso di update se lo status impostato non è valido
+     * @throws InvalidAnalysisInputProvidedException Eccezione lanciata se non è stato fornito un input valido
+     */
+    private void validate(@NotNull Analysis analysis, Analysis oldAnalysis) {
+        // Validate input
+        switch (analysis.getInputType()) {
+            case QUERY:
+                if (analysis.getQuery() == null) {
+                    throw new InvalidAnalysisInputProvidedException("Query not provided");
+                }
+                break;
+            case DOCUMENT:
+                if (analysis.getDocumentId() == null) {
+                    throw new InvalidAnalysisInputProvidedException("Document id not provided");
+                }
+                break;
+        }
+
+        if (analysis.getQuery() != null && analysis.getDocumentId() != null) {
+            throw new InvalidAnalysisInputProvidedException("Both query and document id provided");
+        }
+
+        // Validate status change
+        if (oldAnalysis != null) {
+            boolean isStatusChanged = oldAnalysis.getStatus() != analysis.getStatus();
+            boolean statusChangeAllowed = this.analysisStatusValidator.validate(oldAnalysis.getStatus(), analysis.getStatus());
+            if (isStatusChanged && !statusChangeAllowed) {
+                throw new InvalidAnalysisStatusException(oldAnalysis.getStatus(), analysis.getStatus());
+            }
+        }
+    }
+
+    /**
      * Save a analysis.
      *
      * @param analysis the entity to save
      * @return the persisted entity
-     * @throws InvalidAnalysisStatusException Restituisce errore se lo stato non è associabile all'analisi
+     * @throws InvalidAnalysisStatusException Lancia un errore se lo stato non è associabile all'analisi
+     * @throws InvalidAnalysisInputProvidedException Lancia un errore se non è stato fornito un input valido
      */
     public Analysis save(Analysis analysis) {
         log.debug("Request to save Analysis : {}", analysis);
         Optional<Analysis> oldAnalysis = analysis.getId() != null ? this.findOne(analysis.getId()) : Optional.empty();
         boolean isUpdate = oldAnalysis.isPresent();
 
-        if (isUpdate) {
-            boolean isStatusChanged = oldAnalysis.get().getStatus() != analysis.getStatus();
-            boolean statusChangeAllowed = this.analysisStatusValidator.validate(oldAnalysis.get().getStatus(), analysis.getStatus());
-            if (isStatusChanged && !statusChangeAllowed) {
-                throw new InvalidAnalysisStatusException(oldAnalysis.get().getStatus(), analysis.getStatus());
-            }
-        }else {
-            if (analysis.getCreateDate() == null) {
-                analysis.setCreateDate(Instant.now());
-            }
-
-            if (analysis.getStatus() == null) {
-                analysis.setStatus(Analysis.DEFAULT_STATUS);
-            }
-
-            if (analysis.getVisibility() == null) {
-                analysis.setVisibility(Analysis.DEFAULT_VISIBILITY);
-            }
+        if (!isUpdate) {
+            this.setupAnalysisDefaults(analysis);
         }
 
         analysis.setUpdateDate(Instant.now());
 
+        this.validate(analysis, oldAnalysis.orElse(null));
 
         return analysisRepository.save(analysis);
     }
