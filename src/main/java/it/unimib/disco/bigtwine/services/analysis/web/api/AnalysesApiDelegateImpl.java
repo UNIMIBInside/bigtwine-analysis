@@ -121,11 +121,19 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         }
 
         if (pageNum == null) {
-            pageNum = 1;
+            pageNum = 0;
         }
 
         if (pageSize == null) {
             pageSize = 100;
+        }
+
+        if (pageNum < 0) {
+            throw new BadRequestException("Page num must be greater of equal to 0");
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            throw new BadRequestException("Page size must be between 1 and 100");
         }
 
         Pageable page = PageRequest.of(pageNum, pageSize);
@@ -155,7 +163,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
         AnalysisDTO analysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);
 
-        return new ResponseEntity<>(analysisDTO, HttpStatus.CREATED);
+        return new ResponseEntity<>(analysisDTO, HttpStatus.OK);
     }
 
     @Override
