@@ -32,7 +32,7 @@ public class AnalysisRepositoryIntTest {
     public void setUp() throws Exception {
         for (int i = 1; i <= 3; ++i) {
             Analysis a = new Analysis()
-                .ownerId("user-1")
+                .owner("user-1")
                 .status(AnalysisStatus.READY)
                 .type(AnalysisType.TWITTER_NEEL)
                 .inputType(AnalysisInputType.QUERY)
