@@ -12,6 +12,8 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityExc
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -56,7 +58,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         Analysis analysis = analysisOpt.get();
         String ownerId = this.getCurrentUserIdentifier().orElse(null);
 
-        if (this.checkAnalysisOwnership(analysis, ownerId)) {
+        if (!this.checkAnalysisOwnership(analysis, ownerId)) {
             throw new UnauthorizedException();
         }
 
@@ -146,7 +148,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         if (analysis.getVisibility() == AnalysisVisibility.PRIVATE) {
             String ownerId = this.getCurrentUserIdentifier().orElse(null);
 
-            if (this.checkAnalysisOwnership(analysis, ownerId)) {
+            if (!this.checkAnalysisOwnership(analysis, ownerId)) {
                 throw new UnauthorizedException();
             }
         }
@@ -179,7 +181,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         if (analysis.get().getVisibility() == AnalysisVisibility.PRIVATE) {
             String ownerId = this.getCurrentUserIdentifier().orElse(null);
 
-            if (this.checkAnalysisOwnership(analysis.get(), ownerId)) {
+            if (!this.checkAnalysisOwnership(analysis.get(), ownerId)) {
                 throw new UnauthorizedException();
             }
         }
