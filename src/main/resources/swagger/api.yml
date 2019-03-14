@@ -177,9 +177,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TwitterNeelAnalysisResultDTO'
+                $ref: '#/components/schemas/TwitterNeelAnalysisResultDTO'
         '400':
           description: "The requested analysis is not a Twitter NEEL analysis"
         '401':
@@ -269,31 +267,47 @@ components:
         date:
           type: string
           format: date-time
-    AnalysisResultDTO:
+    PagedResult:
       type: object
       properties:
-        totalResultsCount:
+        totalCount:
+          type: integer
+          format: int64
+        pageSize:
+          type: integer
+        page:
           type: integer
         count:
           type: integer
-        offset:
-          type: integer
     TwitterNeelAnalysisResultDTO:
       allOf:
-        - $ref: '#/components/schemas/AnalysisResultDTO'
+        - $ref: '#/components/schemas/PagedResult'
         - type: object
           properties:
-            results:
+            objects:
               type: array
               items:
-                $ref: '#/components/schemas/ProcessedTweetDTO'
-    ProcessedTweetDTO:
+                $ref: '#/components/schemas/NeelProcessedTweetDTO'
+    NeelProcessedTweetDTO:
       type: object
+      required:
+        - id
+        - analysisId
+        - processDate
+        - saveDate
+        - status
+        - entities
       properties:
         id:
           type: string
         analysisId:
           type: string
+        processDate:
+          type: string
+          format: date-time
+        saveDate:
+          type: string
+          format: date-time
         status:
           $ref: '#/components/schemas/TwitterStatusDTO'
         entities:
@@ -302,6 +316,9 @@ components:
             $ref: '#/components/schemas/LinkedEntityDTO'
     TwitterStatusDTO:
       type: object
+      required:
+        - id
+        - text
       properties:
         id:
           type: string
@@ -309,6 +326,8 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/TwitterUserDTO'
+        coordinates:
+          $ref: '#/components/schemas/CoordinatesDTO'
     TwitterUserDTO:
       type: object
       properties:
