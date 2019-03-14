@@ -1,7 +1,9 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import it.unimib.disco.bigtwine.commons.models.LinkedEntity;
 import it.unimib.disco.bigtwine.commons.models.ProcessedTweet;
+import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,6 +12,7 @@ import javax.validation.constraints.*;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,6 +27,10 @@ public class NeelProcessedTweet implements Serializable {
     private String id;
 
     @NotNull
+    @Field("process_date")
+    private Instant processDate;
+
+    @NotNull
     @Field("save_date")
     private Instant saveDate;
 
@@ -35,8 +42,12 @@ public class NeelProcessedTweet implements Serializable {
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
 
     @NotNull
-    @Field("tweet")
-    private ProcessedTweet tweet;
+    @Field("status")
+    private TwitterStatus status;
+
+    @NotNull
+    @Field("entities")
+    private List<LinkedEntity> entities;
 
     public String getId() {
         return id;
@@ -44,6 +55,19 @@ public class NeelProcessedTweet implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Instant getProcessDate() {
+        return processDate;
+    }
+
+    public NeelProcessedTweet processDate(Instant processDate) {
+        this.processDate = processDate;
+        return this;
+    }
+
+    public void setProcessDate(Instant processDate) {
+        this.processDate = processDate;
     }
 
     public Instant getSaveDate() {
@@ -57,10 +81,6 @@ public class NeelProcessedTweet implements Serializable {
 
     public void setSaveDate(Instant saveDate) {
         this.saveDate = saveDate;
-    }
-
-    public ProcessedTweet getTweet() {
-        return tweet;
     }
 
     public Analysis getAnalysis() {
@@ -78,13 +98,30 @@ public class NeelProcessedTweet implements Serializable {
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
-    public void setTweet(ProcessedTweet tweet) {
-        this.tweet = tweet;
+    public TwitterStatus getStatus() {
+        return status;
     }
 
-    public NeelProcessedTweet tweet(ProcessedTweet tweet) {
-        this.tweet = tweet;
+    public NeelProcessedTweet status(TwitterStatus status) {
+        this.status = status;
         return this;
+    }
+
+    public void setStatus(TwitterStatus status) {
+        this.status = status;
+    }
+
+    public List<LinkedEntity> getEntities() {
+        return entities;
+    }
+
+    public NeelProcessedTweet entities(List<LinkedEntity> entities) {
+        this.entities = entities;
+        return this;
+    }
+
+    public void setEntities(List<LinkedEntity> entities) {
+        this.entities = entities;
     }
 
     @Override

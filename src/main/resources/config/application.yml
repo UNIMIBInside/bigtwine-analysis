@@ -89,6 +89,14 @@ spring:
             enabled: false
     thymeleaf:
         mode: HTML
+    cloud:
+        stream:
+            bindings:
+                twitterNeelOutputChannel:
+                    destination: twitter-neel-output
+                twitterNeelProcessedTweetsChannel:
+                    destination: twitter-neel-processed-tweets
+                    content-type: application/json
 
 server:
     servlet:

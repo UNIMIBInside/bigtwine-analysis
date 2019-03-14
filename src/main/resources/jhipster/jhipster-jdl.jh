@@ -48,6 +48,7 @@ entity Analysis {
 }
 
 entity NeelProcessedTweet {
+    processDate Instant required
     saveDate Instant required
 }
 
