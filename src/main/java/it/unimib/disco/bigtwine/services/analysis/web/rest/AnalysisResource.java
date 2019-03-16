@@ -46,7 +46,6 @@ public class AnalysisResource {
      */
     @PostMapping("/analyses")
     @Timed
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> createAnalysis(@Valid @RequestBody Analysis analysis) throws URISyntaxException {
         log.debug("REST request to save Analysis : {}", analysis);
         if (analysis.getId() != null) {
@@ -69,7 +68,6 @@ public class AnalysisResource {
      */
     @PutMapping("/analyses")
     @Timed
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> updateAnalysis(@Valid @RequestBody Analysis analysis) throws URISyntaxException {
         log.debug("REST request to update Analysis : {}", analysis);
         if (analysis.getId() == null) {
@@ -88,7 +86,6 @@ public class AnalysisResource {
      */
     @GetMapping("/analyses")
     @Timed
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public List<Analysis> getAllAnalyses() {
         log.debug("REST request to get all Analyses");
         return analysisService.findAll();
@@ -102,7 +99,6 @@ public class AnalysisResource {
      */
     @GetMapping("/analyses/{id}")
     @Timed
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Analysis> getAnalysis(@PathVariable String id) {
         log.debug("REST request to get Analysis : {}", id);
         Optional<Analysis> analysis = analysisService.findOne(id);
@@ -117,7 +113,6 @@ public class AnalysisResource {
      */
     @DeleteMapping("/analyses/{id}")
     @Timed
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteAnalysis(@PathVariable String id) {
         log.debug("REST request to delete Analysis : {}", id);
         analysisService.delete(id);
