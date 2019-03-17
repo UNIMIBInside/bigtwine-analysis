@@ -49,7 +49,7 @@ public class Analysis implements Serializable {
     private AnalysisVisibility visibility;
 
     @NotNull
-    @Field("owner_id")
+    @Field("owner")
     private String owner;
 
     @NotNull
