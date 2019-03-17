@@ -5,6 +5,7 @@ import it.unimib.disco.bigtwine.commons.models.LinkedEntity;
 import it.unimib.disco.bigtwine.commons.models.ProcessedTweet;
 import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -35,6 +36,7 @@ public class NeelProcessedTweet implements Serializable {
     private Instant saveDate;
 
     @DBRef
+    @Indexed
     @Field("analysis")
     @JsonIgnoreProperties("")
     private Analysis analysis;

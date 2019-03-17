@@ -2,6 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -47,6 +48,7 @@ public class AnalysisStatusHistory implements Serializable {
     private Instant date;
 
     @DBRef
+    @Indexed
     @Field("analysis")
     @JsonIgnoreProperties("")
     private Analysis analysis;
