@@ -52,7 +52,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
             throw new NoSuchEntityException(String.format("Analysis with id '%s' not found", analysis));
         }
 
-        AnalysisUtil.checkAnalysisOwnership(analysis.get());
+        AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
 
         Pageable page = PageRequest.of(pageNum, pageSize);
         Page<NeelProcessedTweet> tweets = this.tweetRepository.findByAnalysisId(analysis.get().getId(), page);

@@ -4,6 +4,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
+import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
@@ -12,6 +13,7 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityExc
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -60,11 +62,10 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         }
 
         Analysis analysis = analysisOpt.get();
-        String ownerId = this.getCurrentUserIdentifier().orElse(null);
 
-        if (!this.checkAnalysisOwnership(analysis, ownerId)) {
-            throw new UnauthorizedException();
-        }
+        AnalysisUtil.AccessType accessType = (status == AnalysisStatusEnum.CANCELLED ?
+            AnalysisUtil.AccessType.DELETE : AnalysisUtil.AccessType.UPDATE);
+        AnalysisUtil.checkAnalysisOwnership(analysis, accessType);
 
         if (visibility != null) {
             AnalysisVisibility newVisibility = AnalysisMapper.INSTANCE.visibilityFromVisibilityEnum(visibility);
@@ -156,7 +157,13 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         }
 
         Pageable page = PageRequest.of(pageNum, pageSize);
-        List<Analysis> analyses = this.analysisService.findByOwner(ownerId, page).getContent();
+        List<Analysis> analyses;
+
+        if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
+            analyses = this.analysisService.findAll(page).getContent();
+        }else {
+            analyses = this.analysisService.findByOwner(ownerId, page).getContent();
+        }
 
         List<AnalysisDTO> analysisDTOs = AnalysisMapper.INSTANCE.analysisDtosFromAnalyses(analyses);
 
@@ -172,13 +179,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new NoSuchEntityException(Analysis.class, analysisId);
         }
 
-        if (analysis.getVisibility() == AnalysisVisibility.PRIVATE) {
-            String ownerId = this.getCurrentUserIdentifier().orElse(null);
-
-            if (!this.checkAnalysisOwnership(analysis, ownerId)) {
-                throw new UnauthorizedException();
-            }
-        }
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
 
         AnalysisDTO analysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);
 
@@ -205,13 +206,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new NoSuchEntityException(Analysis.class, analysisId);
         }
 
-        if (analysis.get().getVisibility() == AnalysisVisibility.PRIVATE) {
-            String ownerId = this.getCurrentUserIdentifier().orElse(null);
-
-            if (!this.checkAnalysisOwnership(analysis.get(), ownerId)) {
-                throw new UnauthorizedException();
-            }
-        }
+        AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
 
         List<AnalysisStatusHistory> statusHistory = this.analysisService.getStatusHistory(analysisId);
         List<AnalysisStatusHistoryDTO> statusHistoryDTOs = AnalysisMapper.INSTANCE

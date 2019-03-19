@@ -147,6 +147,16 @@ public class AnalysisService {
     }
 
     /**
+     * Get all the analyses (paged).
+     *
+     * @return the list of entities
+     */
+    public Page<Analysis> findAll(Pageable page) {
+        log.debug("Request to get all Analyses");
+        return analysisRepository.findAll(page);
+    }
+
+    /**
      * Get all the analyses of an user.
      *
      * @return the list of entities

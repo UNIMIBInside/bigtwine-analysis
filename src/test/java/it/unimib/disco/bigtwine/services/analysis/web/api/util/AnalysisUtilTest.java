@@ -28,7 +28,7 @@ public class AnalysisUtilTest {
             .owner("testuser-1")
             .visibility(AnalysisVisibility.PRIVATE);
 
-        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis));
+        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -38,7 +38,7 @@ public class AnalysisUtilTest {
             .owner("testuser-2")
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis);
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class AnalysisUtilTest {
             .owner("testuser-1")
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis));
+        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
     }
 
     @Test
@@ -58,7 +58,7 @@ public class AnalysisUtilTest {
             .owner("testuser-2")
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis));
+        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class AnalysisUtilTest {
             .owner("testuser-1")
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis));
+        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -76,6 +76,56 @@ public class AnalysisUtilTest {
             .owner("testuser-1")
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis);
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+    }
+
+    @Test(expected = UnauthorizedException.class)
+    @WithMockUser(username = "testuser-1")
+    public void checkAnalysisOwnershipUnownedPrivateDelete() {
+        Analysis analysis = new Analysis()
+            .owner("testuser-2")
+            .visibility(AnalysisVisibility.PRIVATE);
+
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE);
+    }
+
+    @Test(expected = UnauthorizedException.class)
+    @WithMockUser(username = "testuser-1")
+    public void checkAnalysisOwnershipUnownedPublicDelete() {
+        Analysis analysis = new Analysis()
+            .owner("testuser-2")
+            .visibility(AnalysisVisibility.PUBLIC);
+
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE);
+    }
+
+    @Test
+    @WithMockUser(username = "testuser-1")
+    public void checkAnalysisOwnershipOwnedDelete() {
+        Analysis analysis = new Analysis()
+            .owner("testuser-1")
+            .visibility(AnalysisVisibility.PRIVATE);
+
+        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE));
+    }
+
+    @Test(expected = UnauthorizedException.class)
+    @WithMockUser(username = "testuser-1")
+    public void checkAnalysisOwnershipUnownedPrivateUpdate() {
+        Analysis analysis = new Analysis()
+            .owner("testuser-2")
+            .visibility(AnalysisVisibility.PRIVATE);
+
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.UPDATE);
+    }
+
+    @Test
+    @WithMockUser(username = "testuser-1")
+    public void checkAnalysisOwnershipOwnedPrivateUpdate() {
+        Analysis analysis = new Analysis()
+            .owner("testuser-1")
+            .visibility(AnalysisVisibility.PRIVATE);
+
+        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.UPDATE);
     }
 }
