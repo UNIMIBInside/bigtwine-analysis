@@ -3,6 +3,8 @@ package it.unimib.disco.bigtwine.services.analysis.config;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.TwitterNeelOutputConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.TwitterNeelProcessedTweetProducerChannel;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -25,7 +27,9 @@ import org.springframework.messaging.support.GenericMessage;
 @EnableBinding(value = {
     Source.class,
     TwitterNeelOutputConsumerChannel.class,
-    TwitterNeelProcessedTweetProducerChannel.class
+    TwitterNeelProcessedTweetProducerChannel.class,
+    AnalysisStatusChangedConsumerChannel.class,
+    AnalysisStatusChangeRequestProducerChannel.class
 })
 public class MessagingConfiguration {
 

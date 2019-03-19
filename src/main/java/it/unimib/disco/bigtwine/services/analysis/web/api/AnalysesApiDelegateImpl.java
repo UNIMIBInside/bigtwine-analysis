@@ -35,6 +35,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public AnalysesApiDelegateImpl(NativeWebRequest request, AnalysisService analysisService) {
         this.request = request;
         this.analysisService = analysisService;
@@ -69,32 +70,22 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             AnalysisVisibility newVisibility = AnalysisMapper.INSTANCE.visibilityFromVisibilityEnum(visibility);
 
             analysis.setVisibility(newVisibility);
+
+            try {
+                analysis = analysisService.save(analysis);
+            } catch (InvalidAnalysisStatusException e) {
+                throw new BadRequestException(e.getMessage());
+            }
         }
 
-        AnalysisStatus oldStatus = analysis.getStatus();
-        AnalysisStatus newStatus = null;
         if (status != null) {
-            newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
+            AnalysisStatus newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
 
-            analysis.setStatus(newStatus);
-        }
-
-        try {
-            analysis = analysisService.save(analysis);
-        } catch (InvalidAnalysisStatusException e) {
-            throw new BadRequestException(e.getMessage());
-        }
-
-        if (newStatus != null) {
-            AnalysisStatusHistory statusHistory = new AnalysisStatusHistory()
-                .oldStatus(oldStatus)
-                .newStatus(newStatus)
-                .user(ownerId)
-                .message("User status update request")
-                .date(analysis.getUpdateDate())
-                .analysis(analysis);
-
-            this.analysisService.saveStatusHistory(statusHistory);
+            try {
+                this.analysisService.requestStatusChange(analysis, newStatus, true);
+            } catch (InvalidAnalysisStatusException e) {
+                throw new BadRequestException(e.getMessage());
+            }
         }
 
         AnalysisDTO updatedAnalysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);

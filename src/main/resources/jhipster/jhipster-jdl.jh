@@ -53,7 +53,7 @@ entity NeelProcessedTweet {
 }
 
 relationship ManyToOne {
-	AnalysisStatusHistory{analysis} to Analysis
-    NeelProcessedTweet{analysis} to Analysis
+	AnalysisStatusHistory{analysisId} to Analysis
+    NeelProcessedTweet{analysisId} to Analysis
 }
 

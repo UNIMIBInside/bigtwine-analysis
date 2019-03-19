@@ -1,20 +1,32 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisInputProvidedException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.*;
@@ -32,10 +44,17 @@ public class AnalysisService {
 
     private final AnalysisStatusValidator analysisStatusValidator;
 
-    public AnalysisService(AnalysisRepository analysisRepository, AnalysisStatusHistoryRepository analysisStatusHistoryRepository, AnalysisStatusValidator analysisStatusValidator) {
+    private final MessageChannel statusChangeRequestsChannel;
+
+    public AnalysisService(
+        AnalysisRepository analysisRepository,
+        AnalysisStatusHistoryRepository analysisStatusHistoryRepository,
+        AnalysisStatusValidator analysisStatusValidator,
+        AnalysisStatusChangeRequestProducerChannel channel) {
         this.analysisRepository = analysisRepository;
         this.analysisStatusHistoryRepository = analysisStatusHistoryRepository;
         this.analysisStatusValidator = analysisStatusValidator;
+        this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
     }
 
     /**
@@ -94,9 +113,9 @@ public class AnalysisService {
     }
 
     /**
-     * Save a analysis.
+     * Salva un analisi, registra l'eventuale cambio di stato e lo notifica con l'invio di un evento.
      *
-     * @param analysis the entity to save
+     * @param analysis L'analisis da salvare
      * @return the persisted entity
      * @throws InvalidAnalysisStatusException Lancia un errore se lo stato non è associabile all'analisi
      * @throws InvalidAnalysisInputProvidedException Lancia un errore se non è stato fornito un input valido
@@ -183,4 +202,58 @@ public class AnalysisService {
         this.analysisStatusHistoryRepository.save(statusHistory);
     }
 
+    public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {
+        if (analysis.getId() == null) {
+            throw new IllegalArgumentException("analysis hasn't an id");
+        }
+
+        if (!this.analysisStatusValidator.validate(analysis.getStatus(), newStatus)) {
+            throw new InvalidAnalysisStatusException(analysis.getStatus(), newStatus);
+        }
+
+        if (analysis.getStatus() == newStatus) {
+            return;
+        }
+
+        AnalysisStatusChangeRequestedEvent event = new AnalysisStatusChangeRequestedEvent();
+        event.setAnalysisId(analysis.getId());
+        event.setStatus(AnalysisStatusMapper.INSTANCE.analysisStatusEventEnumFromDomain(newStatus));
+        event.setUserRequested(userRequested);
+
+        Message<AnalysisStatusChangeRequestedEvent> message = MessageBuilder
+            .withPayload(event)
+            .build();
+
+        this.statusChangeRequestsChannel.send(message);
+    }
+
+    @StreamListener(AnalysisStatusChangedConsumerChannel.CHANNEL)
+    public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
+        Optional<Analysis> analysisOpt = this.findOne(event.getAnalysisId());
+
+        if(!analysisOpt.isPresent()) {
+            return;
+        }
+
+        Analysis analysis = analysisOpt.get();
+        AnalysisStatus oldStatus = analysis.getStatus();
+        AnalysisStatus newStatus = AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus());
+
+        AnalysisStatusHistory statusHistory = new AnalysisStatusHistory()
+            .oldStatus(oldStatus)
+            .newStatus(newStatus)
+            .date(Instant.now())
+            .user(event.isUserInitiated() ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
+            .message((event.isUserInitiated() ? "User" : "System") + " status change applied")
+            .analysis(analysis);
+
+        analysis.setStatus(newStatus);
+
+        try {
+            this.save(analysis);
+            this.saveStatusHistory(statusHistory);
+        }catch (ValidationException e) {
+            log.error("Cannot save status change}", e);
+        }
+    }
 }

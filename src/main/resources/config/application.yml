@@ -97,6 +97,11 @@ spring:
                 twitterNeelProcessedTweetsChannel:
                     destination: twitter-neel-processed-tweets
                     content-type: application/json
+                analysisStatusChangedChannel:
+                    destination: analysis-status-changes
+                analysisStatusChangeRequestsChannel:
+                    destination: analysis-status-change-requests
+                    content-type: application/json
 
 server:
     servlet:

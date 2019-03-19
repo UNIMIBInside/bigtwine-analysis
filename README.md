@@ -1,4 +1,4 @@
-# analysis
+# analysisId
 
 This application was generated using JHipster 5.7.2, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v5.7.2](https://www.jhipster.tech/documentation-archive/v5.7.2).
 
@@ -30,7 +30,7 @@ Refer to [Doing API-First development][] for more details.
 
 ## Building for production
 
-To optimize the analysis application for production, run:
+To optimize the analysisId application for production, run:
 
     ./gradlew -Pprod clean bootWar
 
@@ -56,7 +56,7 @@ Sonar is used to analyse code quality. You can start a local Sonar server (acces
 docker-compose -f src/main/docker/sonar.yml up -d
 ```
 
-Then, run a Sonar analysis:
+Then, run a Sonar analysisId:
 
 ```
 ./gradlew -Pprod clean test sonarqube

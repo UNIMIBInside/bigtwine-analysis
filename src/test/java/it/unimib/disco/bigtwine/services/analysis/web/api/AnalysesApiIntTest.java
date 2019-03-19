@@ -1,5 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
@@ -7,6 +9,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInp
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
@@ -21,7 +24,9 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.test.binder.MessageCollector;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +37,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -48,6 +54,13 @@ public class AnalysesApiIntTest {
     @Autowired
     private AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private MessageCollector messageCollector;
+
+    @Autowired
+    private AnalysisStatusChangeRequestProducerChannel statusChangeRequestsChannel;
+
     private MockMvc restApiMvc;
 
     @Before
@@ -57,6 +70,13 @@ public class AnalysesApiIntTest {
         AnalysesApiController controller = new AnalysesApiController(delegate);
         this.restApiMvc = MockMvcBuilders.standaloneSetup(controller)
             .build();
+    }
+
+    @Before
+    public void cleanMessageQueue() {
+        messageCollector
+            .forChannel(statusChangeRequestsChannel.analysisStatusChangeRequestsChannel())
+            .clear();
     }
 
     private Analysis createAnalysis() {
@@ -232,6 +252,7 @@ public class AnalysesApiIntTest {
         this.restApiMvc.perform(delete("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk());
 
+        AnalysisStatus statusBeforeDelete = analysis.getStatus();
         int countBeforeDelete = this.analysisRepository.findAll().size();
 
         List<Analysis> analysisList = this.analysisRepository.findAll();
@@ -240,7 +261,18 @@ public class AnalysesApiIntTest {
 
         Analysis testAnalysis = analysisList.get(countBeforeDelete - 1);
 
-        assertThat(testAnalysis.getStatus()).isEqualTo(AnalysisStatus.CANCELLED);
+        assertThat(testAnalysis.getStatus()).isEqualTo(statusBeforeDelete);
+        Message<?> received = messageCollector
+            .forChannel(statusChangeRequestsChannel.analysisStatusChangeRequestsChannel())
+            .poll();
+        assertNotNull(received);
+        AnalysisStatusChangeRequestedEvent event = new ObjectMapper().readValue((String)received.getPayload(),
+            AnalysisStatusChangeRequestedEvent.class);
+
+        assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
+        assertThat(event.isUserRequested()).isEqualTo(true);
+        assertThat(event.getStatus())
+            .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.CANCELLED);
     }
 
     @Test
@@ -264,6 +296,7 @@ public class AnalysesApiIntTest {
 
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .status(AnalysisStatusEnum.STARTED);
+        AnalysisStatus statusBeforeUpdate = analysis.getStatus();
 
         this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -273,8 +306,18 @@ public class AnalysesApiIntTest {
         Analysis testAnalysis = this.analysisRepository.findById(analysis.getId()).orElse(null);
 
         assertThat(testAnalysis).isNotNull();
+        assertThat(testAnalysis.getStatus()).isEqualTo(statusBeforeUpdate);
+        Message<?> received = messageCollector
+            .forChannel(statusChangeRequestsChannel.analysisStatusChangeRequestsChannel())
+            .poll();
+        assertNotNull(received);
+        AnalysisStatusChangeRequestedEvent event = new ObjectMapper().readValue((String)received.getPayload(),
+            AnalysisStatusChangeRequestedEvent.class);
 
-        assertThat(testAnalysis.getStatus()).isEqualTo(AnalysisStatus.STARTED);
+        assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
+        assertThat(event.isUserRequested()).isEqualTo(true);
+        assertThat(event.getStatus())
+            .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.STARTED);
     }
 
     @Test
@@ -339,12 +382,6 @@ public class AnalysesApiIntTest {
         List<AnalysisStatusHistory> statusHistory = this.analysisStatusHistoryRepository
             .findByAnalysisId(testAnalysis.getId());
 
-        assertThat(statusHistory).hasSize(1);
-
-        AnalysisStatusHistory lastStatusHistory = statusHistory.get(statusHistory.size() - 1);
-
-        assertThat(lastStatusHistory.getOldStatus()).isEqualTo(AnalysisStatus.READY);
-        assertThat(lastStatusHistory.getNewStatus()).isEqualTo(AnalysisStatus.STARTED);
-        assertThat(lastStatusHistory.getUser()).isEqualTo("testuser-1");
+        assertThat(statusHistory).hasSize(0);
     }
 }
