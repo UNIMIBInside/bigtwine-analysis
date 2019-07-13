@@ -130,6 +130,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
 }
 
@@ -208,7 +209,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-library"
     testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
-    compile project(':commons')
+    compile 'org.bitbucket.bigtwine:commons:master-SNAPSHOT'
 }
 
 task cleanResources(type: Delete) {
