@@ -227,7 +227,7 @@ public class AnalysisService {
 
         AnalysisStatusChangeRequestedEvent event = new AnalysisStatusChangeRequestedEvent();
         event.setAnalysisId(analysis.getId());
-        event.setStatus(AnalysisStatusMapper.INSTANCE.analysisStatusEventEnumFromDomain(newStatus));
+        event.setDesiredStatus(AnalysisStatusMapper.INSTANCE.analysisStatusEventEnumFromDomain(newStatus));
         event.setUserRequested(userRequested);
 
         Message<AnalysisStatusChangeRequestedEvent> message = MessageBuilder
@@ -247,23 +247,33 @@ public class AnalysisService {
 
         Analysis analysis = analysisOpt.get();
         AnalysisStatus oldStatus = analysis.getStatus();
-        AnalysisStatus newStatus = AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus());
+        AnalysisStatus newStatus;
+
+        if (event.getStatus() != null) {
+            newStatus = AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus());
+        }else {
+            // Status unchanged
+            newStatus = oldStatus;
+        }
+
+        if (newStatus != oldStatus) {
+            analysis.setStatus(newStatus);
+
+            try {
+                analysis = this.save(analysis);
+            } catch (ValidationException e) {
+                log.error("Cannot save status change", e);
+            }
+        }
 
         AnalysisStatusHistory statusHistory = new AnalysisStatusHistory()
             .oldStatus(oldStatus)
             .newStatus(newStatus)
             .date(Instant.now())
             .user(event.isUserInitiated() ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
-            .message((event.isUserInitiated() ? "User" : "System") + " status change applied")
+            .message(event.getMessage())
             .analysis(analysis);
 
-        analysis.setStatus(newStatus);
-
-        try {
-            this.save(analysis);
-            this.saveStatusHistory(statusHistory);
-        }catch (ValidationException e) {
-            log.error("Cannot save status change}", e);
-        }
+        this.saveStatusHistory(statusHistory);
     }
 }
