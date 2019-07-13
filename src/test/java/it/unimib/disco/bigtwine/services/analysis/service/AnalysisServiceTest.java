@@ -91,7 +91,7 @@ public class AnalysisServiceTest {
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
         assertThat(event.isUserRequested()).isEqualTo(false);
-        assertThat(event.getStatus())
+        assertThat(event.getDesiredStatus())
             .isEqualTo(AnalysisStatusEnum.STARTED);
     }
 

@@ -271,7 +271,7 @@ public class AnalysesApiIntTest {
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
         assertThat(event.isUserRequested()).isEqualTo(true);
-        assertThat(event.getStatus())
+        assertThat(event.getDesiredStatus())
             .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.CANCELLED);
     }
 
@@ -316,7 +316,7 @@ public class AnalysesApiIntTest {
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
         assertThat(event.isUserRequested()).isEqualTo(true);
-        assertThat(event.getStatus())
+        assertThat(event.getDesiredStatus())
             .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.STARTED);
     }
 
