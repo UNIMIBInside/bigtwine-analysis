@@ -16,7 +16,7 @@ public final class AnalysisUtil {
     }
 
     public static Optional<String> getCurrentUserIdentifier() {
-        return SecurityUtils.getCurrentUserLogin();
+        return SecurityUtils.getCurrentUserId();
     }
 
     /**

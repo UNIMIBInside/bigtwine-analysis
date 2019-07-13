@@ -4,6 +4,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -28,6 +29,29 @@ public final class SecurityUtils {
                     return springSecurityUser.getUsername();
                 } else if (authentication.getPrincipal() instanceof String) {
                     return (String) authentication.getPrincipal();
+                }
+                return null;
+            });
+    }
+
+    /**
+     * Get the id of the current user
+     *
+     * @return the id of the current user
+     */
+    public static Optional<String> getCurrentUserId() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(securityContext.getAuthentication())
+            .map(authentication -> {
+                if (authentication.getDetails() instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<Object, Object> details = (Map<Object, Object>) authentication.getDetails();
+                    Object userId = details.getOrDefault(AuthDetailsConstants.USER_ID, null);
+                    if (userId != null) {
+                        return userId.toString();
+                    }else {
+                        return null;
+                    }
                 }
                 return null;
             });
