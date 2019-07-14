@@ -4,6 +4,8 @@ import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedE
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
+import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
@@ -12,7 +14,7 @@ import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
-import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisInputProvidedException;
+import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,21 +87,37 @@ public class AnalysisService {
      */
     private void validate(@NotNull Analysis analysis, Analysis oldAnalysis) {
         // Validate input
-        switch (analysis.getInputType()) {
-            case QUERY:
-                if (analysis.getQuery() == null) {
-                    throw new InvalidAnalysisInputProvidedException("Query not provided");
-                }
-                break;
-            case DOCUMENT:
-                if (analysis.getDocumentId() == null) {
-                    throw new InvalidAnalysisInputProvidedException("Document id not provided");
-                }
-                break;
+        if (analysis.getInput() == null) {
+            throw new InvalidAnalysisInputProvidedException("Input not provided");
         }
 
-        if (analysis.getQuery() != null && analysis.getDocumentId() != null) {
-            throw new InvalidAnalysisInputProvidedException("Both query and document id provided");
+        switch (analysis.getInputType()) {
+            case QUERY:
+                if (!(analysis.getInput() instanceof QueryAnalysisInput)) {
+                    throw new InvalidAnalysisInputProvidedException("Query input not provided");
+                }
+
+                List<String> tokens = ((QueryAnalysisInput)analysis.getInput()).getTokens();
+
+                if (tokens == null || tokens.isEmpty()) {
+                    throw new InvalidAnalysisInputProvidedException("Invalid query input, no tokens provided");
+                }
+
+                if (((QueryAnalysisInput)analysis.getInput()).getJoinOperator() == null) {
+                    throw new InvalidAnalysisInputProvidedException("Invalid query input, no join operator provided");
+                }
+
+                break;
+            case DATASET:
+                if (!(analysis.getInput() instanceof DatasetAnalysisInput)) {
+                    throw new InvalidAnalysisInputProvidedException("Dataset input not provided");
+                }
+
+                if (((DatasetAnalysisInput)analysis.getInput()).getDocumentId() == null) {
+                    throw new InvalidAnalysisInputProvidedException("Invalid document input, no document id provided");
+                }
+
+                break;
         }
 
         // Validate status change

@@ -3,8 +3,13 @@ package it.unimib.disco.bigtwine.services.analysis.web.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
+import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig;
+import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUser;
+import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityContextFactory;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
+import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
@@ -13,10 +18,7 @@ import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChange
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
-import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisDTO;
-import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisStatusEnum;
-import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisUpdatableDTO;
-import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisVisibilityEnum;
+import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,13 +29,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.test.binder.MessageCollector;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +44,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = AnalysisApp.class)
+@SpringBootTest(classes = {
+    AnalysisApp.class,
+    SpringSecurityWebAuxTestConfig.class,
+    WithMockCustomUserSecurityContextFactory.class
+})
 public class AnalysesApiIntTest {
 
     @Autowired
@@ -80,6 +86,10 @@ public class AnalysesApiIntTest {
     }
 
     private Analysis createAnalysis() {
+        AnalysisInput input = new QueryAnalysisInput()
+            .tokens(Arrays.asList("query", "di", "prova"))
+            .joinOperator(QueryAnalysisInput.JoinOperator.AND);
+
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
             .inputType(AnalysisInputType.QUERY)
@@ -88,18 +98,22 @@ public class AnalysesApiIntTest {
             .visibility(AnalysisVisibility.PUBLIC)
             .status(AnalysisStatus.READY)
             .owner("testuser-1")
-            .query("prova");
+            .input(input);
     }
 
     private AnalysisDTO createAnalysisDTO() {
+        AnalysisInputDTO input = new QueryAnalysisInputDTO()
+            .tokens(Arrays.asList("query", "di", "prova"))
+            .joinOperator(QueryAnalysisInputDTO.JoinOperatorEnum.AND);
+
         return new AnalysisDTO()
-            .type(AnalysisDTO.TypeEnum.TWITTER_NEEL)
-            .inputType(AnalysisDTO.InputTypeEnum.QUERY)
-            .query("prova");
+            .type(AnalysisTypeEnum.TWITTER_NEEL)
+            .inputType(AnalysisInputTypeEnum.QUERY)
+            .input(input);
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysis() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO();
 
@@ -116,9 +130,9 @@ public class AnalysesApiIntTest {
 
         Analysis testAnalysis = analysisList.get(analysisList.size() - 1);
         assertThat(testAnalysis.getOwner()).isEqualTo("testuser-1");
-        assertThat(testAnalysis.getQuery()).isEqualTo("prova");
         assertThat(testAnalysis.getType()).isEqualTo(AnalysisType.TWITTER_NEEL);
         assertThat(testAnalysis.getInputType()).isEqualTo(AnalysisInputType.QUERY);
+        assertThat(((QueryAnalysisInput)testAnalysis.getInput()).getTokens()).isEqualTo(Arrays.asList("query", "di", "prova"));
         assertThat(testAnalysis.getStatus()).isEqualTo(Analysis.DEFAULT_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(Analysis.DEFAULT_VISIBILITY);
         assertThat(testAnalysis.getCreateDate()).isNotNull();
@@ -136,12 +150,11 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysisInvalidInputDoc() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisDTO.InputTypeEnum.DOCUMENT)
-            .query("prova")
-            .documentId(null);
+            .inputType(AnalysisInputTypeEnum.DATASET)
+            .input(new QueryAnalysisInputDTO());
 
         this.restApiMvc.perform(post("/api/public/analyses")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -150,12 +163,11 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysisInvalidInputQuery() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisDTO.InputTypeEnum.QUERY)
-            .query(null)
-            .documentId("1");
+            .inputType(AnalysisInputTypeEnum.QUERY)
+            .input(new DatasetAnalysisInputDTO());
 
         this.restApiMvc.perform(post("/api/public/analyses")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -164,12 +176,11 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
-    public void testCreateAnalysisInvalidInputBoth() throws Exception {
+    @WithMockCustomUser(userId = "testuser-1")
+    public void testCreateAnalysisNullInput() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisDTO.InputTypeEnum.QUERY)
-            .query(null)
-            .documentId(null);
+            .inputType(AnalysisInputTypeEnum.QUERY)
+            .input(null);
 
         this.restApiMvc.perform(post("/api/public/analyses")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -178,7 +189,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testGetPublicAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PUBLIC)
@@ -192,7 +203,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testGetOwnedPrivateAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
@@ -206,7 +217,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testGetUnonwnedPrivateAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
@@ -218,7 +229,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testGetAnalyses() throws Exception {
         this.analysisRepository.deleteAll();
         Analysis a1 = this.createAnalysis()
@@ -243,7 +254,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testDeleteOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-1");
@@ -276,7 +287,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testDeleteUnownedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-2");
@@ -287,7 +298,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateStatusOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-1")
@@ -321,7 +332,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateVisibilityOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-1")
@@ -344,7 +355,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateUnownedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-2")
@@ -361,7 +372,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void testCreateStatusHistory() throws Exception {
         Analysis analysis = this.createAnalysis()
             .owner("testuser-1")

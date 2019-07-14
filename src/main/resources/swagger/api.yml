@@ -192,38 +192,71 @@ components:
   schemas:
     AnalysisStatusEnum:
       type: string
-      default: READY
+      default: ready
       enum:
-        - READY
-        - STARTED
-        - STOPPED
-        - COMPLETED
-        - CANCELLED
-        - FAILED
+        - ready
+        - started
+        - stopped
+        - completed
+        - cancelled
+        - failed
     AnalysisVisibilityEnum:
       type: string
-      default: PUBLIC
+      default: public
       enum:
-        - PRIVATE
-        - PUBLIC
+        - private
+        - public
+    AnalysisTypeEnum:
+      type: string
+      enum:
+        - twitter-neel
+    AnalysisInputTypeEnum:
+      type: string
+      enum:
+        - query
+        - dataset
+    AnalysisInputDTO:
+      type: object
+    QueryAnalysisInputDTO:
+      allOf:
+        - $ref: '#/components/schemas/AnalysisInputDTO'
+        - type: object
+          required:
+            - tokens
+            - operator
+          properties:
+            tokens:
+              type: array
+              items:
+                type: string
+            joinOperator:
+              type: string
+              enum:
+                - and
+                - or
+    DatasetAnalysisInputDTO:
+      allOf:
+        - $ref: '#/components/schemas/AnalysisInputDTO'
+        - type: object
+          required:
+            - documentId
+          properties:
+            documentId:
+              type: string
     AnalysisDTO:
       type: object
       required:
         - type
         - inputType
+        - input
       properties:
         id:
           type: string
           readOnly: true
         type:
-          type: string
-          enum:
-            - TWITTER_NEEL
+          $ref: '#/components/schemas/AnalysisTypeEnum'
         inputType:
-          type: string
-          enum:
-            - QUERY
-            - DOCUMENT
+          $ref: '#/components/schemas/AnalysisInputTypeEnum'
         owner:
           type: string
           readOnly: true
@@ -231,12 +264,16 @@ components:
           $ref: '#/components/schemas/AnalysisStatusEnum'
         visibility:
           $ref: '#/components/schemas/AnalysisVisibilityEnum'
-        query:
-          type: string
-          nullable: true
-        documentId:
-          type: string
-          nullable: true
+        input:
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/QueryAnalysisInputDTO'
+            - $ref: '#/components/schemas/DatasetAnalysisInputDTO'
+          discriminator:
+            propertyName: inputType
+            mapping:
+              query: '#/components/schemas/QueryAnalysisInputDTO'
+              dataset: '#/components/schemas/DatasetAnalysisInputDTO'
         createDate:
           type: string
           format: date-time

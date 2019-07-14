@@ -6,7 +6,9 @@ import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
+import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,6 +52,10 @@ public class AnalysisResultsApiIntTest {
 
 
     private Analysis createAnalysis() {
+        AnalysisInput input = new QueryAnalysisInput()
+            .tokens(Arrays.asList("query", "di", "prova"))
+            .joinOperator(QueryAnalysisInput.JoinOperator.AND);
+
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
             .inputType(AnalysisInputType.QUERY)
@@ -57,7 +64,7 @@ public class AnalysisResultsApiIntTest {
             .visibility(AnalysisVisibility.PUBLIC)
             .status(AnalysisStatus.READY)
             .owner("testuser-1")
-            .query("prova");
+            .input(input);
     }
 
     private NeelProcessedTweet createProcessedTweet() {

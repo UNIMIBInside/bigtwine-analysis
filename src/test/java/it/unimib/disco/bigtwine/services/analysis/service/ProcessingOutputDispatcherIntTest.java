@@ -8,6 +8,7 @@ import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
@@ -73,8 +74,8 @@ public class ProcessingOutputDispatcherIntTest {
         this.analysis = this.analysisService.save(
             new Analysis()
                 .type(AnalysisType.TWITTER_NEEL)
-                .inputType(AnalysisInputType.DOCUMENT)
-                .documentId("testdoc-1")
+                .inputType(AnalysisInputType.DATASET)
+                .input(new DatasetAnalysisInput().documentId("testdoc-1"))
                 .owner("testuser-1")
         );
     }

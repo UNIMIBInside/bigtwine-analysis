@@ -60,11 +60,8 @@ public class Analysis implements Serializable {
     @Field("update_date")
     private Instant updateDate;
 
-    @Field("query")
-    private String query;
-
-    @Field("document_id")
-    private String documentId;
+    @Field("input")
+    private AnalysisInput input;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
@@ -166,31 +163,19 @@ public class Analysis implements Serializable {
         this.updateDate = updateDate;
     }
 
-    public String getQuery() {
-        return query;
+    public AnalysisInput getInput() {
+        return input;
     }
 
-    public Analysis query(String query) {
-        this.query = query;
+    public Analysis input(AnalysisInput input) {
+        this.setInput(input);
         return this;
     }
 
-    public void setQuery(String query) {
-        this.query = query;
+    public void setInput(AnalysisInput input) {
+        this.input = input;
     }
 
-    public String getDocumentId() {
-        return documentId;
-    }
-
-    public Analysis documentId(String documentId) {
-        this.documentId = documentId;
-        return this;
-    }
-
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
-    }
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
@@ -224,8 +209,7 @@ public class Analysis implements Serializable {
             ", owner='" + getOwner() + "'" +
             ", createDate='" + getCreateDate() + "'" +
             ", updateDate='" + getUpdateDate() + "'" +
-            ", query='" + getQuery() + "'" +
-            ", documentId='" + getDocumentId() + "'" +
+            ", input='" + getInput() + "'" +
             "}";
     }
 }
