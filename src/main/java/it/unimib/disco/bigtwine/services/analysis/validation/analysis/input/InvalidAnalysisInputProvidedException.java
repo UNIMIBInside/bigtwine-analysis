@@ -1,4 +1,4 @@
-package it.unimib.disco.bigtwine.services.analysis.validation;
+package it.unimib.disco.bigtwine.services.analysis.validation.analysis.input;
 
 import javax.validation.ValidationException;
 

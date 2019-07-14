@@ -14,6 +14,7 @@ import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
+import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class AnalysisService {
     private final AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
     private final AnalysisStatusValidator analysisStatusValidator;
+    private final AnalysisInputValidatorLocator inputValidatorLocator;
 
     private final MessageChannel statusChangeRequestsChannel;
 
@@ -52,10 +54,12 @@ public class AnalysisService {
         AnalysisRepository analysisRepository,
         AnalysisStatusHistoryRepository analysisStatusHistoryRepository,
         AnalysisStatusValidator analysisStatusValidator,
+        AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisStatusChangeRequestProducerChannel channel) {
         this.analysisRepository = analysisRepository;
         this.analysisStatusHistoryRepository = analysisStatusHistoryRepository;
         this.analysisStatusValidator = analysisStatusValidator;
+        this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
     }
 
@@ -87,38 +91,13 @@ public class AnalysisService {
      */
     private void validate(@NotNull Analysis analysis, Analysis oldAnalysis) {
         // Validate input
-        if (analysis.getInput() == null) {
+        if (analysis.getInputType() == null || analysis.getInput() == null) {
             throw new InvalidAnalysisInputProvidedException("Input not provided");
         }
 
-        switch (analysis.getInputType()) {
-            case QUERY:
-                if (!(analysis.getInput() instanceof QueryAnalysisInput)) {
-                    throw new InvalidAnalysisInputProvidedException("Query input not provided");
-                }
-
-                List<String> tokens = ((QueryAnalysisInput)analysis.getInput()).getTokens();
-
-                if (tokens == null || tokens.isEmpty()) {
-                    throw new InvalidAnalysisInputProvidedException("Invalid query input, no tokens provided");
-                }
-
-                if (((QueryAnalysisInput)analysis.getInput()).getJoinOperator() == null) {
-                    throw new InvalidAnalysisInputProvidedException("Invalid query input, no join operator provided");
-                }
-
-                break;
-            case DATASET:
-                if (!(analysis.getInput() instanceof DatasetAnalysisInput)) {
-                    throw new InvalidAnalysisInputProvidedException("Dataset input not provided");
-                }
-
-                if (((DatasetAnalysisInput)analysis.getInput()).getDocumentId() == null) {
-                    throw new InvalidAnalysisInputProvidedException("Invalid document input, no document id provided");
-                }
-
-                break;
-        }
+        this.inputValidatorLocator
+            .getValidator(analysis.getInputType())
+            .validate(analysis.getInput());
 
         // Validate status change
         if (oldAnalysis != null) {
