@@ -154,6 +154,15 @@ public class AnalysisService {
     }
 
     /**
+     * Return the total number of analysis in db
+     *
+     * @return Total number of analysis in db
+     */
+    public Long countAll() {
+        return this.analysisRepository.count();
+    }
+
+    /**
      * Get all the analyses of an user.
      *
      * @return the list of entities
@@ -171,6 +180,16 @@ public class AnalysisService {
     public Page<Analysis> findByOwner(String owner, Pageable page) {
         log.debug("Request to get all Analyses of an user");
         return analysisRepository.findByOwner(owner, page);
+    }
+
+    /**
+     * Return the number of analyses owned by indicated user
+     *
+     * @param owner The owner of the analyses
+     * @return the number of analyses owned by indicated user
+     */
+    public Long countByOwner(String owner) {
+        return analysisRepository.countByOwner(owner);
     }
 
 

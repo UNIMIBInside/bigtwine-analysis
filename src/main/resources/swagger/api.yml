@@ -41,9 +41,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AnalysisDTO'
+                $ref: '#/components/schemas/PagedAnalyses'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         default:
@@ -190,6 +188,18 @@ paths:
         - 'Analysis'
 components:
   schemas:
+    PagedResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int64
+        pageSize:
+          type: integer
+        page:
+          type: integer
+        count:
+          type: integer
     AnalysisStatusEnum:
       type: string
       default: ready
@@ -304,21 +314,18 @@ components:
         date:
           type: string
           format: date-time
-    PagedResult:
-      type: object
-      properties:
-        totalCount:
-          type: integer
-          format: int64
-        pageSize:
-          type: integer
-        page:
-          type: integer
-        count:
-          type: integer
+    PagedAnalyses:
+      allOf:
+        - $ref: '#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            objects:
+              type: array
+              items:
+                $ref: '#/components/schemas/AnalysisDTO'
     TwitterNeelAnalysisResultDTO:
       allOf:
-        - $ref: '#/components/schemas/PagedResult'
+        - $ref: '#/components/schemas/PagedResponse'
         - type: object
           properties:
             objects:

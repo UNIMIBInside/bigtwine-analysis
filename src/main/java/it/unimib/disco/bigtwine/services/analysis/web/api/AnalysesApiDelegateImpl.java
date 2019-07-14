@@ -133,7 +133,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<AnalysisDTO>> listAnalysesV1(Integer pageNum, Integer pageSize) {
+    public ResponseEntity<PagedAnalyses> listAnalysesV1(Integer pageNum, Integer pageSize) {
         String ownerId = this.getCurrentUserIdentifier().orElse(null);
 
         if (ownerId == null) {
@@ -158,17 +158,27 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
         Pageable page = PageRequest.of(pageNum, pageSize);
         List<Analysis> analyses;
+        long totalCount;
 
         if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
             analyses = this.analysisService.findAll(page).getContent();
+            totalCount = this.analysisService.countAll();
         }else {
             analyses = this.analysisService.findByOwner(ownerId, page).getContent();
+            totalCount = this.analysisService.countByOwner(ownerId);
         }
 
         List<AnalysisDTO> analysisDTOs = AnalysisMapper.INSTANCE.analysisDtosFromAnalyses(analyses);
+        PagedAnalyses responseBody = new PagedAnalyses()
+            .objects(analysisDTOs);
 
+        responseBody
+            .page(pageNum)
+            .pageSize(pageSize)
+            .count(analysisDTOs.size())
+            .totalCount(totalCount);
 
-        return new ResponseEntity<>(analysisDTOs, HttpStatus.OK);
+        return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
 
     @Override
