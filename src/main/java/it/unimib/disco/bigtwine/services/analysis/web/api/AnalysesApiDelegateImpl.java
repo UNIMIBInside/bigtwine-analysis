@@ -16,6 +16,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -157,26 +158,24 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         }
 
         Pageable page = PageRequest.of(pageNum, pageSize);
-        List<Analysis> analyses;
-        long totalCount;
+        Page<Analysis> pageObj;
 
         if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
-            analyses = this.analysisService.findAll(page).getContent();
-            totalCount = this.analysisService.countAll();
+            pageObj = this.analysisService.findAll(page);
         }else {
-            analyses = this.analysisService.findByOwner(ownerId, page).getContent();
-            totalCount = this.analysisService.countByOwner(ownerId);
+            pageObj = this.analysisService.findByOwner(ownerId, page);
         }
 
+        List<Analysis> analyses = pageObj.getContent();
         List<AnalysisDTO> analysisDTOs = AnalysisMapper.INSTANCE.analysisDtosFromAnalyses(analyses);
-        PagedAnalyses responseBody = new PagedAnalyses()
-            .objects(analysisDTOs);
+        PagedAnalyses responseBody = new PagedAnalyses();
 
         responseBody
-            .page(pageNum)
-            .pageSize(pageSize)
-            .count(analysisDTOs.size())
-            .totalCount(totalCount);
+            .objects(analysisDTOs)
+            .page(pageObj.getPageable().getPageNumber())
+            .pageSize(pageObj.getPageable().getPageSize())
+            .count(pageObj.getNumberOfElements())
+            .totalCount(pageObj.getTotalElements());
 
         return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }

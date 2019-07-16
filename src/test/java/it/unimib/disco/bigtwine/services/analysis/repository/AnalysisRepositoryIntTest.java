@@ -33,19 +33,22 @@ public class AnalysisRepositoryIntTest {
 
     @Before
     public void setUp() throws Exception {
+        this.analysisRepository.deleteAll();
+
         for (int i = 1; i <= 3; ++i) {
             AnalysisInput input = new QueryAnalysisInput()
                 .tokens(Arrays.asList("query", "di", "prova", "" + i))
                 .joinOperator(QueryAnalysisInput.JoinOperator.AND);
 
             Analysis a = new Analysis()
-                .owner("user-1")
+                .owner("user-" + i)
                 .status(AnalysisStatus.READY)
                 .type(AnalysisType.TWITTER_NEEL)
                 .inputType(AnalysisInputType.QUERY)
                 .visibility(AnalysisVisibility.PUBLIC)
                 .input(input)
-                .createDate(Instant.now());
+                .createDate(Instant.now())
+                .updateDate(Instant.now());
 
             this.analysisRepository.save(a);
         }
@@ -58,7 +61,7 @@ public class AnalysisRepositoryIntTest {
         assertNotNull(analyses);
         assertEquals(1, analyses.size());
 
-        analyses = this.analysisRepository.findByOwner("user-2");
+        analyses = this.analysisRepository.findByOwner("user-non-esistente");
 
         assertNotNull(analyses);
         assertEquals(0, analyses.size());

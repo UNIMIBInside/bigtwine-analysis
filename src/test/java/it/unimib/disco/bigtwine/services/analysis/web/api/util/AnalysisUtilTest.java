@@ -1,6 +1,9 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api.util;
 
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
+import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig;
+import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUser;
+import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityContextFactory;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
@@ -18,11 +21,15 @@ import static org.junit.Assert.*;
  * @see AnalysisUtil
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = AnalysisApp.class)
+@SpringBootTest(classes = {
+    AnalysisApp.class,
+    SpringSecurityWebAuxTestConfig.class,
+    WithMockCustomUserSecurityContextFactory.class
+})
 public class AnalysisUtilTest {
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipOwnedPrivate() {
         Analysis analysis = new Analysis()
             .owner("testuser-1")
@@ -32,7 +39,7 @@ public class AnalysisUtilTest {
     }
 
     @Test(expected = UnauthorizedException.class)
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipUnownedPrivate() {
         Analysis analysis = new Analysis()
             .owner("testuser-2")
@@ -42,7 +49,7 @@ public class AnalysisUtilTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipOwnedPublic() {
         Analysis analysis = new Analysis()
             .owner("testuser-1")
@@ -52,7 +59,7 @@ public class AnalysisUtilTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipUnownedPublic() {
         Analysis analysis = new Analysis()
             .owner("testuser-2")
@@ -80,7 +87,7 @@ public class AnalysisUtilTest {
     }
 
     @Test(expected = UnauthorizedException.class)
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipUnownedPrivateDelete() {
         Analysis analysis = new Analysis()
             .owner("testuser-2")
@@ -90,7 +97,7 @@ public class AnalysisUtilTest {
     }
 
     @Test(expected = UnauthorizedException.class)
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipUnownedPublicDelete() {
         Analysis analysis = new Analysis()
             .owner("testuser-2")
@@ -100,7 +107,7 @@ public class AnalysisUtilTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipOwnedDelete() {
         Analysis analysis = new Analysis()
             .owner("testuser-1")
@@ -110,7 +117,7 @@ public class AnalysisUtilTest {
     }
 
     @Test(expected = UnauthorizedException.class)
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipUnownedPrivateUpdate() {
         Analysis analysis = new Analysis()
             .owner("testuser-2")
@@ -120,7 +127,7 @@ public class AnalysisUtilTest {
     }
 
     @Test
-    @WithMockUser(username = "testuser-1")
+    @WithMockCustomUser(userId = "testuser-1")
     public void checkAnalysisOwnershipOwnedPrivateUpdate() {
         Analysis analysis = new Analysis()
             .owner("testuser-1")

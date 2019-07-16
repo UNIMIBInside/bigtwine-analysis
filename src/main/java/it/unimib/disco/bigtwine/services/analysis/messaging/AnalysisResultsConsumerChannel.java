@@ -3,10 +3,10 @@ package it.unimib.disco.bigtwine.services.analysis.messaging;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.messaging.SubscribableChannel;
 
-public interface TwitterNeelOutputConsumerChannel {
+public interface AnalysisResultsConsumerChannel {
 
-    String CHANNEL = "twitterNeelOutputChannel";
+    String CHANNEL = "analysisResultsChannel";
 
     @Input
-    SubscribableChannel twitterNeelOutputChannel();
+    SubscribableChannel analysisResultsChannel();
 }

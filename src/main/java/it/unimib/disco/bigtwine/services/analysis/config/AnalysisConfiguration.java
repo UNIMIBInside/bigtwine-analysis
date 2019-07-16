@@ -1,9 +1,12 @@
 package it.unimib.disco.bigtwine.services.analysis.config;
 
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
+import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
+import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPayloadMapperLocator;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.NeelProcessedTweetMapper;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.TwitterNeelAnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusStaticValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
@@ -28,5 +31,21 @@ public class AnalysisConfiguration {
         registry.registerInputValidator(new DatasetAnalysisInputValidator(), AnalysisInputType.DATASET);
 
         return registry;
+    }
+
+    @Bean
+    public AnalysisResultPayloadMapperLocator analysisResultPayloadMapperLocator() {
+        AnalysisResultPayloadMapperLocator locator = new AnalysisResultPayloadMapperLocator();
+        locator.registerMapper(NeelProcessedTweetDTO.class, NeelProcessedTweetMapper.INSTANCE);
+
+        return locator;
+    }
+
+    @Bean
+    public AnalysisResultMapperLocator analysisResultMapperLocator() {
+        AnalysisResultMapperLocator locator = new AnalysisResultMapperLocator();
+        locator.registerMapper(NeelProcessedTweet.class, TwitterNeelAnalysisResultMapper.INSTANCE);
+
+        return locator;
     }
 }

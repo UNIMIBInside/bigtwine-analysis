@@ -1,5 +1,6 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
+import it.unimib.disco.bigtwine.services.analysis.config.Constants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,7 +22,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 /**
  * A Analysis.
  */
-@Document(collection = "analysis")
+@Document(collection = Constants.ANALYSIS_DB_COLLECTION)
 public class Analysis implements Serializable {
 
     private static final long serialVersionUID = 1L;

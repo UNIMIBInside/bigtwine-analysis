@@ -244,13 +244,16 @@ public class AnalysesApiIntTest {
         a1 = this.analysisRepository.save(a1);
         this.analysisRepository.save(a2);
         a3 = this.analysisRepository.save(a3);
+        List<Analysis> all = this.analysisRepository.findAll();
 
         this.restApiMvc.perform(get("/api/public/analyses"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].id").value(a1.getId()))
-            .andExpect(jsonPath("$[1].id").value(a3.getId()));
+            .andExpect(jsonPath("$.totalCount").value(2))
+            .andExpect(jsonPath("$.count").value(2))
+            .andExpect(jsonPath("$.objects.length()").value(2))
+            .andExpect(jsonPath("$.objects[0].id").value(a1.getId()))
+            .andExpect(jsonPath("$.objects[1].id").value(a3.getId()));
     }
 
     @Test

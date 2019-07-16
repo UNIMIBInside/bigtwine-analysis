@@ -92,10 +92,10 @@ spring:
     cloud:
         stream:
             bindings:
-                twitterNeelOutputChannel:
-                    destination: twitter-neel-output
-                twitterNeelProcessedTweetsChannel:
-                    destination: twitter-neel-processed-tweets
+                analysisResultsChannel:
+                    destination: analysis-results
+                analysisResultsForwardedChannel:
+                    destination: analysis-results-forwarded
                     content-type: application/json
                 analysisStatusChangedChannel:
                     destination: analysis-status-changes

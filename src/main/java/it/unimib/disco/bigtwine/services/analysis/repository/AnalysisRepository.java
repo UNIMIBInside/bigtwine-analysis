@@ -17,4 +17,5 @@ import java.util.List;
 public interface AnalysisRepository extends MongoRepository<Analysis, String> {
     List<Analysis> findByOwner(String owner);
     Page<Analysis> findByOwner(String owner, Pageable page);
+    long countByOwner(String owner);
 }

@@ -1,20 +1,21 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
-import it.unimib.disco.bigtwine.commons.messaging.NeelTweetProcessedEvent;
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
 import it.unimib.disco.bigtwine.commons.models.LinkedEntity;
 import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
 import it.unimib.disco.bigtwine.commons.models.TwitterUser;
+import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
-import it.unimib.disco.bigtwine.services.analysis.messaging.TwitterNeelOutputConsumerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.TwitterNeelProcessedTweetProducerChannel;
-import it.unimib.disco.bigtwine.services.analysis.repository.NeelProcessedTweetRepository;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,20 +45,19 @@ import static org.junit.Assert.*;
 public class ProcessingOutputDispatcherIntTest {
 
     @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private MessageCollector messageCollector;
 
     @Autowired
     private AnalysisService analysisService;
 
     @Autowired
-    private NeelProcessedTweetRepository tweetRepository;
+    private AnalysisResultsRepository resultsRepository;
 
     @Autowired
-    private TwitterNeelProcessedTweetProducerChannel outputChannel;
+    private AnalysisResultsProducerChannel outputChannel;
 
     @Autowired
-    private TwitterNeelOutputConsumerChannel inputChannel;
+    private AnalysisResultsConsumerChannel inputChannel;
 
     @SpyBean
     private ProcessingOutputDispatcher dispatcher;
@@ -91,26 +91,29 @@ public class ProcessingOutputDispatcherIntTest {
         status.setText("text");
         status.setUser(user);
 
-        NeelTweetProcessedEvent e = new NeelTweetProcessedEvent();
+        NeelProcessedTweetDTO tweetPayload = new NeelProcessedTweetDTO();
+        tweetPayload.setStatus(status);
+        tweetPayload.setEntities(new LinkedEntity[0]);
+
+        AnalysisResultProducedEvent e = new AnalysisResultProducedEvent();
         e.setAnalysisId(this.analysis.getId());
         e.setProcessDate(Instant.now());
-        e.setStatus(status);
-        e.setEntities(new LinkedEntity[0]);
+        e.setPayload(tweetPayload);
 
-        int tweetsSizeBeforeCreate = tweetRepository.findAll().size();
+        int tweetsSizeBeforeCreate = resultsRepository.findAll().size();
+        Message<AnalysisResultProducedEvent> message = MessageBuilder.withPayload(e).build();
+        inputChannel
+            .analysisResultsChannel()
+            .send(message);
 
-        inputChannel.twitterNeelOutputChannel().send(MessageBuilder.withPayload(e).build());
-
-        List<NeelProcessedTweet> tweets = tweetRepository.findAll();
+        List<AnalysisResult<?>> tweets = resultsRepository.findAll();
         assertThat(tweets).hasSize(tweetsSizeBeforeCreate + 1);
 
         Message<?> received = messageCollector
-            .forChannel(outputChannel.twitterNeelProcessedTweetsChannel())
+            .forChannel(outputChannel.analysisResultsForwardedChannel())
             .poll();
+
         assertNotNull(received);
-        /*assertThat(received.getPayload()).isInstanceOf(NeelProcessedTweetDTO.class);
-        NeelProcessedTweetDTO payload = (NeelProcessedTweetDTO)received.getPayload();
-        assertThat(payload.getAnalysisId()).isEqualTo(analysis.getId());*/
-        verify(this.dispatcher, times(1)).consumeTwitterNeelOutput(any());
+        verify(this.dispatcher, times(1)).consumeAnalysisResult(any());
     }
 }

@@ -152,8 +152,8 @@ paths:
       tags:
         - 'Analysis'
 
-  /analysis-results/twitter-neel/{analysisId}:
-    summary: 'Get the result of a twitter neel analysis'
+  /analysis-results/{analysisId}:
+    summary: 'Get the result of an analysis'
     parameters:
       -
         name: analysisId
@@ -165,7 +165,7 @@ paths:
     get:
       summary: 'Get the results of an analysis'
       description: ""
-      operationId: getTwitterNeelAnalysisResultsV1
+      operationId: getAnalysisResultsV1
       parameters:
         - $ref: '#/components/parameters/pageParam'
         - $ref: '#/components/parameters/pageSizeParam'
@@ -175,9 +175,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TwitterNeelAnalysisResultDTO'
-        '400':
-          description: "The requested analysis is not a Twitter NEEL analysis"
+                $ref: '#/components/schemas/PagedAnalysisResults'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -185,7 +183,72 @@ paths:
         '404':
           $ref: '#/components/responses/AnalysisNotFoundError'
       tags:
-        - 'Analysis'
+        - 'Analysis Results'
+  /analysis-results/{analysisId}/search:
+    summary: 'Search the result of an analysis'
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        description: 'The id of the analysis'
+        schema:
+          type: string
+    get:
+      summary: 'Search the results of an analysis'
+      description: ""
+      operationId: searchAnalysisResultsV1
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: filter
+          in: query
+          required: true
+          description: 'The search query'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAnalysisResults'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/UnaccessibleError'
+        '404':
+          $ref: '#/components/responses/AnalysisNotFoundError'
+      tags:
+        - 'Analysis Results'
+  /analysis-results/{analysisId}/count:
+    summary: 'Get the total number of results for the chosen analysis'
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        description: 'The id of the analysis'
+        schema:
+          type: string
+    get:
+      summary: 'Get the total number of results for the chosen analysis'
+      description: ""
+      operationId: countAnalysisResultsV1
+      responses:
+        '200':
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResultsCount'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/UnaccessibleError'
+        '404':
+          $ref: '#/components/responses/AnalysisNotFoundError'
+      tags:
+        - 'Analysis Results'
 components:
   schemas:
     PagedResponse:
@@ -323,24 +386,37 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/AnalysisDTO'
-    TwitterNeelAnalysisResultDTO:
+    PagedAnalysisResults:
       allOf:
         - $ref: '#/components/schemas/PagedResponse'
         - type: object
           properties:
+            analysisId:
+              type: string
             objects:
               type: array
               items:
-                $ref: '#/components/schemas/NeelProcessedTweetDTO'
+                oneOf:
+                  - $ref: '#/components/schemas/TwitterNeelAnalysisResultDTO'
+    AnalysisResultsCount:
+      type: object
+      properties:
+        analysisId:
+          type: string
+        count:
+          type: number
+          format: int64
     NeelProcessedTweetDTO:
       type: object
-      required:
-        - id
-        - analysisId
-        - processDate
-        - saveDate
-        - status
-        - entities
+      properties:
+        status:
+          $ref: '#/components/schemas/TwitterStatusDTO'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkedEntityDTO'
+    AnalysisResultDTO:
+      type: object
       properties:
         id:
           type: string
@@ -352,12 +428,16 @@ components:
         saveDate:
           type: string
           format: date-time
-        status:
-          $ref: '#/components/schemas/TwitterStatusDTO'
-        entities:
-          type: array
-          items:
-            $ref: '#/components/schemas/LinkedEntityDTO'
+    TwitterNeelAnalysisResultDTO:
+      allOf:
+        - $ref: '#/components/schemas/AnalysisResultDTO'
+        - type: object
+          required:
+            - status
+            - entities
+          properties:
+            payload:
+              $ref: '#/components/schemas/NeelProcessedTweetDTO'
     TwitterStatusDTO:
       type: object
       required:
