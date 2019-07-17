@@ -3,7 +3,6 @@ package it.unimib.disco.bigtwine.services.analysis.web.rest;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
@@ -54,7 +53,6 @@ public class AnalysisResourceIntTest {
     private static final AnalysisType UPDATED_TYPE = AnalysisType.TWITTER_NEEL;
 
     private static final AnalysisInputType DEFAULT_INPUT_TYPE = AnalysisInputType.QUERY;
-    private static final AnalysisInputType UPDATED_INPUT_TYPE = AnalysisInputType.DATASET;
 
     private static final AnalysisStatus DEFAULT_STATUS = AnalysisStatus.READY;
     private static final AnalysisStatus UPDATED_STATUS = AnalysisStatus.STARTED;
@@ -120,7 +118,6 @@ public class AnalysisResourceIntTest {
     public static Analysis createEntity() {
         return new Analysis()
             .type(DEFAULT_TYPE)
-            .inputType(DEFAULT_INPUT_TYPE)
             .status(DEFAULT_STATUS)
             .visibility(DEFAULT_VISIBILITY)
             .owner(DEFAULT_OWNER_ID)
@@ -150,7 +147,6 @@ public class AnalysisResourceIntTest {
         assertThat(analysisList).hasSize(databaseSizeBeforeCreate + 1);
         Analysis testAnalysis = analysisList.get(analysisList.size() - 1);
         assertThat(testAnalysis.getType()).isEqualTo(DEFAULT_TYPE);
-        assertThat(testAnalysis.getInputType()).isEqualTo(DEFAULT_INPUT_TYPE);
         assertThat(testAnalysis.getStatus()).isEqualTo(DEFAULT_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(DEFAULT_VISIBILITY);
         assertThat(testAnalysis.getOwner()).isEqualTo(DEFAULT_OWNER_ID);
@@ -182,23 +178,6 @@ public class AnalysisResourceIntTest {
         int databaseSizeBeforeTest = analysisRepository.findAll().size();
         // set the field null
         analysis.setType(null);
-
-        // Create the Analysis, which fails.
-
-        restAnalysisMockMvc.perform(post("/api/analyses")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(analysis)))
-            .andExpect(status().isBadRequest());
-
-        List<Analysis> analysisList = analysisRepository.findAll();
-        assertThat(analysisList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    public void checkInputTypeIsRequired() throws Exception {
-        int databaseSizeBeforeTest = analysisRepository.findAll().size();
-        // set the field null
-        analysis.setInputType(null);
 
         // Create the Analysis, which fails.
 
@@ -307,7 +286,6 @@ public class AnalysisResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(analysis.getId())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
-            .andExpect(jsonPath("$.[*].inputType").value(hasItem(DEFAULT_INPUT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].visibility").value(hasItem(DEFAULT_VISIBILITY.toString())))
             .andExpect(jsonPath("$.[*].owner").value(hasItem(DEFAULT_OWNER_ID)))
@@ -322,12 +300,11 @@ public class AnalysisResourceIntTest {
         analysisRepository.save(analysis);
 
         // Get the analysis
-        String c = restAnalysisMockMvc.perform(get("/api/analyses/{id}", analysis.getId()))
+        restAnalysisMockMvc.perform(get("/api/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysis.getId()))
             .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
-            .andExpect(jsonPath("$.inputType").value(DEFAULT_INPUT_TYPE.toString()))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
             .andExpect(jsonPath("$.visibility").value(DEFAULT_VISIBILITY.toString()))
             .andExpect(jsonPath("$.owner").value(DEFAULT_OWNER_ID))
@@ -335,8 +312,7 @@ public class AnalysisResourceIntTest {
             .andExpect(jsonPath("$.updateDate").value(DEFAULT_UPDATE_DATE.toString()))
             .andExpect(jsonPath("$.input").isNotEmpty())
             .andExpect(jsonPath("$.input.tokens").isArray())
-            .andExpect(jsonPath("$.input.tokens", is(DEFAULT_INPUT.getTokens())))
-            .andReturn().getResponse().getContentAsString();
+            .andExpect(jsonPath("$.input.tokens", is(DEFAULT_INPUT.getTokens())));
     }
 
     @Test
@@ -357,7 +333,6 @@ public class AnalysisResourceIntTest {
         Analysis updatedAnalysis = analysisRepository.findById(analysis.getId()).get();
         updatedAnalysis
             .type(UPDATED_TYPE)
-            .inputType(UPDATED_INPUT_TYPE)
             .status(UPDATED_STATUS)
             .visibility(UPDATED_VISIBILITY)
             .owner(UPDATED_OWNER_ID)
@@ -375,7 +350,6 @@ public class AnalysisResourceIntTest {
         assertThat(analysisList).hasSize(databaseSizeBeforeUpdate);
         Analysis testAnalysis = analysisList.get(analysisList.size() - 1);
         assertThat(testAnalysis.getType()).isEqualTo(UPDATED_TYPE);
-        assertThat(testAnalysis.getInputType()).isEqualTo(UPDATED_INPUT_TYPE);
         assertThat(testAnalysis.getStatus()).isEqualTo(UPDATED_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(UPDATED_VISIBILITY);
         assertThat(testAnalysis.getOwner()).isEqualTo(UPDATED_OWNER_ID);

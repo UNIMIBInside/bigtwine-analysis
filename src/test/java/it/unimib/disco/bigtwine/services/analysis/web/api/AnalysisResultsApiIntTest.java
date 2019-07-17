@@ -65,7 +65,6 @@ public class AnalysisResultsApiIntTest {
 
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
-            .inputType(AnalysisInputType.QUERY)
             .createDate(Instant.now())
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)

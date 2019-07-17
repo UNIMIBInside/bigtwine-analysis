@@ -10,7 +10,6 @@ import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -29,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.test.binder.MessageCollector;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -92,7 +92,6 @@ public class AnalysesApiIntTest {
 
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
-            .inputType(AnalysisInputType.QUERY)
             .createDate(Instant.now())
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)
@@ -103,12 +102,12 @@ public class AnalysesApiIntTest {
 
     private AnalysisDTO createAnalysisDTO() {
         AnalysisInputDTO input = new QueryAnalysisInputDTO()
+            .type(AnalysisInputTypeEnum.QUERY)
             .tokens(Arrays.asList("query", "di", "prova"))
             .joinOperator(QueryAnalysisInputDTO.JoinOperatorEnum.AND);
 
         return new AnalysisDTO()
             .type(AnalysisTypeEnum.TWITTER_NEEL)
-            .inputType(AnalysisInputTypeEnum.QUERY)
             .input(input);
     }
 
@@ -131,7 +130,6 @@ public class AnalysesApiIntTest {
         Analysis testAnalysis = analysisList.get(analysisList.size() - 1);
         assertThat(testAnalysis.getOwner()).isEqualTo("testuser-1");
         assertThat(testAnalysis.getType()).isEqualTo(AnalysisType.TWITTER_NEEL);
-        assertThat(testAnalysis.getInputType()).isEqualTo(AnalysisInputType.QUERY);
         assertThat(((QueryAnalysisInput)testAnalysis.getInput()).getTokens()).isEqualTo(Arrays.asList("query", "di", "prova"));
         assertThat(testAnalysis.getStatus()).isEqualTo(Analysis.DEFAULT_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(Analysis.DEFAULT_VISIBILITY);
@@ -140,6 +138,7 @@ public class AnalysesApiIntTest {
     }
 
     @Test
+    @WithAnonymousUser
     public void testCreateAnalysisUnauthenticated() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO();
 
@@ -153,8 +152,7 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysisInvalidInputDoc() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisInputTypeEnum.DATASET)
-            .input(new QueryAnalysisInputDTO());
+            .input(new QueryAnalysisInputDTO().type(AnalysisInputTypeEnum.QUERY));
 
         this.restApiMvc.perform(post("/api/public/analyses")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -166,8 +164,7 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysisInvalidInputQuery() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisInputTypeEnum.QUERY)
-            .input(new DatasetAnalysisInputDTO());
+            .input(new DatasetAnalysisInputDTO().type(AnalysisInputTypeEnum.DATASET));
 
         this.restApiMvc.perform(post("/api/public/analyses")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -179,7 +176,6 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testCreateAnalysisNullInput() throws Exception {
         AnalysisDTO analysis = this.createAnalysisDTO()
-            .inputType(AnalysisInputTypeEnum.QUERY)
             .input(null);
 
         this.restApiMvc.perform(post("/api/public/analyses")
@@ -244,7 +240,6 @@ public class AnalysesApiIntTest {
         a1 = this.analysisRepository.save(a1);
         this.analysisRepository.save(a2);
         a3 = this.analysisRepository.save(a3);
-        List<Analysis> all = this.analysisRepository.findAll();
 
         this.restApiMvc.perform(get("/api/public/analyses"))
             .andExpect(status().isOk())

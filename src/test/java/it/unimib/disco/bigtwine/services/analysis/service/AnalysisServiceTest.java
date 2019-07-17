@@ -9,7 +9,6 @@ import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -65,7 +64,6 @@ public class AnalysisServiceTest {
 
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
-            .inputType(AnalysisInputType.QUERY)
             .createDate(Instant.now())
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)

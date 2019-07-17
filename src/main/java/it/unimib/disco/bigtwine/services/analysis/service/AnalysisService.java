@@ -91,12 +91,12 @@ public class AnalysisService {
      */
     private void validate(@NotNull Analysis analysis, Analysis oldAnalysis) {
         // Validate input
-        if (analysis.getInputType() == null || analysis.getInput() == null) {
+        if (analysis.getInput() == null || analysis.getInput().getType() == null) {
             throw new InvalidAnalysisInputProvidedException("Input not provided");
         }
 
         this.inputValidatorLocator
-            .getValidator(analysis.getInputType())
+            .getValidator(analysis.getInput().getType())
             .validate(analysis.getInput());
 
         // Validate status change

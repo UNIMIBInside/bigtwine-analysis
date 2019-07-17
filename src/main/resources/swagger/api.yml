@@ -294,7 +294,7 @@ components:
         - type
       properties:
         type:
-          type: string
+          $ref: '#/components/schemas/AnalysisInputTypeEnum'
     QueryAnalysisInputDTO:
       allOf:
         - $ref: '#/components/schemas/AnalysisInputDTO'
@@ -304,8 +304,7 @@ components:
             - operator
           properties:
             type:
-              type: string
-              default: query
+              $ref: '#/components/schemas/AnalysisInputTypeEnum'
             tokens:
               type: array
               items:
@@ -323,15 +322,13 @@ components:
             - documentId
           properties:
             type:
-              type: string
-              default: dataset
+              $ref: '#/components/schemas/AnalysisInputTypeEnum'
             documentId:
               type: string
     AnalysisDTO:
       type: object
       required:
         - type
-        - inputType
         - input
       properties:
         id:
@@ -339,8 +336,6 @@ components:
           readOnly: true
         type:
           $ref: '#/components/schemas/AnalysisTypeEnum'
-        inputType:
-          $ref: '#/components/schemas/AnalysisInputTypeEnum'
         owner:
           type: string
           readOnly: true
@@ -354,7 +349,7 @@ components:
             - $ref: '#/components/schemas/QueryAnalysisInputDTO'
             - $ref: '#/components/schemas/DatasetAnalysisInputDTO'
           discriminator:
-            propertyName: inputType
+            propertyName: type
             mapping:
               query: '#/components/schemas/QueryAnalysisInputDTO'
               dataset: '#/components/schemas/DatasetAnalysisInputDTO'

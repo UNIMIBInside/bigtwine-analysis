@@ -11,7 +11,6 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
@@ -74,7 +73,6 @@ public class ProcessingOutputDispatcherIntTest {
         this.analysis = this.analysisService.save(
             new Analysis()
                 .type(AnalysisType.TWITTER_NEEL)
-                .inputType(AnalysisInputType.DATASET)
                 .input(new DatasetAnalysisInput().documentId("testdoc-1"))
                 .owner("testuser-1")
         );

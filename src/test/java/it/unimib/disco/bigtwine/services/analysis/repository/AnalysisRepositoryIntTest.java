@@ -45,7 +45,6 @@ public class AnalysisRepositoryIntTest {
                 .owner(owners[i - 1])
                 .status(AnalysisStatus.READY)
                 .type(AnalysisType.TWITTER_NEEL)
-                .inputType(AnalysisInputType.QUERY)
                 .visibility(AnalysisVisibility.PUBLIC)
                 .input(input)
                 .createDate(Instant.now())

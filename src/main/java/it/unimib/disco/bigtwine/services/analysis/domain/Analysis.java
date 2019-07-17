@@ -38,10 +38,6 @@ public class Analysis implements Serializable {
     private AnalysisType type;
 
     @NotNull
-    @Field("input_type")
-    private AnalysisInputType inputType;
-
-    @NotNull
     @Field("status")
     private AnalysisStatus status;
 
@@ -84,19 +80,6 @@ public class Analysis implements Serializable {
 
     public void setType(AnalysisType type) {
         this.type = type;
-    }
-
-    public AnalysisInputType getInputType() {
-        return inputType;
-    }
-
-    public Analysis inputType(AnalysisInputType inputType) {
-        this.inputType = inputType;
-        return this;
-    }
-
-    public void setInputType(AnalysisInputType inputType) {
-        this.inputType = inputType;
     }
 
     public AnalysisStatus getStatus() {
@@ -204,7 +187,6 @@ public class Analysis implements Serializable {
         return "Analysis{" +
             "id=" + getId() +
             ", type='" + getType() + "'" +
-            ", inputType='" + getInputType() + "'" +
             ", status='" + getStatus() + "'" +
             ", visibility='" + getVisibility() + "'" +
             ", owner='" + getOwner() + "'" +
