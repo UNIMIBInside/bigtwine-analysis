@@ -49,7 +49,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     }
 
     private Optional<String> getCurrentUserIdentifier() {
-        return SecurityUtils.getCurrentUserLogin();
+        return SecurityUtils.getCurrentUserId();
     }
 
     private ResponseEntity<AnalysisDTO> updateAnalysis(
