@@ -4,6 +4,7 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
@@ -32,6 +33,7 @@ import java.util.List;
 import static it.unimib.disco.bigtwine.services.analysis.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -69,12 +71,11 @@ public class AnalysisResourceIntTest {
     private static final Instant DEFAULT_UPDATE_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_UPDATE_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final AnalysisInput DEFAULT_INPUT = new QueryAnalysisInput()
+    private static final QueryAnalysisInput DEFAULT_INPUT = new QueryAnalysisInput()
         .tokens(Arrays.asList("AAAAA", "AAAAA"))
         .joinOperator(QueryAnalysisInput.JoinOperator.OR);
-    private static final AnalysisInput UPDATED_INPUT = new QueryAnalysisInput()
-        .tokens(Arrays.asList("BBBBB", "BBBBB"))
-        .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+    private static final DatasetAnalysisInput UPDATED_INPUT = new DatasetAnalysisInput()
+        .documentId("AAAAA");
 
     @Autowired
     private AnalysisRepository analysisRepository;
@@ -117,7 +118,7 @@ public class AnalysisResourceIntTest {
      * if they test an entity which requires the current entity.
      */
     public static Analysis createEntity() {
-        Analysis analysis = new Analysis()
+        return new Analysis()
             .type(DEFAULT_TYPE)
             .inputType(DEFAULT_INPUT_TYPE)
             .status(DEFAULT_STATUS)
@@ -126,7 +127,6 @@ public class AnalysisResourceIntTest {
             .createDate(DEFAULT_CREATE_DATE)
             .updateDate(DEFAULT_UPDATE_DATE)
             .input(DEFAULT_INPUT);
-        return analysis;
     }
 
     @Before
@@ -154,8 +154,8 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getStatus()).isEqualTo(DEFAULT_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(DEFAULT_VISIBILITY);
         assertThat(testAnalysis.getOwner()).isEqualTo(DEFAULT_OWNER_ID);
-        assertThat(testAnalysis.getCreateDate()).isEqualTo(DEFAULT_CREATE_DATE);
-        assertThat(testAnalysis.getUpdateDate()).isEqualTo(DEFAULT_UPDATE_DATE);
+        assertThat(testAnalysis.getCreateDate()).isNotNull();
+        assertThat(testAnalysis.getUpdateDate()).isNotNull();
         assertThat(testAnalysis.getInput()).isEqualTo(DEFAULT_INPUT);
     }
 
@@ -313,7 +313,7 @@ public class AnalysisResourceIntTest {
             .andExpect(jsonPath("$.[*].owner").value(hasItem(DEFAULT_OWNER_ID)))
             .andExpect(jsonPath("$.[*].createDate").value(hasItem(DEFAULT_CREATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].updateDate").value(hasItem(DEFAULT_UPDATE_DATE.toString())))
-            .andExpect(jsonPath("$.[*].input").value(hasItem(DEFAULT_INPUT.toString())));
+            .andExpect(jsonPath("$.[*].input.tokens").value(hasItem(DEFAULT_INPUT.getTokens())));
     }
     
     @Test
@@ -322,7 +322,7 @@ public class AnalysisResourceIntTest {
         analysisRepository.save(analysis);
 
         // Get the analysis
-        restAnalysisMockMvc.perform(get("/api/analyses/{id}", analysis.getId()))
+        String c = restAnalysisMockMvc.perform(get("/api/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysis.getId()))
@@ -333,7 +333,10 @@ public class AnalysisResourceIntTest {
             .andExpect(jsonPath("$.owner").value(DEFAULT_OWNER_ID))
             .andExpect(jsonPath("$.createDate").value(DEFAULT_CREATE_DATE.toString()))
             .andExpect(jsonPath("$.updateDate").value(DEFAULT_UPDATE_DATE.toString()))
-            .andExpect(jsonPath("$.input").value(DEFAULT_INPUT.toString()));
+            .andExpect(jsonPath("$.input").isNotEmpty())
+            .andExpect(jsonPath("$.input.tokens").isArray())
+            .andExpect(jsonPath("$.input.tokens", is(DEFAULT_INPUT.getTokens())))
+            .andReturn().getResponse().getContentAsString();
     }
 
     @Test
@@ -376,8 +379,8 @@ public class AnalysisResourceIntTest {
         assertThat(testAnalysis.getStatus()).isEqualTo(UPDATED_STATUS);
         assertThat(testAnalysis.getVisibility()).isEqualTo(UPDATED_VISIBILITY);
         assertThat(testAnalysis.getOwner()).isEqualTo(UPDATED_OWNER_ID);
-        assertThat(testAnalysis.getCreateDate()).isEqualTo(UPDATED_CREATE_DATE);
-        assertThat(testAnalysis.getUpdateDate()).isEqualTo(UPDATED_UPDATE_DATE);
+        assertThat(testAnalysis.getCreateDate()).isNotNull();
+        assertThat(testAnalysis.getUpdateDate()).isNotNull();
         assertThat(testAnalysis.getInput()).isEqualTo(UPDATED_INPUT);
     }
 

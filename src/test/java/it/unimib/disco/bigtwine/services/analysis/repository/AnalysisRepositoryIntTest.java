@@ -34,14 +34,15 @@ public class AnalysisRepositoryIntTest {
     @Before
     public void setUp() throws Exception {
         this.analysisRepository.deleteAll();
+        String[] owners = new String[]{"user-1", "user-1", "user-1", "user-2", "user-3"};
 
-        for (int i = 1; i <= 3; ++i) {
+        for (int i = 1; i <= owners.length; ++i) {
             AnalysisInput input = new QueryAnalysisInput()
                 .tokens(Arrays.asList("query", "di", "prova", "" + i))
                 .joinOperator(QueryAnalysisInput.JoinOperator.AND);
 
             Analysis a = new Analysis()
-                .owner("user-" + i)
+                .owner(owners[i - 1])
                 .status(AnalysisStatus.READY)
                 .type(AnalysisType.TWITTER_NEEL)
                 .inputType(AnalysisInputType.QUERY)
@@ -59,7 +60,7 @@ public class AnalysisRepositoryIntTest {
         List<Analysis> analyses = this.analysisRepository.findByOwner("user-1");
 
         assertNotNull(analyses);
-        assertEquals(1, analyses.size());
+        assertEquals(3, analyses.size());
 
         analyses = this.analysisRepository.findByOwner("user-non-esistente");
 
@@ -74,8 +75,7 @@ public class AnalysisRepositoryIntTest {
 
         assertNotNull(analyses);
         assertEquals(2, analyses.getTotalPages());
-
-        assertNotNull(analyses);
-        assertEquals(2, analyses.getSize());
+        assertEquals(3, analyses.getTotalElements());
+        assertEquals(1, analyses.getNumberOfElements());
     }
 }

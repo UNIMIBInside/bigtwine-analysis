@@ -8,8 +8,8 @@ import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
  * The AnalysisInputType enumeration.
  */
 public enum AnalysisInputType {
-    QUERY("query", QueryAnalysisInput.class),
-    DATASET("dataset", DatasetAnalysisInput.class);
+    QUERY(Constants.QUERY_VALUE, QueryAnalysisInput.class),
+    DATASET(Constants.DATASET_VALUE, DatasetAnalysisInput.class);
 
     public final String value;
     public final Class<? extends AnalysisInput> inputClass;
@@ -17,5 +17,10 @@ public enum AnalysisInputType {
     AnalysisInputType(String value, Class<? extends AnalysisInput> inputClass) {
         this.value = value;
         this.inputClass = inputClass;
+    }
+
+    public static class Constants {
+        public static final String QUERY_VALUE = "QUERY";
+        public static final String DATASET_VALUE = "DATASET";
     }
 }

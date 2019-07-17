@@ -1,5 +1,6 @@
 package it.unimib.disco.bigtwine.services.analysis.domain.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.BeanUtil;
@@ -12,6 +13,7 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.BeanUtils;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -24,6 +26,11 @@ public interface AnalysisMapper {
 
     AnalysisMapper INSTANCE = Mappers.getMapper( AnalysisMapper.class );
     ObjectMapper jsonMapper = new ObjectMapper();
+
+    default ObjectMapper getObjectMapper() {
+        jsonMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
+        return jsonMapper;
+    }
 
     default OffsetDateTime fromInstant(Instant instant) {
         return instant == null ? null : OffsetDateTime.ofInstant(instant, TimeZone.getTimeZone("UTC").toZoneId());
@@ -43,8 +50,31 @@ public interface AnalysisMapper {
 
     AnalysisVisibility visibilityFromVisibilityEnum(AnalysisVisibilityEnum visibility);
 
-    default AnalysisInput analysisInputFromAnalysisInputDTO(Object input) {
-        return null;
+    default AnalysisInput analysisInputFromObject(Object input) {
+        if (input instanceof AnalysisInputDTO) {
+            return analysisInputFromAnalysisInputDTO((AnalysisInputDTO)input);
+        } else if (input instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> mapInput = (Map<Object, Object>)input;
+            return analysisInputFromMap(mapInput);
+        } else {
+            return null;
+        }
+    }
+
+    default AnalysisInput analysisInputFromAnalysisInputDTO(AnalysisInputDTO input) {
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> mapInput = (Map<Object, Object>)this.getObjectMapper().convertValue(input, Map.class);
+        return this.analysisInputFromMap(mapInput);
+    }
+
+    default AnalysisInput analysisInputFromMap(Map<Object, Object> input) {
+        if (input.containsKey("type") && input.get("type") instanceof String) {
+            String type = (String)input.get("type");
+            input.replace("type", type.toUpperCase());
+        }
+
+        return this.getObjectMapper().convertValue(input, AnalysisInput.class);
     }
 
     default AnalysisInputDTO analysisInputDtoFromAnalysisInput(AnalysisInput input) {
@@ -54,20 +84,6 @@ public interface AnalysisMapper {
             return this.datasetAnalysisInputDtoFromDatasetAnalysisInput((DatasetAnalysisInput)input);
         } else {
             throw new UnsupportedOperationException("Unsupported input type " + input.getClass());
-        }
-    }
-
-    @AfterMapping
-    default void afterAnalysisDTOMapping(@MappingTarget Analysis analysis, AnalysisDTO analysisDto) {
-        if (analysis.getInputType() == null) {
-            analysis.setInput(null);
-        } else {
-            this.jsonMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-            AnalysisInput input = this.jsonMapper.convertValue(
-                analysisDto.getInput(),
-                analysis.getInputType().inputClass);
-
-            analysis.setInput(input);
         }
     }
 
