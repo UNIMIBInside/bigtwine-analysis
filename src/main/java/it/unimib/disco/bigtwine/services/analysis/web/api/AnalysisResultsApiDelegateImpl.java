@@ -2,6 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.web.api;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
@@ -63,10 +64,20 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         List<AnalysisResult<?>> results = pageObj.getContent();
         List<Object> resultsDtos = new ArrayList<>(results.size());
         results.forEach((AnalysisResult<?> result) -> {
-            // TODO: Controllare payload != null e che mapper esiste
-            AnalysisResultDTO resultDto = this.resultMapperLocator
-                .getMapper(result.getPayload().getClass())
-                .map(result);
+            if (result.getPayload() == null) {
+                log.debug("Payload missing");
+                return;
+            }
+
+            AnalysisResultMapper mapper = this.resultMapperLocator
+                .getMapper(result.getPayload().getClass());
+
+            if (mapper == null) {
+                log.debug("Missing mapper for payload type: {}", result.getPayload().getClass());
+                return;
+            }
+
+            AnalysisResultDTO resultDto = mapper.map(result);
 
             resultsDtos.add(resultDto);
         });
