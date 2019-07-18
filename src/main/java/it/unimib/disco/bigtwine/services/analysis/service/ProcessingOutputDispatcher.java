@@ -51,7 +51,6 @@ public class ProcessingOutputDispatcher {
         Optional<Analysis> analysis = analysisService.findOne(e.getAnalysisId());
 
         if (analysis.isPresent()) {
-            // TODO: Controllare payload != null e che mapper esiste
             Object payloadDto = e.getPayload();
             if (payloadDto == null) {
                 log.debug("Payload missing");
