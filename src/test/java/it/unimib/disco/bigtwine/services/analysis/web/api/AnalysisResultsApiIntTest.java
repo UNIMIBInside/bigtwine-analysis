@@ -9,7 +9,6 @@ import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig
 import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUser;
 import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityContextFactory;
 import it.unimib.disco.bigtwine.services.analysis.domain.*;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -23,15 +22,20 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -55,7 +59,14 @@ public class AnalysisResultsApiIntTest {
     @Autowired
     private AnalysisRepository analysisRepository;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     private MockMvc restApiMvc;
+
+    private Analysis ownedAnalysis;
+    private Analysis privateAnalysis;
+    private Analysis publicAnalysis;
 
 
     private Analysis createAnalysis() {
@@ -73,13 +84,13 @@ public class AnalysisResultsApiIntTest {
             .input(input);
     }
 
-    private NeelProcessedTweet createProcessedTweet() {
+    private NeelProcessedTweet createProcessedTweet(int i) {
         TwitterUser user = new TwitterUserDTO();
-        user.setId("1");
-        user.setScreenName("user1");
+        user.setId("user" + i);
+        user.setScreenName("user" + i);
         TwitterStatus status = new TwitterStatusDTO();
-        status.setId("1");
-        status.setText("text");
+        status.setId("" + i);
+        status.setText("text" + i);
         status.setUser(user);
 
         NeelProcessedTweet tweet = new NeelProcessedTweet();
@@ -87,24 +98,77 @@ public class AnalysisResultsApiIntTest {
         tweet.setEntities(Collections.emptyList());
         
         return tweet;
-
-
     }
 
-    private AnalysisResult<?> createAnalysisResult() {
-        NeelProcessedTweet tweet = this.createProcessedTweet();
+    private AnalysisResult<?> createAnalysisResult(int i) {
+        NeelProcessedTweet tweet = this.createProcessedTweet(i);
         return new AnalysisResult<>()
             .payload(tweet)
             .processDate(Instant.now());
     }
 
+    private void clearRepositories() {
+        this.analysisRepository.deleteAll();
+        this.resultsRepository.deleteAll();
+    }
+
+    private void fillRepositories() {
+        Analysis a1 = this.createAnalysis()
+            .visibility(AnalysisVisibility.PRIVATE)
+            .owner("testuser-1");
+        this.ownedAnalysis = this.analysisRepository.save(a1);
+
+        int tweetCount = 3;
+        for (int i = 1; i <= tweetCount; ++i) {
+            AnalysisResult<?> result = this.createAnalysisResult(i)
+                .analysis(ownedAnalysis)
+                .saveDate(Instant.now());
+
+            this.resultsRepository.save(result);
+        }
+
+        Analysis a2 = this.createAnalysis()
+            .visibility(AnalysisVisibility.PRIVATE)
+            .owner("testuser-2");
+        this.privateAnalysis = this.analysisRepository.save(a2);
+
+        for (int i = 1; i <= tweetCount; ++i) {
+            AnalysisResult<?> result = this.createAnalysisResult(i)
+                .analysis(privateAnalysis)
+                .saveDate(Instant.now());
+
+            this.resultsRepository.save(result);
+        }
+
+        Analysis a3 = this.createAnalysis()
+            .visibility(AnalysisVisibility.PUBLIC)
+            .owner("testuser-2");
+        this.publicAnalysis = this.analysisRepository.save(a3);
+
+        for (int i = 1; i <= tweetCount; ++i) {
+            AnalysisResult<?> result = this.createAnalysisResult(i)
+                .analysis(publicAnalysis)
+                .saveDate(Instant.now());
+
+            this.resultsRepository.save(result);
+        }
+    }
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        AnalysisResultsApiDelegateImpl delegate = new AnalysisResultsApiDelegateImpl(null, analysisService, resultsRepository, resultMapperLocator);
+        AnalysisResultsApiDelegateImpl delegate = new AnalysisResultsApiDelegateImpl(
+            null,
+            analysisService,
+            resultsRepository,
+            resultMapperLocator,
+            mongoTemplate);
         AnalysisResultsApiController controller = new AnalysisResultsApiController(delegate);
         this.restApiMvc = MockMvcBuilders.standaloneSetup(controller)
             .build();
+
+        this.clearRepositories();
+        this.fillRepositories();
     }
 
     @Test
@@ -124,42 +188,60 @@ public class AnalysisResultsApiIntTest {
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultNotFound() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", 1))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", "invalid-id"))
             .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultUnauthorized() throws Exception {
-        Analysis analysis = this.createAnalysis()
-            .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-2");
-        analysis = this.analysisRepository.save(analysis);
-
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", privateAnalysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResult() throws Exception {
-        Analysis analysis = this.createAnalysis()
-            .visibility(AnalysisVisibility.PUBLIC)
-            .owner("testuser-1");
-        analysis = this.analysisRepository.save(analysis);
-
-        int tweetCount = 3;
-        for (int i = 0; i < tweetCount; ++i) {
-            AnalysisResult<?> result = this.createAnalysisResult()
-                .analysis(analysis)
-                .saveDate(Instant.now());
-
-            this.resultsRepository.save(result);
-        }
-
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", ownedAnalysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.totalCount").value(3))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.count").value(3))
+            .andExpect(jsonPath("$.objects[0].analysisId").value(ownedAnalysis.getId()))
+            .andExpect(jsonPath("$.objects[0].payload.status.text").value("text1"))
             .andExpect(jsonPath("$.objects.length()").value(3));
+    }
+
+    @Test
+    @WithMockCustomUser(userId = "testuser-1")
+    public void testSearchAnalysisResults() throws Exception {
+        String query = "{\"payload.status.text\": \"text1\"}";
+
+        RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
+            .content(query)
+            .contentType(MediaType.TEXT_PLAIN);
+
+        this.restApiMvc.perform(requestBuilder)
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.objects.length()").value(1))
+            .andExpect(jsonPath("$.objects[0].payload.status.text").value("text1"));
+    }
+
+    @Test
+    @WithMockCustomUser(userId = "testuser-1")
+    public void testSearchAnalysisResultsWithAnalysisIdOverwrite() throws Exception {
+        String query = "{\"analysisId\": \"" + privateAnalysis.getId() + "\"}";
+
+        RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
+            .content(query)
+            .contentType(MediaType.TEXT_PLAIN);
+
+        this.restApiMvc.perform(requestBuilder)
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.objects.length()").value(3))
+            .andExpect(jsonPath("$.objects.[*].analysisId", everyItem(is(ownedAnalysis.getId()))));
     }
 }

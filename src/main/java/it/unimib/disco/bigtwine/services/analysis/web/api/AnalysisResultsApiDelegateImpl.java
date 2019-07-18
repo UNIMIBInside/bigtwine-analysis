@@ -14,6 +14,10 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -31,6 +35,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
     private final AnalysisService analysisService;
     private final AnalysisResultsRepository resultsRepository;
     private final AnalysisResultMapperLocator resultMapperLocator;
+    private final MongoTemplate mongoTemplate;
 
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -38,11 +43,13 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         NativeWebRequest request,
         AnalysisService analysisService,
         AnalysisResultsRepository resultsRepository,
-        AnalysisResultMapperLocator resultMapperLocator) {
+        AnalysisResultMapperLocator resultMapperLocator,
+        MongoTemplate mongoTemplate) {
         this.request = request;
         this.analysisService = analysisService;
         this.resultsRepository = resultsRepository;
         this.resultMapperLocator = resultMapperLocator;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
@@ -60,10 +67,10 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         return analysis;
     }
 
-    private ResponseEntity<PagedAnalysisResults> buildPagedResultsResponse(Analysis analysis, Page<AnalysisResult<?>> pageObj) {
-        List<AnalysisResult<?>> results = pageObj.getContent();
+    private ResponseEntity<PagedAnalysisResults> buildPagedResultsResponse(Analysis analysis, Page<AnalysisResult> pageObj) {
+        List<AnalysisResult> results = pageObj.getContent();
         List<Object> resultsDtos = new ArrayList<>(results.size());
-        results.forEach((AnalysisResult<?> result) -> {
+        results.forEach((AnalysisResult result) -> {
             if (result.getPayload() == null) {
                 log.debug("Payload missing");
                 return;
@@ -99,38 +106,31 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         Analysis analysis = this.getAnalysisById(analysisId);
         Pageable page = PageRequest.of(pageNum, pageSize);
 
-        @SuppressWarnings("unchecked")
-        Page<AnalysisResult<?>> pageObj = resultsRepository.findByAnalysisId(analysis.getId(), page);
+        Page<AnalysisResult> pageObj = resultsRepository.findByAnalysisId(analysis.getId(), page);
 
         return this.buildPagedResultsResponse(analysis, pageObj);
     }
 
     @Override
-    public ResponseEntity<PagedAnalysisResults> searchAnalysisResultsV1(String analysisId, String filter, Integer pageNum, Integer pageSize) {
+    public ResponseEntity<PagedAnalysisResults> searchAnalysisResultsV1(String analysisId, String body, Integer pageNum, Integer pageSize) {
         Analysis analysis = this.getAnalysisById(analysisId);
         Pageable page = PageRequest.of(pageNum, pageSize);
-        Example example = new Example() {
-            @Override
-            public Object getProbe() {
-                return null;
-            }
+        BasicQuery query = new BasicQuery(body);
+        query.with(page);
+        query.addCriteria(Criteria.where("analysisId").is(analysis.getId()));
 
-            @Override
-            public ExampleMatcher getMatcher() {
-                return null;
-            }
-        };
+        log.debug("Results search query: {}", query.getQueryObject().toJson());
 
-        @SuppressWarnings("unchecked")
-        Page<Object> pageObj = resultsRepository.findAll(example, page);
+        List<AnalysisResult> results = this.mongoTemplate.find(query, AnalysisResult.class);
+        Page<AnalysisResult> pageObj = PageableExecutionUtils.getPage(results, page, () ->
+            this.mongoTemplate.count(query, AnalysisResult.class));
 
-        return null; // this.buildPagedResultsResponse(analysis, pageObj);
+        return this.buildPagedResultsResponse(analysis, pageObj);
     }
 
     @Override
     public ResponseEntity<AnalysisResultsCount> countAnalysisResultsV1(String analysisId) {
         Analysis analysis = this.getAnalysisById(analysisId);
-        @SuppressWarnings("unchecked")
         long count = resultsRepository.countByAnalysisId(analysisId);
 
         AnalysisResultsCount body = new AnalysisResultsCount()

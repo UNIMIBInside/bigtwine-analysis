@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface AnalysisResultsRepository extends MongoRepository<AnalysisResult<?>, String> {
-    List<AnalysisResult<?>> findByAnalysisId(String id);
-    Page<AnalysisResult<?>> findByAnalysisId(String id, Pageable page);
+    List<AnalysisResult> findByAnalysisId(String id);
+    Page<AnalysisResult> findByAnalysisId(String id, Pageable page);
     long countByAnalysisId(String id);
 }

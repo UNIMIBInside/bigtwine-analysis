@@ -41,6 +41,11 @@ public class AnalysisResult<P extends AnalysisResultPayload> implements Serializ
         return id;
     }
 
+    public AnalysisResult<P> id(String id) {
+        this.id = id;
+        return this;
+    }
+
     public void setId(String id) {
         this.id = id;
     }

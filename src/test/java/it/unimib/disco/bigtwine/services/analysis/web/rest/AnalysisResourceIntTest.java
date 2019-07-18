@@ -52,8 +52,6 @@ public class AnalysisResourceIntTest {
     private static final AnalysisType DEFAULT_TYPE = AnalysisType.TWITTER_NEEL;
     private static final AnalysisType UPDATED_TYPE = AnalysisType.TWITTER_NEEL;
 
-    private static final AnalysisInputType DEFAULT_INPUT_TYPE = AnalysisInputType.QUERY;
-
     private static final AnalysisStatus DEFAULT_STATUS = AnalysisStatus.READY;
     private static final AnalysisStatus UPDATED_STATUS = AnalysisStatus.STARTED;
 
