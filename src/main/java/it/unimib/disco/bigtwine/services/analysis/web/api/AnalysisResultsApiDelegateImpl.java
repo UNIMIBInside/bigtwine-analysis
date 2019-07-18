@@ -135,7 +135,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
 
         AnalysisResultsCount body = new AnalysisResultsCount()
             .analysisId(analysis.getId())
-            .count((double) count);
+            .count(count);
 
         return ResponseEntity.ok(body);
     }

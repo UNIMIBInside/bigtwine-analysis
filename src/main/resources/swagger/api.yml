@@ -410,7 +410,7 @@ components:
         analysisId:
           type: string
         count:
-          type: number
+          type: integer
           format: int64
     NeelProcessedTweetDTO:
       type: object
@@ -477,9 +477,11 @@ components:
       type: object
       properties:
         latitude:
-          type: integer
+          type: number
+          format: double
         longitude:
-          type: integer
+          type: number
+          format: double
     LinkedEntityDTO:
       type: object
       properties:

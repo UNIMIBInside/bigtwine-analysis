@@ -81,8 +81,8 @@ public class ProcessingOutputDispatcherIntTest {
     @Test
     public void testDispatch() {
         TwitterUser user = new TwitterUserDTO();
-        user.setScreenName("testuser-1");
         user.setId("testuser-1");
+        user.setScreenName("testuser-1");
 
         TwitterStatus status = new TwitterStatusDTO();
         status.setId("teststatus-1");

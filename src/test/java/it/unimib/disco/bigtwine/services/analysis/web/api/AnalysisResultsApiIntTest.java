@@ -1,9 +1,5 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api;
 
-import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
-import it.unimib.disco.bigtwine.commons.models.TwitterUser;
-import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
-import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig;
 import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUser;
@@ -85,10 +81,10 @@ public class AnalysisResultsApiIntTest {
     }
 
     private NeelProcessedTweet createProcessedTweet(int i) {
-        TwitterUser user = new TwitterUserDTO();
+        TwitterUser user = new TwitterUser();
         user.setId("user" + i);
         user.setScreenName("user" + i);
-        TwitterStatus status = new TwitterStatusDTO();
+        TwitterStatus status = new TwitterStatus();
         status.setId("" + i);
         status.setText("text" + i);
         status.setUser(user);
@@ -220,7 +216,7 @@ public class AnalysisResultsApiIntTest {
 
         RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
-            .contentType(MediaType.TEXT_PLAIN);
+            .contentType(MediaType.APPLICATION_JSON);
 
         this.restApiMvc.perform(requestBuilder)
             .andExpect(status().isOk())
@@ -236,7 +232,7 @@ public class AnalysisResultsApiIntTest {
 
         RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
-            .contentType(MediaType.TEXT_PLAIN);
+            .contentType(MediaType.APPLICATION_JSON);
 
         this.restApiMvc.perform(requestBuilder)
             .andExpect(status().isOk())

@@ -1,7 +1,5 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
-import it.unimib.disco.bigtwine.commons.models.LinkedEntity;
-import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
 import org.springframework.data.mongodb.core.mapping.Field;
 import javax.validation.constraints.*;
 
