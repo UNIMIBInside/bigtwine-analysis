@@ -2,9 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.validation.analysis.input;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import org.junit.Test;
@@ -30,7 +28,7 @@ public class AnalysisInputSerializationTest {
     public void testValidInputSerialization() throws Exception {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(VALID_TOKENS)
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         String json = getObjectMapper().writeValueAsString(input);
 
@@ -41,41 +39,41 @@ public class AnalysisInputSerializationTest {
         assertEquals(input, deserializedInput);
         assertEquals(deserializedInput.getType(), AnalysisInputType.QUERY);
         assertEquals(deserializedInput.getTokens(), VALID_TOKENS);
-        assertEquals(deserializedInput.getJoinOperator(), QueryAnalysisInput.JoinOperator.OR);
+        assertEquals(deserializedInput.getJoinOperator(), QueryAnalysisInput.JoinOperator.ANY);
     }
 
     @Test(expected = Exception.class)
     public void testInvalidDeserialization() throws Exception {
-        String json = "{\"type\": \"DATASET\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"OR\"}";
+        String json = "{\"type\": \"DATASET\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"ANY\"}";
 
         QueryAnalysisInput deserializedInput = getObjectMapper().readValue(json, QueryAnalysisInput.class);
 
         assertEquals(deserializedInput.getType(), AnalysisInputType.QUERY); // proprietà type deve essere ignorata
         assertEquals(deserializedInput.getTokens(), VALID_TOKENS);
-        assertEquals(deserializedInput.getJoinOperator(), QueryAnalysisInput.JoinOperator.OR);
+        assertEquals(deserializedInput.getJoinOperator(), QueryAnalysisInput.JoinOperator.ANY);
     }
 
     @Test
     public void testGenericDeserialization() throws Exception {
-        String json = "{\"type\": \"QUERY\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"OR\"}";
+        String json = "{\"type\": \"QUERY\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"ANY\"}";
 
         AnalysisInput deserializedInput = getObjectMapper().readValue(json, AnalysisInput.class);
 
         assertEquals(deserializedInput.getType(), AnalysisInputType.QUERY);
         assertTrue(deserializedInput instanceof QueryAnalysisInput);
         assertEquals(((QueryAnalysisInput)deserializedInput).getTokens(), VALID_TOKENS);
-        assertEquals(((QueryAnalysisInput)deserializedInput).getJoinOperator(), QueryAnalysisInput.JoinOperator.OR);
+        assertEquals(((QueryAnalysisInput)deserializedInput).getJoinOperator(), QueryAnalysisInput.JoinOperator.ANY);
     }
 
     @Test
     public void testCaseInsensitiveDeserialization() throws Exception {
-        String json = "{\"type\": \"QUERY\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"or\"}";
+        String json = "{\"type\": \"QUERY\", \"tokens\": [\"query\", \"di\", \"prova\"], \"joinOperator\": \"any\"}";
 
         AnalysisInput deserializedInput = getObjectMapper().readValue(json, AnalysisInput.class);
 
         assertEquals(deserializedInput.getType(), AnalysisInputType.QUERY);
         assertTrue(deserializedInput instanceof QueryAnalysisInput);
         assertEquals(((QueryAnalysisInput)deserializedInput).getTokens(), VALID_TOKENS);
-        assertEquals(((QueryAnalysisInput)deserializedInput).getJoinOperator(), QueryAnalysisInput.JoinOperator.OR);
+        assertEquals(((QueryAnalysisInput)deserializedInput).getJoinOperator(), QueryAnalysisInput.JoinOperator.ANY);
     }
 }

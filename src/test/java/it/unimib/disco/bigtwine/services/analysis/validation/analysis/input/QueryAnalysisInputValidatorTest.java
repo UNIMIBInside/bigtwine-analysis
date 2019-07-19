@@ -27,7 +27,7 @@ public class QueryAnalysisInputValidatorTest {
     public void testValidInput() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(VALID_TOKENS)
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         this.validator.validate(input);
     }
@@ -36,7 +36,7 @@ public class QueryAnalysisInputValidatorTest {
     public void testEmptyTokens() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(EMPTY_TOKENS)
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         this.validator.validate(input);
     }
@@ -45,7 +45,7 @@ public class QueryAnalysisInputValidatorTest {
     public void testNullTokens() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(null)
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         this.validator.validate(input);
     }
@@ -55,7 +55,7 @@ public class QueryAnalysisInputValidatorTest {
     public void testNoTokens() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(Collections.EMPTY_LIST)
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         this.validator.validate(input);
     }

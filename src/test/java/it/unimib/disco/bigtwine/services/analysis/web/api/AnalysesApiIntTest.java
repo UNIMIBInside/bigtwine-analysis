@@ -88,7 +88,7 @@ public class AnalysesApiIntTest {
     private Analysis createAnalysis() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(Arrays.asList("query", "di", "prova"))
-            .joinOperator(QueryAnalysisInput.JoinOperator.AND);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ALL);
 
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)
@@ -104,7 +104,7 @@ public class AnalysesApiIntTest {
         AnalysisInputDTO input = new QueryAnalysisInputDTO()
             .type(AnalysisInputTypeEnum.QUERY)
             .tokens(Arrays.asList("query", "di", "prova"))
-            .joinOperator(QueryAnalysisInputDTO.JoinOperatorEnum.AND);
+            .joinOperator(QueryAnalysisInputDTO.JoinOperatorEnum.ALL);
 
         return new AnalysisDTO()
             .type(AnalysisTypeEnum.TWITTER_NEEL)

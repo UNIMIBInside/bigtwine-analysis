@@ -49,7 +49,7 @@ public class DatasetAnalysisInputValidatorTest {
     public void testInvalidInputType() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(Arrays.asList("query", "di", "prova"))
-            .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
 
         this.validator.validate(input);
     }

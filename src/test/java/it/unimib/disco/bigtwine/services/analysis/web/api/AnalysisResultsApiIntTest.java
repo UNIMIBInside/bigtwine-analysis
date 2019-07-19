@@ -68,7 +68,7 @@ public class AnalysisResultsApiIntTest {
     private Analysis createAnalysis() {
         AnalysisInput input = new QueryAnalysisInput()
             .tokens(Arrays.asList("query", "di", "prova"))
-            .joinOperator(QueryAnalysisInput.JoinOperator.AND);
+            .joinOperator(QueryAnalysisInput.JoinOperator.ALL);
 
         return new Analysis()
             .type(AnalysisType.TWITTER_NEEL)

@@ -37,7 +37,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 /**
@@ -69,7 +68,7 @@ public class AnalysisResourceIntTest {
 
     private static final QueryAnalysisInput DEFAULT_INPUT = new QueryAnalysisInput()
         .tokens(Arrays.asList("AAAAA", "AAAAA"))
-        .joinOperator(QueryAnalysisInput.JoinOperator.OR);
+        .joinOperator(QueryAnalysisInput.JoinOperator.ANY);
     private static final DatasetAnalysisInput UPDATED_INPUT = new DatasetAnalysisInput()
         .documentId("AAAAA");
 

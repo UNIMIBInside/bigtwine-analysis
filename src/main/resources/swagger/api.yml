@@ -312,8 +312,8 @@ components:
             joinOperator:
               type: string
               enum:
-                - and
-                - or
+                - all
+                - any
     DatasetAnalysisInputDTO:
       allOf:
         - $ref: '#/components/schemas/AnalysisInputDTO'

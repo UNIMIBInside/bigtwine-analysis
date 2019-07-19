@@ -4,7 +4,6 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -39,7 +38,7 @@ public class AnalysisRepositoryIntTest {
         for (int i = 1; i <= owners.length; ++i) {
             AnalysisInput input = new QueryAnalysisInput()
                 .tokens(Arrays.asList("query", "di", "prova", "" + i))
-                .joinOperator(QueryAnalysisInput.JoinOperator.AND);
+                .joinOperator(QueryAnalysisInput.JoinOperator.ALL);
 
             Analysis a = new Analysis()
                 .owner(owners[i - 1])

@@ -48,7 +48,7 @@ public class QueryAnalysisInput implements AnalysisInput {
     }
 
     public enum JoinOperator {
-        AND, OR
+        ALL, ANY
     }
 
     @Override
