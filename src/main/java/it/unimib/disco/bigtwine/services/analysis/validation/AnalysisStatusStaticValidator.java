@@ -32,6 +32,7 @@ public class AnalysisStatusStaticValidator implements AnalysisStatusValidator {
             AnalysisStatus.STOPPED,
             new HashSet<>(Arrays.asList(
                 AnalysisStatus.STARTED,
+                AnalysisStatus.FAILED,
                 AnalysisStatus.CANCELLED))
         );
 

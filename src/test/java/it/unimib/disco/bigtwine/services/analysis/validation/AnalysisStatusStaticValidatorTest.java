@@ -35,6 +35,7 @@ public class AnalysisStatusStaticValidatorTest {
         assertTrue(validator.validate(AnalysisStatus.STARTED, AnalysisStatus.CANCELLED));
 
         assertTrue(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.STARTED));
+        assertTrue(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.FAILED));
         assertTrue(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.CANCELLED));
 
         assertTrue(validator.validate(AnalysisStatus.COMPLETED, AnalysisStatus.CANCELLED));
@@ -51,7 +52,6 @@ public class AnalysisStatusStaticValidatorTest {
 
         assertFalse(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.READY));
         assertFalse(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.COMPLETED));
-        assertFalse(validator.validate(AnalysisStatus.STOPPED, AnalysisStatus.FAILED));
 
         assertFalse(validator.validate(AnalysisStatus.COMPLETED, AnalysisStatus.READY));
         assertFalse(validator.validate(AnalysisStatus.COMPLETED, AnalysisStatus.STARTED));
