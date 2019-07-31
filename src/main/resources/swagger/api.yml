@@ -485,6 +485,8 @@ components:
     LinkedEntityDTO:
       type: object
       properties:
+        value:
+          type: string
         link:
           type: string
         confidence:
