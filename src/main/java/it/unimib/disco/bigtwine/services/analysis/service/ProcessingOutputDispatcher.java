@@ -1,16 +1,17 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResultPayload;
-import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapper;
-import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
-import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPayloadMapper;
-import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPayloadMapperLocator;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.*;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisUpdatesProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
+import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class ProcessingOutputDispatcher {
     private AnalysisService analysisService;
     private AnalysisResultsRepository resultsRepository;
     private MessageChannel analysisResultsForwardChannel;
+    private MessageChannel analysisUpdatesChannel;
     private AnalysisResultPayloadMapperLocator payloadMapperLocator;
     private AnalysisResultMapperLocator resultMapperLocator;
 
@@ -39,12 +41,14 @@ public class ProcessingOutputDispatcher {
         AnalysisResultsRepository resultsRepository,
         AnalysisResultPayloadMapperLocator payloadMapperLocator,
         AnalysisResultMapperLocator resultMapperLocator,
-        AnalysisResultsProducerChannel channel) {
+        AnalysisResultsProducerChannel channel,
+        AnalysisUpdatesProducerChannel analysisUpdatesProducerChannel) {
         this.analysisService = analysisService;
         this.resultsRepository = resultsRepository;
         this.payloadMapperLocator = payloadMapperLocator;
         this.resultMapperLocator = resultMapperLocator;
         this.analysisResultsForwardChannel = channel.analysisResultsForwardedChannel();
+        this.analysisUpdatesChannel = analysisUpdatesProducerChannel.analysisUpdatesChannel();
     }
 
     private AnalysisResult<?> saveAnalysisResult(AnalysisResultProducedEvent e) {
@@ -102,11 +106,31 @@ public class ProcessingOutputDispatcher {
             .send(message);
     }
 
+    private void forwardUpdatedAnalysis(Analysis analysis) {
+        AnalysisDTO analysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);
+        if (analysisDTO != null) {
+            Message<AnalysisDTO> message = MessageBuilder
+                .withPayload(analysisDTO)
+                .build();
+
+            this.analysisUpdatesChannel.send(message);
+        }
+    }
+
     @StreamListener(AnalysisResultsConsumerChannel.CHANNEL)
     public void consumeAnalysisResult(AnalysisResultProducedEvent e) {
         AnalysisResult<?> result = this.saveAnalysisResult(e);
         if (result != null) {
             this.forwardAnalysisResult(result);
+        }
+    }
+
+    @StreamListener(AnalysisStatusChangedConsumerChannel.CHANNEL)
+    public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
+        log.debug("Consume status changed event {}", event);
+        Analysis analysis = this.analysisService.saveAnalysisStatusChange(event);
+        if (analysis != null) {
+            this.forwardUpdatedAnalysis(analysis);
         }
     }
 }

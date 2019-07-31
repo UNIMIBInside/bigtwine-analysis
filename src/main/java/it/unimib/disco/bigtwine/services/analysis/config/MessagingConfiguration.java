@@ -3,10 +3,7 @@ package it.unimib.disco.bigtwine.services.analysis.config;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.*;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +26,8 @@ import org.springframework.messaging.support.GenericMessage;
     AnalysisResultsConsumerChannel.class,
     AnalysisResultsProducerChannel.class,
     AnalysisStatusChangedConsumerChannel.class,
-    AnalysisStatusChangeRequestProducerChannel.class
+    AnalysisStatusChangeRequestProducerChannel.class,
+    AnalysisUpdatesProducerChannel.class
 })
 public class MessagingConfiguration {
 

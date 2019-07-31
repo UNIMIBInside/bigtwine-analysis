@@ -102,6 +102,9 @@ spring:
                 analysisStatusChangeRequestsChannel:
                     destination: analysis-status-change-requests
                     content-type: application/json
+                analysisUpdatesChannel:
+                    destination: analysis-updates
+                    content-type: application/json
 
 server:
     servlet:

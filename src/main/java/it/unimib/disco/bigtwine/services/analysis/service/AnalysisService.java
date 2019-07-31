@@ -253,12 +253,11 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    @StreamListener(AnalysisStatusChangedConsumerChannel.CHANNEL)
-    public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
+    public Analysis saveAnalysisStatusChange(AnalysisStatusChangedEvent event) {
         Optional<Analysis> analysisOpt = this.findOne(event.getAnalysisId());
 
         if(!analysisOpt.isPresent()) {
-            return;
+            return null;
         }
 
         Analysis analysis = analysisOpt.get();
@@ -279,6 +278,7 @@ public class AnalysisService {
                 analysis = this.save(analysis);
             } catch (ValidationException e) {
                 log.error("Cannot save status change", e);
+                return null;
             }
         }
 
@@ -291,5 +291,7 @@ public class AnalysisService {
             .analysis(analysis);
 
         this.saveStatusHistory(statusHistory);
+
+        return analysis;
     }
 }
