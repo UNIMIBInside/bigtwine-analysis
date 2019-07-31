@@ -14,7 +14,9 @@ jib {
         image = 'openjdk:8-jre-alpine'
     }
     to {
-        image = 'analysis:latest'
+        image = '535233662260.dkr.ecr.eu-central-1.amazonaws.com/bigtwine/analysis'
+        credHelper = 'ecr-login'
+        tags = ['latest', project.version]
     }
     container {
         entrypoint = ['sh', '-c', 'chmod +x /entrypoint.sh && sync && /entrypoint.sh']
