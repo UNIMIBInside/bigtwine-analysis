@@ -193,7 +193,7 @@ paths:
         description: 'The id of the analysis'
         schema:
           type: string
-    get:
+    post:
       summary: 'Search the results of an analysis'
       description: ""
       operationId: searchAnalysisResultsV1
@@ -249,6 +249,71 @@ paths:
           $ref: '#/components/responses/AnalysisNotFoundError'
       tags:
         - 'Analysis Results'
+  /documents:
+    summary: ""
+    post:
+      summary: "Upload a new document"
+      description: ""
+      operationId: uploadDocumentV1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: "File uploaded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDTO'
+      tags:
+        - 'Documents'
+  /documents/{documentId}:
+    summary: ""
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        description: 'The id of the document'
+        schema:
+          type: string
+    get:
+      summary: "Get document info"
+      description: ""
+      operationId: getDocumentMetaV1
+      responses:
+        '200':
+          description: "The document specs"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDTO'
+      tags:
+        - 'Documents'
+  /documents/{documentId}/download:
+    summary: ""
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        description: 'The id of the document'
+        schema:
+          type: string
+    get:
+      summary: "Download document content"
+      description: ""
+      operationId: downloadDocumentV1
+      responses:
+        '200':
+          description: "The content of the document"
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      tags:
+        - 'Documents'
 components:
   schemas:
     PagedResponse:
@@ -523,6 +588,23 @@ components:
           type: string
         coordinates:
           $ref: '#/components/schemas/CoordinatesDTO'
+    DocumentDTO:
+      type: object
+      properties:
+        documentId:
+          type: string
+        filename:
+          type: string
+        size:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        uploadDate:
+          type: string
+          format: 'date-time'
+        user:
+          type: string
   parameters:
     pageSizeParam:
       name: pageSize

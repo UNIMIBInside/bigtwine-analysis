@@ -105,6 +105,11 @@ spring:
                 analysisUpdatesChannel:
                     destination: analysis-updates
                     content-type: application/json
+    servlet:
+        multipart:
+            enabled: false
+            max-file-size: 1GB
+            max-request-size: 2GB
 
 server:
     servlet:

@@ -210,6 +210,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-library"
     testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
+    compile 'commons-fileupload:commons-fileupload:1.4'
     compile 'org.bitbucket.bigtwine:commons:a6684f0e89'
 }
 
