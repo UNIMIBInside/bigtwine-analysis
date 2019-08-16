@@ -2,14 +2,12 @@ package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisProgressUpdateEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResultPayload;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.*;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisUpdatesProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.*;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDTO;
@@ -129,6 +127,19 @@ public class ProcessingOutputDispatcher {
     public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
         log.debug("Consume status changed event {}", event);
         Analysis analysis = this.analysisService.saveAnalysisStatusChange(event);
+        if (analysis != null) {
+            this.forwardUpdatedAnalysis(analysis);
+        }
+    }
+
+    @StreamListener(AnalysisProgressUpdateConsumerChannel.CHANNEL)
+    public void consumeProgressUpdateEvent(AnalysisProgressUpdateEvent event) {
+        Analysis analysis = null;
+
+        if (event.getJobType().equals("PROCESSING")) {
+            analysis = this.analysisService.saveAnalysisProgressUpdate(event.getAnalysisId(), event.getProgress());
+        }
+
         if (analysis != null) {
             this.forwardUpdatedAnalysis(analysis);
         }

@@ -418,6 +418,11 @@ components:
             mapping:
               query: '#/components/schemas/QueryAnalysisInputDTO'
               dataset: '#/components/schemas/DatasetAnalysisInputDTO'
+        progress:
+          type: number
+          format: double
+          description: "A negative value if the input is an endless streaming, a value between [0, 1] otherwise"
+          readOnly: true
         createDate:
           type: string
           format: date-time

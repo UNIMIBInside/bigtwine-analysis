@@ -105,6 +105,8 @@ spring:
                 analysisUpdatesChannel:
                     destination: analysis-updates
                     content-type: application/json
+                analysisProgressUpdateChannel:
+                    destination: analysis-progress-updates
     servlet:
         multipart:
             enabled: false

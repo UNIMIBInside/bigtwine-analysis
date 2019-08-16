@@ -27,7 +27,8 @@ import org.springframework.messaging.support.GenericMessage;
     AnalysisResultsProducerChannel.class,
     AnalysisStatusChangedConsumerChannel.class,
     AnalysisStatusChangeRequestProducerChannel.class,
-    AnalysisUpdatesProducerChannel.class
+    AnalysisUpdatesProducerChannel.class,
+    AnalysisProgressUpdateConsumerChannel.class
 })
 public class MessagingConfiguration {
 

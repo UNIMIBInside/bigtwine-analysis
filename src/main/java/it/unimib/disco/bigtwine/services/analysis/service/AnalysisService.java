@@ -1,5 +1,6 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
+import it.unimib.disco.bigtwine.commons.messaging.AnalysisProgressUpdateEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
@@ -293,5 +294,23 @@ public class AnalysisService {
         this.saveStatusHistory(statusHistory);
 
         return analysis;
+    }
+
+    public Analysis saveAnalysisProgressUpdate(String analysisId, double progress) {
+        Optional<Analysis> analysisOpt = this.findOne(analysisId);
+
+        if(!analysisOpt.isPresent()) {
+            return null;
+        }
+
+        Analysis analysis = analysisOpt.get();
+        analysis.setProgress(progress);
+
+        try {
+            return this.save(analysis);
+        } catch (ValidationException e) {
+            log.error("Cannot save progress update", e);
+            return null;
+        }
     }
 }

@@ -13,8 +13,6 @@ import java.util.Objects;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
-
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -59,6 +57,9 @@ public class Analysis implements Serializable {
 
     @Field("input")
     private AnalysisInput input;
+
+    @Field("progress")
+    private double progress;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
@@ -160,6 +161,19 @@ public class Analysis implements Serializable {
         this.input = input;
     }
 
+    public double getProgress() {
+        return progress;
+    }
+
+    public Analysis progress(double progress) {
+        this.setProgress(progress);
+        return this;
+    }
+
+    public void setProgress(double progress) {
+        this.progress = progress;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
@@ -193,6 +207,7 @@ public class Analysis implements Serializable {
             ", createDate='" + getCreateDate() + "'" +
             ", updateDate='" + getUpdateDate() + "'" +
             ", input='" + getInput() + "'" +
+            ", progress='" + getProgress() + "'" +
             "}";
     }
 }
