@@ -3,6 +3,7 @@ package it.unimib.disco.bigtwine.services.analysis.service;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisProgressUpdateEvent;
+import it.unimib.disco.bigtwine.commons.models.JobTypeEnum;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResultPayload;
@@ -142,7 +143,7 @@ public class ProcessingOutputDispatcher {
     public void consumeProgressUpdateEvent(AnalysisProgressUpdateEvent event) {
         Analysis analysis = null;
 
-        if (event.getJobType().equals("PROCESSING")) {
+        if (event.getJobType() == JobTypeEnum.PROCESSING) {
             analysis = this.analysisService.saveAnalysisProgressUpdate(event.getAnalysisId(), event.getProgress());
         }
 
