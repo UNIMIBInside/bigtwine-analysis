@@ -254,8 +254,8 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    public Analysis saveAnalysisStatusChange(AnalysisStatusChangedEvent event) {
-        Optional<Analysis> analysisOpt = this.findOne(event.getAnalysisId());
+    public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, boolean isUserInitiated, String message) {
+        Optional<Analysis> analysisOpt = this.findOne(analysisId);
 
         if(!analysisOpt.isPresent()) {
             return null;
@@ -263,11 +263,8 @@ public class AnalysisService {
 
         Analysis analysis = analysisOpt.get();
         AnalysisStatus oldStatus = analysis.getStatus();
-        AnalysisStatus newStatus;
 
-        if (event.getStatus() != null) {
-            newStatus = AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus());
-        }else {
+        if (newStatus == null) {
             // Status unchanged
             newStatus = oldStatus;
         }
@@ -287,8 +284,8 @@ public class AnalysisService {
             .oldStatus(oldStatus)
             .newStatus(newStatus)
             .date(Instant.now())
-            .user(event.isUserInitiated() ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
-            .message(event.getMessage())
+            .user(isUserInitiated ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
+            .message(message)
             .analysis(analysis);
 
         this.saveStatusHistory(statusHistory);

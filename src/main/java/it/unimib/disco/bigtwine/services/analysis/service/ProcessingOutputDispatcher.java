@@ -126,7 +126,13 @@ public class ProcessingOutputDispatcher {
     @StreamListener(AnalysisStatusChangedConsumerChannel.CHANNEL)
     public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
         log.debug("Consume status changed event {}", event);
-        Analysis analysis = this.analysisService.saveAnalysisStatusChange(event);
+
+        Analysis analysis = this.analysisService.saveAnalysisStatusChange(
+            event.getAnalysisId(),
+            AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus()),
+            event.isUserInitiated(),
+            event.getMessage());
+
         if (analysis != null) {
             this.forwardUpdatedAnalysis(analysis);
         }
