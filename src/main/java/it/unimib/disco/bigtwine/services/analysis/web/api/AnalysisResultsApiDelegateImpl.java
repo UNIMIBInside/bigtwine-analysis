@@ -11,6 +11,7 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDT
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultsCount;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.PagedAnalysisResults;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -117,7 +118,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         Pageable page = PageRequest.of(pageNum, pageSize);
         BasicQuery query = new BasicQuery(body);
         query.with(page);
-        query.addCriteria(Criteria.where("analysisId").is(analysis.getId()));
+        query.addCriteria(Criteria.where("analysis.$id").is(new ObjectId(analysis.getId())));
 
         log.debug("Results search query: {}", query.getQueryObject().toJson());
 
