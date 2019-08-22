@@ -1,19 +1,13 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
-import it.unimib.disco.bigtwine.commons.messaging.AnalysisProgressUpdateEvent;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
-import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
-import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
-import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
-import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
@@ -22,10 +16,8 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
@@ -45,7 +37,6 @@ public class AnalysisService {
     private final Logger log = LoggerFactory.getLogger(AnalysisService.class);
 
     private final AnalysisRepository analysisRepository;
-    private final AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
     private final AnalysisResultsRepository analysisResultsRepository;
 
     private final AnalysisStatusValidator analysisStatusValidator;
@@ -55,13 +46,11 @@ public class AnalysisService {
 
     public AnalysisService(
         AnalysisRepository analysisRepository,
-        AnalysisStatusHistoryRepository analysisStatusHistoryRepository,
         AnalysisResultsRepository analysisResultsRepository,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisStatusChangeRequestProducerChannel channel) {
         this.analysisRepository = analysisRepository;
-        this.analysisStatusHistoryRepository = analysisStatusHistoryRepository;
         this.analysisResultsRepository = analysisResultsRepository;
         this.analysisStatusValidator = analysisStatusValidator;
         this.inputValidatorLocator = inputValidatorLocator;
@@ -226,11 +215,12 @@ public class AnalysisService {
      * @return A change list of the analysis status
      */
     public List<AnalysisStatusHistory> getStatusHistory(String id) {
-        return this.analysisStatusHistoryRepository.findByAnalysisId(id, Sort.by(Sort.Direction.DESC, "date"));
-    }
-
-    public void saveStatusHistory(AnalysisStatusHistory statusHistory) {
-        this.analysisStatusHistoryRepository.save(statusHistory);
+        Analysis analysis = this.findOne(id).orElse(null);
+        if (analysis == null) {
+            return null;
+        } else {
+            return analysis.getStatusHistory();
+        }
     }
 
     public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {
@@ -280,24 +270,23 @@ public class AnalysisService {
                 long resultsCount = this.analysisResultsRepository.countByAnalysisId(analysisId);
                 analysis.setResultsCount(resultsCount);
             }
-
-            try {
-                analysis = this.save(analysis);
-            } catch (ValidationException e) {
-                log.error("Cannot save status change", e);
-                return null;
-            }
         }
 
-        AnalysisStatusHistory statusHistory = new AnalysisStatusHistory()
+        AnalysisStatusHistory statusChange = new AnalysisStatusHistory()
             .oldStatus(oldStatus)
             .newStatus(newStatus)
             .date(Instant.now())
             .user(isUserInitiated ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
-            .message(message)
-            .analysis(analysis);
+            .message(message);
 
-        this.saveStatusHistory(statusHistory);
+        analysis.addStatusChange(statusChange);
+
+        try {
+            analysis = this.save(analysis);
+        } catch (ValidationException e) {
+            log.error("Cannot save status change", e);
+            return null;
+        }
 
         return analysis;
     }

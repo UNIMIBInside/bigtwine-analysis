@@ -418,6 +418,10 @@ components:
           readOnly: true
         status:
           $ref: '#/components/schemas/AnalysisStatusEnum'
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisStatusHistoryDTO'
         visibility:
           $ref: '#/components/schemas/AnalysisVisibilityEnum'
         input:

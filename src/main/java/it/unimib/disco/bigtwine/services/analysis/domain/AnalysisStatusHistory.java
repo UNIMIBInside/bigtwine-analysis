@@ -1,16 +1,10 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import javax.validation.constraints.*;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Objects;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 
@@ -19,13 +13,9 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisErr
 /**
  * A AnalysisStatusHistory.
  */
-@Document(collection = "analysis_status_history")
 public class AnalysisStatusHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    @Id
-    private String id;
 
     @NotNull
     @Field("new_status")
@@ -47,21 +37,7 @@ public class AnalysisStatusHistory implements Serializable {
     @Field("date")
     private Instant date;
 
-    @DBRef
-    @Indexed
-    @Field("analysis")
-    @JsonIgnoreProperties("")
-    private Analysis analysis;
-
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public AnalysisStatus getNewStatus() {
         return newStatus;
     }
@@ -140,44 +116,11 @@ public class AnalysisStatusHistory implements Serializable {
         this.date = date;
     }
 
-    public Analysis getAnalysis() {
-        return analysis;
-    }
-
-    public AnalysisStatusHistory analysis(Analysis analysis) {
-        this.analysis = analysis;
-        return this;
-    }
-
-    public void setAnalysis(Analysis analysis) {
-        this.analysis = analysis;
-    }
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        AnalysisStatusHistory analysisStatusHistory = (AnalysisStatusHistory) o;
-        if (analysisStatusHistory.getId() == null || getId() == null) {
-            return false;
-        }
-        return Objects.equals(getId(), analysisStatusHistory.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(getId());
-    }
 
     @Override
     public String toString() {
         return "AnalysisStatusHistory{" +
-            "id=" + getId() +
             ", newStatus='" + getNewStatus() + "'" +
             ", oldStatus='" + getOldStatus() + "'" +
             ", user='" + getUser() + "'" +

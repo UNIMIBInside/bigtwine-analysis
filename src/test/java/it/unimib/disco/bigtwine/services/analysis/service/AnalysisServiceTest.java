@@ -15,7 +15,6 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
-import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,9 +52,6 @@ public class AnalysisServiceTest {
 
     @Autowired
     private AnalysisRepository analysisRepository;
-
-    @Autowired
-    private AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
     private Analysis createAnalysis() {
         AnalysisInput input = new QueryAnalysisInput()
@@ -113,10 +109,11 @@ public class AnalysisServiceTest {
         statusChangedChannel.analysisStatusChangedChannel()
             .send(MessageBuilder.withPayload(event).build());
 
-        verify(this.analysisService, times(1)).consumeStatusChangedEvent(event);
+        verify(this.analysisService, times(1)).saveAnalysisStatusChange(
+            analysis.getId(), AnalysisStatus.STARTED, false, null);
 
-        List<AnalysisStatusHistory> statusHistory = this.analysisStatusHistoryRepository
-            .findByAnalysisId(analysis.getId());
+        List<AnalysisStatusHistory> statusHistory = this.analysisService
+            .getStatusHistory(analysis.getId());
 
         assertThat(statusHistory).size().isGreaterThan(0);
         assertThat(statusHistory.get(0).getOldStatus()).isEqualTo(AnalysisStatus.READY);

@@ -9,6 +9,8 @@ import javax.validation.constraints.*;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
@@ -38,6 +40,9 @@ public class Analysis implements Serializable {
     @NotNull
     @Field("status")
     private AnalysisStatus status;
+
+    @Field("status_history")
+    private List<AnalysisStatusHistory> statusHistory;
 
     @NotNull
     @Field("visibility")
@@ -97,6 +102,27 @@ public class Analysis implements Serializable {
 
     public void setStatus(AnalysisStatus status) {
         this.status = status;
+    }
+
+    public List<AnalysisStatusHistory> getStatusHistory() {
+        return statusHistory;
+    }
+
+    public Analysis statusHistory(List<AnalysisStatusHistory> statusHistory) {
+        this.statusHistory = statusHistory;
+        return this;
+    }
+
+    public void setStatusHistory(List<AnalysisStatusHistory> statusHistory) {
+        this.statusHistory = statusHistory;
+    }
+
+    public void addStatusChange(@NotNull AnalysisStatusHistory change) {
+        if (this.statusHistory == null) {
+            this.statusHistory = new ArrayList<>();
+        }
+
+        this.statusHistory.add(change);
     }
 
     public AnalysisVisibility getVisibility() {

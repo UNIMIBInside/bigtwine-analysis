@@ -15,7 +15,6 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisTyp
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
-import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.TestUtil;
@@ -56,9 +55,6 @@ public class AnalysesApiIntTest {
 
     @Autowired
     private AnalysisRepository analysisRepository;
-
-    @Autowired
-    private AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
 
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -388,9 +384,9 @@ public class AnalysesApiIntTest {
         Analysis testAnalysis = this.analysisRepository.findById(analysis.getId()).orElse(null);
         assertThat(testAnalysis).isNotNull();
 
-        List<AnalysisStatusHistory> statusHistory = this.analysisStatusHistoryRepository
-            .findByAnalysisId(testAnalysis.getId());
+        List<AnalysisStatusHistory> statusHistory = testAnalysis.getStatusHistory();
 
+        // Vengono registrati solo i cambi effettivi (es. Quelli che arrivano dal JobSupervisor)
         assertThat(statusHistory).hasSize(0);
     }
 }
