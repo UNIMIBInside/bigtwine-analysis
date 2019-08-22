@@ -9,6 +9,7 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthenticatedException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UploadFailedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.DocumentDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
@@ -39,6 +40,8 @@ import java.time.ZoneOffset;
 @Service
 public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     private final Logger log = LoggerFactory.getLogger(DocumentsApiDelegateImpl.class);
+
+    private final String METADATA_USER_KEY = "user";
 
     private final NativeWebRequest request;
     private GridFsTemplate gridFsTemplate;
@@ -80,7 +83,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
             .documentId(file.getObjectId().toString())
             .filename(file.getFilename())
             .size(file.getLength())
-            .user(file.getMetadata().getString("user"))
+            .user(file.getMetadata().getString(METADATA_USER_KEY))
             .uploadDate(OffsetDateTime.ofInstant(file.getUploadDate().toInstant(), ZoneOffset.UTC))
             .contentType(contentType);
     }
@@ -92,6 +95,8 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<DocumentDTO> getDocumentMetaV1(String documentId) {
+        AnalysisUtil.getCurrentUserIdentifier()
+            .orElseThrow(UnauthenticatedException::new);
         GridFSFile file = this.getFile(documentId);
 
         return ResponseEntity.ok(this.createDocumentFromFile(file));
@@ -99,7 +104,14 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<Resource> downloadDocumentV1(String documentId) {
+        String userId = AnalysisUtil.getCurrentUserIdentifier().orElseThrow(UnauthenticatedException::new);
+
         GridFSFile file = this.getFile(documentId);
+
+        if (!userId.equals(file.getMetadata().get(METADATA_USER_KEY))) {
+            throw new UnauthorizedException("Only the uploader can download this document");
+        }
+
         InputStream stream = this.getGridFs(null).openDownloadStream(file.getObjectId());
         Resource resource = new GridFsResource(file, stream);
 
@@ -108,9 +120,9 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<DocumentDTO> uploadDocumentV1() {
+        String userId = AnalysisUtil.getCurrentUserIdentifier().orElseThrow(UnauthenticatedException::new);
         HttpServletRequest request = (HttpServletRequest) this.request.getNativeRequest();
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-        String userId = AnalysisUtil.getCurrentUserIdentifier().orElseThrow(UnauthenticatedException::new);
 
         if (!isMultipart) {
             log.debug("Request isn't multipart");
@@ -130,7 +142,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
                 if (!item.isFormField()) {
                     // Process the InputStream
                     DBObject metadata = new BasicDBObject();
-                    metadata.put("user", userId);
+                    metadata.put(METADATA_USER_KEY, userId);
                     objectId = gridFsTemplate.store(stream, item.getName(), item.getContentType(), metadata);
                 }
             }

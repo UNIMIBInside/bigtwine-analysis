@@ -267,6 +267,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocumentDTO'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
       tags:
         - 'Documents'
   /documents/{documentId}:
@@ -289,6 +291,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocumentDTO'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/DocumentNotFoundError'
       tags:
         - 'Documents'
   /documents/{documentId}/download:
@@ -312,6 +318,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/UnaccessibleError'
+        '404':
+          $ref: '#/components/responses/DocumentNotFoundError'
       tags:
         - 'Documents'
 components:
@@ -641,11 +653,13 @@ components:
     UnauthorizedError:
       description: JWT token is missing or invalid
     UnaccessibleError:
-      description: Cannot access to this analysis
+      description: Cannot access to this resource
     AnalysisNotFoundError:
       description: Analysis not found
     InvalidStatusError:
       description: Analysis status change cannot be applied
+    DocumentNotFoundError:
+      description: Document not found
 
 servers:
   -
