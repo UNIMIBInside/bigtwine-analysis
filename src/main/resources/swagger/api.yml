@@ -614,13 +614,13 @@ components:
     pageSizeParam:
       name: pageSize
       in: query
-      description: 'How many items to return per page (max 100)'
+      description: 'How many items to return per page'
       required: false
       schema:
         type: integer
         format: int32
         minimum: 1
-        maximum: 100
+        maximum: 2000
         default: 100
     pageParam:
       name: page
