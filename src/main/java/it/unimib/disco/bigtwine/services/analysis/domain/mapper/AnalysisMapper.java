@@ -46,6 +46,16 @@ public interface AnalysisMapper {
 
     AnalysisDTO analysisDtoFromAnalysis(Analysis analysis);
 
+    User userDTOToUser(UserDTO user);
+
+    default User userFromUserMap(Map<Object, Object> userMap) {
+        if (userMap == null) {
+            return null;
+        }
+
+        return this.getObjectMapper().convertValue(userMap, User.class);
+    }
+
     List<AnalysisDTO> analysisDtosFromAnalyses(List<Analysis> analyses);
 
     AnalysisVisibility visibilityFromVisibilityEnum(AnalysisVisibilityEnum visibility);
@@ -102,10 +112,18 @@ public interface AnalysisMapper {
     List<AnalysisStatusHistoryDTO> statusHistoryDTOsFromStatusHistories(List<AnalysisStatusHistory> statusHistories);
 
     default AnalysisErrorCode analysisErrorCodeFromInt(Integer value) {
-        return AnalysisErrorCode.valueOf(value);
+        if (value != null) {
+            return AnalysisErrorCode.valueOf(value);
+        } else {
+            return null;
+        }
     }
 
     default Integer intFromAnalysisErrorCode(AnalysisErrorCode value) {
-        return value.getValue();
+        if (value != null) {
+            return value.getValue();
+        } else {
+            return 0;
+        }
     }
 }

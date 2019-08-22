@@ -13,7 +13,7 @@ public class DatasetAnalysisInputValidator implements AnalysisInputValidator {
         String documentId = ((DatasetAnalysisInput)input).getDocumentId();
 
         if (documentId == null || documentId.trim().isEmpty()) {
-            throw new InvalidAnalysisInputProvidedException("Invalid document input, no document id provided");
+            throw new InvalidAnalysisInputProvidedException("Invalid document input, no document uid provided");
         }
     }
 }

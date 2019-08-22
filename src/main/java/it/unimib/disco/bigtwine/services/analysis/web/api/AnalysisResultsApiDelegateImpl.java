@@ -60,7 +60,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
 
     private Analysis getAnalysisById(String analysisId) {
         Analysis analysis = this.analysisService.findOne(analysisId).orElseThrow(() ->
-            new NoSuchEntityException(String.format("Analysis with id '%s' not found", analysisId))
+            new NoSuchEntityException(String.format("Analysis with uid '%s' not found", analysisId))
         );
 
         AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
@@ -118,7 +118,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         Pageable page = PageRequest.of(pageNum, pageSize);
         BasicQuery query = new BasicQuery(body);
         query.with(page);
-        query.addCriteria(Criteria.where("analysis.$id").is(new ObjectId(analysis.getId())));
+        query.addCriteria(Criteria.where("analysis.$uid").is(new ObjectId(analysis.getId())));
 
         log.debug("Results search query: {}", query.getQueryObject().toJson());
 

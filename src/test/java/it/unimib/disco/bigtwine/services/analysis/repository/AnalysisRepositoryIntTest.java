@@ -4,6 +4,7 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
 import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -41,7 +42,7 @@ public class AnalysisRepositoryIntTest {
                 .joinOperator(QueryAnalysisInput.JoinOperator.ALL);
 
             Analysis a = new Analysis()
-                .owner(owners[i - 1])
+                .owner(new User().uid(owners[i - 1]).username(owners[i - 1]))
                 .status(AnalysisStatus.READY)
                 .type(AnalysisType.TWITTER_NEEL)
                 .visibility(AnalysisVisibility.PUBLIC)
@@ -55,12 +56,12 @@ public class AnalysisRepositoryIntTest {
 
     @Test
     public void findByOwner() {
-        List<Analysis> analyses = this.analysisRepository.findByOwner("user-1");
+        List<Analysis> analyses = this.analysisRepository.findByOwnerUid("user-1");
 
         assertNotNull(analyses);
         assertEquals(3, analyses.size());
 
-        analyses = this.analysisRepository.findByOwner("user-non-esistente");
+        analyses = this.analysisRepository.findByOwnerUid("user-non-esistente");
 
         assertNotNull(analyses);
         assertEquals(0, analyses.size());
@@ -69,7 +70,7 @@ public class AnalysisRepositoryIntTest {
     @Test
     public void findByOwnerPaged() {
         Pageable page = PageRequest.of(1, 2);
-        Page<Analysis> analyses = this.analysisRepository.findByOwner("user-1", page);
+        Page<Analysis> analyses = this.analysisRepository.findByOwnerUid("user-1", page);
 
         assertNotNull(analyses);
         assertEquals(2, analyses.getTotalPages());

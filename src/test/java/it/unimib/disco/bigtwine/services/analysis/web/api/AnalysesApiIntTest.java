@@ -6,10 +6,7 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig;
 import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUser;
 import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityContextFactory;
-import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
-import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -92,7 +89,9 @@ public class AnalysesApiIntTest {
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)
             .status(AnalysisStatus.READY)
-            .owner("testuser-1")
+            .owner(new User()
+                .uid("testuser-1")
+                .username("testuser-1"))
             .input(input);
     }
 
@@ -185,13 +184,13 @@ public class AnalysesApiIntTest {
     public void testGetPublicAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PUBLIC)
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.id").value(analysis.getId()));
+            .andExpect(jsonPath("$.uid").value(analysis.getId()));
     }
 
     @Test
@@ -199,13 +198,13 @@ public class AnalysesApiIntTest {
     public void testGetOwnedPrivateAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.id").value(analysis.getId()));
+            .andExpect(jsonPath("$.uid").value(analysis.getId()));
     }
 
     @Test
@@ -213,10 +212,10 @@ public class AnalysesApiIntTest {
     public void testGetUnonwnedPrivateAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
@@ -226,13 +225,13 @@ public class AnalysesApiIntTest {
         this.analysisRepository.deleteAll();
         Analysis a1 = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         Analysis a2 = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         Analysis a3 = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         a1 = this.analysisRepository.save(a1);
         this.analysisRepository.save(a2);
         a3 = this.analysisRepository.save(a3);
@@ -243,18 +242,18 @@ public class AnalysesApiIntTest {
             .andExpect(jsonPath("$.totalCount").value(2))
             .andExpect(jsonPath("$.count").value(2))
             .andExpect(jsonPath("$.objects.length()").value(2))
-            .andExpect(jsonPath("$.objects[0].id").value(a1.getId()))
-            .andExpect(jsonPath("$.objects[1].id").value(a3.getId()));
+            .andExpect(jsonPath("$.objects[0].uid").value(a1.getId()))
+            .andExpect(jsonPath("$.objects[1].uid").value(a3.getId()));
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testDeleteOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(delete("/api/public/analyses/{id}", analysis.getId()))
+        this.restApiMvc.perform(delete("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk());
 
         AnalysisStatus statusBeforeDelete = analysis.getStatus();
@@ -275,7 +274,7 @@ public class AnalysesApiIntTest {
             AnalysisStatusChangeRequestedEvent.class);
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
-        assertThat(event.isUserRequested()).isEqualTo(true);
+        assertThat(event.getUser()).isNotNull();
         assertThat(event.getDesiredStatus())
             .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.CANCELLED);
     }
@@ -284,10 +283,10 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testDeleteUnownedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(delete("/api/public/analyses/{id}", analysis.getId()))
+        this.restApiMvc.perform(delete("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
@@ -295,7 +294,7 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateStatusOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-1")
+            .owner(new User().uid("testuser-1").username("testuser-1"))
             .status(AnalysisStatus.READY);
         analysis = this.analysisRepository.save(analysis);
 
@@ -303,7 +302,7 @@ public class AnalysesApiIntTest {
             .status(AnalysisStatusEnum.STARTED);
         AnalysisStatus statusBeforeUpdate = analysis.getStatus();
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());
@@ -320,7 +319,7 @@ public class AnalysesApiIntTest {
             AnalysisStatusChangeRequestedEvent.class);
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
-        assertThat(event.isUserRequested()).isEqualTo(true);
+        assertThat(event.getUser()).isNotNull();
         assertThat(event.getDesiredStatus())
             .isEqualTo(it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum.STARTED);
     }
@@ -329,14 +328,14 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateVisibilityOwnedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-1")
+            .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PRIVATE);
         analysis = this.analysisRepository.save(analysis);
 
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .visibility(AnalysisVisibilityEnum.PUBLIC);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());
@@ -352,14 +351,14 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testUpdateUnownedAnalysis() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-2")
+            .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PRIVATE);
         analysis = this.analysisRepository.save(analysis);
 
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .visibility(AnalysisVisibilityEnum.PUBLIC);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isUnauthorized());
@@ -369,14 +368,16 @@ public class AnalysesApiIntTest {
     @WithMockCustomUser(userId = "testuser-1")
     public void testCreateStatusHistory() throws Exception {
         Analysis analysis = this.createAnalysis()
-            .owner("testuser-1")
+            .owner(new User()
+                .uid("testuser-1")
+                .username("testuser-1"))
             .status(AnalysisStatus.READY);
         analysis = this.analysisRepository.save(analysis);
 
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .status(AnalysisStatusEnum.STARTED);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());

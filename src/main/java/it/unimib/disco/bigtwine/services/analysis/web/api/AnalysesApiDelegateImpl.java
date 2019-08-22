@@ -1,6 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
+import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
@@ -45,11 +46,14 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     }
 
     private boolean checkAnalysisOwnership(@NotNull Analysis analysis, String ownerId) {
-        return ownerId != null && ownerId.equals(analysis.getOwner());
+        return ownerId != null && analysis.getOwner() != null && ownerId.equals(analysis.getOwner().getUid());
     }
 
     private Optional<String> getCurrentUserIdentifier() {
         return SecurityUtils.getCurrentUserId();
+    }
+    private Optional<User> getCurrentUser() {
+        return AnalysisUtil.getCurrentUser();
     }
 
     private ResponseEntity<AnalysisDTO> updateAnalysis(
@@ -102,14 +106,10 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
     @Override
     public ResponseEntity<AnalysisDTO> createAnalysisV1(AnalysisDTO analysis) {
-        String ownerId = this.getCurrentUserIdentifier().orElse(null);
-
-        if (ownerId == null) {
-            throw new UnauthorizedException();
-        }
+        User owner = this.getCurrentUser().orElseThrow(UnauthorizedException::new);
 
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
-        a.setOwner(ownerId);
+        a.setOwner(owner);
 
         try {
             a = this.analysisService.save(a);

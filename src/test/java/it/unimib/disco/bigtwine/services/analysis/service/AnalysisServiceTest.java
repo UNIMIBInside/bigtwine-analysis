@@ -5,10 +5,7 @@ import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedE
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangedEvent;
 import it.unimib.disco.bigtwine.commons.models.AnalysisStatusEnum;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
-import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisInput;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
-import it.unimib.disco.bigtwine.services.analysis.domain.QueryAnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -64,7 +61,9 @@ public class AnalysisServiceTest {
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)
             .status(AnalysisStatus.READY)
-            .owner("testuser-1")
+            .owner(new User()
+                .uid("testuser-1")
+                .username("testuser-1"))
             .input(input);
     }
 

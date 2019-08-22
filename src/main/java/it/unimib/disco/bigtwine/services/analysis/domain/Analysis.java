@@ -50,7 +50,7 @@ public class Analysis implements Serializable {
 
     @NotNull
     @Field("owner")
-    private String owner;
+    private User owner;
 
     @NotNull
     @Field("create_date")
@@ -138,16 +138,16 @@ public class Analysis implements Serializable {
         this.visibility = visibility;
     }
 
-    public String getOwner() {
+    public User getOwner() {
         return owner;
     }
 
-    public Analysis owner(String ownerId) {
-        this.owner = ownerId;
+    public Analysis owner(User owner) {
+        this.owner = owner;
         return this;
     }
 
-    public void setOwner(String owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 
@@ -241,7 +241,7 @@ public class Analysis implements Serializable {
     @Override
     public String toString() {
         return "Analysis{" +
-            "id=" + getId() +
+            "uid=" + getId() +
             ", type='" + getType() + "'" +
             ", status='" + getStatus() + "'" +
             ", visibility='" + getVisibility() + "'" +

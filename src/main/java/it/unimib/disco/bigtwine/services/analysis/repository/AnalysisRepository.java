@@ -4,6 +4,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 @Repository
 public interface AnalysisRepository extends MongoRepository<Analysis, String> {
-    List<Analysis> findByOwner(String owner);
-    Page<Analysis> findByOwner(String owner, Pageable page);
-    long countByOwner(String owner);
+    List<Analysis> findByOwnerUid(String ownerId);
+    Page<Analysis> findByOwnerUid(String ownerId, Pageable page);
+    long countByOwnerUid(String owner);
 }

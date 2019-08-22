@@ -3,6 +3,7 @@ package it.unimib.disco.bigtwine.services.analysis.service;
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
+import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
@@ -163,7 +164,7 @@ public class AnalysisService {
      */
     public List<Analysis> findByOwner(String owner) {
         log.debug("Request to get all Analyses of an user");
-        return analysisRepository.findByOwner(owner);
+        return analysisRepository.findByOwnerUid(owner);
     }
 
     /**
@@ -173,7 +174,7 @@ public class AnalysisService {
      */
     public Page<Analysis> findByOwner(String owner, Pageable page) {
         log.debug("Request to get all Analyses of an user");
-        return analysisRepository.findByOwner(owner, page);
+        return analysisRepository.findByOwnerUid(owner, page);
     }
 
     /**
@@ -183,14 +184,14 @@ public class AnalysisService {
      * @return the number of analyses owned by indicated user
      */
     public Long countByOwner(String owner) {
-        return analysisRepository.countByOwner(owner);
+        return analysisRepository.countByOwnerUid(owner);
     }
 
 
     /**
-     * Get one analysis by id.
+     * Get one analysis by uid.
      *
-     * @param id the id of the entity
+     * @param id the uid of the entity
      * @return the entity
      */
     public Optional<Analysis> findOne(String id) {
@@ -199,9 +200,9 @@ public class AnalysisService {
     }
 
     /**
-     * Delete the analysis by id.
+     * Delete the analysis by uid.
      *
-     * @param id the id of the entity
+     * @param id the uid of the entity
      */
     public void delete(String id) {
         log.debug("Request to delete Analysis : {}", id);
@@ -211,7 +212,7 @@ public class AnalysisService {
     /**
      * Restituisce la lista di tutti i cambi di stato dell'analisi indicata
      *
-     * @param id the id of the entity
+     * @param id the uid of the entity
      * @return A change list of the analysis status
      */
     public List<AnalysisStatusHistory> getStatusHistory(String id) {
@@ -225,7 +226,7 @@ public class AnalysisService {
 
     public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {
         if (analysis.getId() == null) {
-            throw new IllegalArgumentException("analysis hasn't an id");
+            throw new IllegalArgumentException("analysis hasn't an uid");
         }
 
         if (!this.analysisStatusValidator.validate(analysis.getStatus(), newStatus)) {
@@ -236,9 +237,9 @@ public class AnalysisService {
             return;
         }
 
-        String user = null;
+        User user = null;
         if (userRequested) {
-            user = AnalysisUtil.getCurrentUserIdentifier().orElse(null);
+            user = AnalysisUtil.getCurrentUser().orElse(null);
         }
 
         AnalysisStatusChangeRequestedEvent event = new AnalysisStatusChangeRequestedEvent();
@@ -253,7 +254,7 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, String user, String message) {
+    public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, User user, String message) {
         Optional<Analysis> analysisOpt = this.findOne(analysisId);
 
         if(!analysisOpt.isPresent()) {

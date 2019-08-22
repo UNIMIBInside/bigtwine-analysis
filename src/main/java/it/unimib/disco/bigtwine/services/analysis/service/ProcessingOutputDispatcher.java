@@ -21,6 +21,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -128,10 +129,12 @@ public class ProcessingOutputDispatcher {
     public void consumeStatusChangedEvent(AnalysisStatusChangedEvent event) {
         log.debug("Consume status changed event {}", event);
 
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> user = (Map<Object, Object>) event.getUser();
         Analysis analysis = this.analysisService.saveAnalysisStatusChange(
             event.getAnalysisId(),
             AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus()),
-            event.getUser(),
+            AnalysisMapper.INSTANCE.userFromUserMap(user),
             event.getMessage());
 
         if (analysis != null) {

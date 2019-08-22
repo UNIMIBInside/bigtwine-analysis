@@ -55,7 +55,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The id of the analysis to retrieve'
+        description: 'The uid of the analysis to retrieve'
         schema:
           type: string
     get:
@@ -127,7 +127,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The id of the analysis to retrieve'
+        description: 'The uid of the analysis to retrieve'
         schema:
           type: string
     get:
@@ -159,7 +159,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The id of the analysis'
+        description: 'The uid of the analysis'
         schema:
           type: string
     get:
@@ -190,7 +190,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The id of the analysis'
+        description: 'The uid of the analysis'
         schema:
           type: string
     post:
@@ -227,7 +227,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The id of the analysis'
+        description: 'The uid of the analysis'
         schema:
           type: string
     get:
@@ -277,7 +277,7 @@ paths:
       - name: documentId
         in: path
         required: true
-        description: 'The id of the document'
+        description: 'The uid of the document'
         schema:
           type: string
     get:
@@ -303,7 +303,7 @@ paths:
       - name: documentId
         in: path
         required: true
-        description: 'The id of the document'
+        description: 'The uid of the document'
         schema:
           type: string
     get:
@@ -340,6 +340,13 @@ components:
           type: integer
         count:
           type: integer
+    UserDTO:
+      type: object
+      properties:
+        uid:
+          type: string
+        username:
+          type: string
     AnalysisStatusEnum:
       type: string
       default: ready
@@ -414,8 +421,9 @@ components:
         type:
           $ref: '#/components/schemas/AnalysisTypeEnum'
         owner:
-          type: string
-          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/UserDTO'
+            - readOnly: true
         status:
           $ref: '#/components/schemas/AnalysisStatusEnum'
         statusHistory:
@@ -470,7 +478,7 @@ components:
         errorCode:
           type: integer
         user:
-          type: string
+          $ref: '#/components/schemas/UserDTO'
         date:
           type: string
           format: date-time
@@ -538,7 +546,7 @@ components:
     TwitterStatusDTO:
       type: object
       required:
-        - id
+        - uid
         - text
       properties:
         id:
@@ -630,7 +638,7 @@ components:
           type: string
           format: 'date-time'
         user:
-          type: string
+          $ref: '#/components/schemas/UserDTO'
   parameters:
     pageSizeParam:
       name: pageSize

@@ -9,6 +9,7 @@ import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
 import it.unimib.disco.bigtwine.services.analysis.domain.DatasetAnalysisInput;
+import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisResultsProducerChannel;
@@ -72,7 +73,9 @@ public class ProcessingOutputDispatcherIntTest {
             new Analysis()
                 .type(AnalysisType.TWITTER_NEEL)
                 .input(new DatasetAnalysisInput().documentId("testdoc-1"))
-                .owner("testuser-1")
+                .owner(new User()
+                    .uid("testuser-1")
+                    .username("testuser-1"))
         );
     }
 

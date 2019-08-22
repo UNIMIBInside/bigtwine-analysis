@@ -7,17 +7,18 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthenticatedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UploadFailedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.DocumentDTO;
+import it.unimib.disco.bigtwine.services.analysis.web.api.model.UserDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.util.Streams;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,8 @@ import java.time.ZoneOffset;
 public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     private final Logger log = LoggerFactory.getLogger(DocumentsApiDelegateImpl.class);
 
-    private final String METADATA_USER_KEY = "user";
+    private final String METADATA_USERID_KEY = "userid";
+    private final String METADATA_USERNAME_KEY = "username";
 
     private final NativeWebRequest request;
     private GridFsTemplate gridFsTemplate;
@@ -64,7 +66,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
         GridFSFile file = gridFsTemplate.findOne(query);
 
         if (file == null) {
-            throw new NoSuchEntityException(String.format("Document with id %s not found", objectId));
+            throw new NoSuchEntityException(String.format("Document with uid %s not found", objectId));
         }
 
         return file;
@@ -83,7 +85,9 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
             .documentId(file.getObjectId().toString())
             .filename(file.getFilename())
             .size(file.getLength())
-            .user(file.getMetadata().getString(METADATA_USER_KEY))
+            .user(new UserDTO()
+                .uid(file.getMetadata().getString(METADATA_USERID_KEY))
+                .username(file.getMetadata().getString(METADATA_USERNAME_KEY)))
             .uploadDate(OffsetDateTime.ofInstant(file.getUploadDate().toInstant(), ZoneOffset.UTC))
             .contentType(contentType);
     }
@@ -108,7 +112,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
         GridFSFile file = this.getFile(documentId);
 
-        if (!userId.equals(file.getMetadata().get(METADATA_USER_KEY))) {
+        if (!userId.equals(file.getMetadata().get(METADATA_USERID_KEY))) {
             throw new UnauthorizedException("Only the uploader can download this document");
         }
 
@@ -120,7 +124,8 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<DocumentDTO> uploadDocumentV1() {
-        String userId = AnalysisUtil.getCurrentUserIdentifier().orElseThrow(UnauthenticatedException::new);
+        String userId = SecurityUtils.getCurrentUserId().orElseThrow(UnauthenticatedException::new);
+        String username = SecurityUtils.getCurrentUserLogin().orElse(null);
         HttpServletRequest request = (HttpServletRequest) this.request.getNativeRequest();
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 
@@ -142,7 +147,8 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
                 if (!item.isFormField()) {
                     // Process the InputStream
                     DBObject metadata = new BasicDBObject();
-                    metadata.put(METADATA_USER_KEY, userId);
+                    metadata.put(METADATA_USERID_KEY, userId);
+                    metadata.put(METADATA_USERNAME_KEY, username);
                     objectId = gridFsTemplate.store(stream, item.getName(), item.getContentType(), metadata);
                 }
             }

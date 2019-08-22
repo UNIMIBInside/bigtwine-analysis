@@ -25,7 +25,7 @@ public class AnalysisStatusHistory implements Serializable {
     private AnalysisStatus oldStatus;
 
     @Field("user")
-    private String user;
+    private User user;
 
     @Field("error_code")
     private AnalysisErrorCode errorCode;
@@ -64,16 +64,16 @@ public class AnalysisStatusHistory implements Serializable {
         this.oldStatus = oldStatus;
     }
 
-    public String getUser() {
+    public User getUser() {
         return user;
     }
 
-    public AnalysisStatusHistory user(String userId) {
-        this.user = userId;
+    public AnalysisStatusHistory user(User user) {
+        this.user = user;
         return this;
     }
 
-    public void setUser(String user) {
+    public void setUser(User user) {
         this.user = user;
     }
 

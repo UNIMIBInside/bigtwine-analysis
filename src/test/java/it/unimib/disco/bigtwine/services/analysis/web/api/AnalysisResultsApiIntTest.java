@@ -76,7 +76,7 @@ public class AnalysisResultsApiIntTest {
             .updateDate(Instant.now())
             .visibility(AnalysisVisibility.PUBLIC)
             .status(AnalysisStatus.READY)
-            .owner("testuser-1")
+            .owner(new User().uid("testuser-1").username("testuser-1"))
             .input(input);
     }
 
@@ -111,7 +111,7 @@ public class AnalysisResultsApiIntTest {
     private void fillRepositories() {
         Analysis a1 = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         this.ownedAnalysis = this.analysisRepository.save(a1);
 
         int tweetCount = 3;
@@ -125,7 +125,7 @@ public class AnalysisResultsApiIntTest {
 
         Analysis a2 = this.createAnalysis()
             .visibility(AnalysisVisibility.PRIVATE)
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         this.privateAnalysis = this.analysisRepository.save(a2);
 
         for (int i = 1; i <= tweetCount; ++i) {
@@ -138,7 +138,7 @@ public class AnalysisResultsApiIntTest {
 
         Analysis a3 = this.createAnalysis()
             .visibility(AnalysisVisibility.PUBLIC)
-            .owner("testuser-2");
+            .owner(new User().uid("testuser-2").username("testuser-2"));
         this.publicAnalysis = this.analysisRepository.save(a3);
 
         for (int i = 1; i <= tweetCount; ++i) {
@@ -172,10 +172,10 @@ public class AnalysisResultsApiIntTest {
     public void testListAnalysisResultEmpty() throws Exception {
         Analysis analysis = this.createAnalysis()
             .visibility(AnalysisVisibility.PUBLIC)
-            .owner("testuser-1");
+            .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.objects.length()").value(0));
@@ -184,21 +184,21 @@ public class AnalysisResultsApiIntTest {
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultNotFound() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", "invalid-id"))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", "invalid-uid"))
             .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultUnauthorized() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", privateAnalysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", privateAnalysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResult() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", ownedAnalysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", ownedAnalysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.totalCount").value(3))
@@ -214,7 +214,7 @@ public class AnalysisResultsApiIntTest {
     public void testSearchAnalysisResults() throws Exception {
         String query = "{\"payload.status.text\": \"text1\"}";
 
-        RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
+        RequestBuilder requestBuilder = get("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
             .content(query)
             .contentType(MediaType.TEXT_PLAIN);
 
@@ -230,7 +230,7 @@ public class AnalysisResultsApiIntTest {
     public void testSearchAnalysisResultsWithAnalysisIdOverwrite() throws Exception {
         String query = "{\"analysisId\": \"" + privateAnalysis.getId() + "\"}";
 
-        RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
+        RequestBuilder requestBuilder = get("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
             .content(query)
             .contentType(MediaType.TEXT_PLAIN);
 

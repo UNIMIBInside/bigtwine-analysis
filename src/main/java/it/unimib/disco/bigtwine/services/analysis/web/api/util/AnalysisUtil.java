@@ -1,6 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api.util;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
@@ -19,6 +20,19 @@ public final class AnalysisUtil {
         return SecurityUtils.getCurrentUserId();
     }
 
+    public static Optional<User> getCurrentUser() {
+        String userId = SecurityUtils.getCurrentUserId().orElse(null);
+        if (userId == null) {
+            return Optional.empty();
+        }
+
+        User user = new User()
+            .uid(userId)
+            .username(SecurityUtils.getCurrentUserLogin().orElse(null));
+
+        return Optional.of(user);
+    }
+
     /**
      * Controlla che l'utente corrente sia il proprietario dell'analisi corrente o che l'analisi sia pubblica
      * in caso contrario lancia un eccesione
@@ -29,7 +43,7 @@ public final class AnalysisUtil {
      */
     public static boolean checkAnalysisOwnership(@NotNull Analysis analysis, AccessType accessType) {
         String ownerId = getCurrentUserIdentifier().orElse(null);
-        boolean isOwner = ownerId != null && ownerId.equals(analysis.getOwner());
+        boolean isOwner = ownerId != null && analysis.getOwner() != null && ownerId.equals(analysis.getOwner().getUid());
         boolean isSuperUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN);
 
         if (isOwner || isSuperUser) {
