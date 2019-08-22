@@ -236,10 +236,15 @@ public class AnalysisService {
             return;
         }
 
+        String user = null;
+        if (userRequested) {
+            user = AnalysisUtil.getCurrentUserIdentifier().orElse(null);
+        }
+
         AnalysisStatusChangeRequestedEvent event = new AnalysisStatusChangeRequestedEvent();
         event.setAnalysisId(analysis.getId());
         event.setDesiredStatus(AnalysisStatusMapper.INSTANCE.analysisStatusEventEnumFromDomain(newStatus));
-        event.setUserRequested(userRequested);
+        event.setUser(user);
 
         Message<AnalysisStatusChangeRequestedEvent> message = MessageBuilder
             .withPayload(event)
@@ -248,7 +253,7 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, boolean isUserInitiated, String message) {
+    public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, String user, String message) {
         Optional<Analysis> analysisOpt = this.findOne(analysisId);
 
         if(!analysisOpt.isPresent()) {
@@ -276,7 +281,7 @@ public class AnalysisService {
             .oldStatus(oldStatus)
             .newStatus(newStatus)
             .date(Instant.now())
-            .user(isUserInitiated ? AnalysisUtil.getCurrentUserIdentifier().orElse(null) : null)
+            .user(user)
             .message(message);
 
         analysis.addStatusChange(statusChange);

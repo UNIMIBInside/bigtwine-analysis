@@ -91,7 +91,7 @@ public class AnalysisServiceTest {
             AnalysisStatusChangeRequestedEvent.class);
 
         assertThat(event.getAnalysisId()).isEqualTo(analysis.getId());
-        assertThat(event.isUserRequested()).isEqualTo(false);
+        assertThat(event.getUser()).isEqualTo(null);
         assertThat(event.getDesiredStatus())
             .isEqualTo(AnalysisStatusEnum.STARTED);
     }
@@ -110,7 +110,7 @@ public class AnalysisServiceTest {
             .send(MessageBuilder.withPayload(event).build());
 
         verify(this.analysisService, times(1)).saveAnalysisStatusChange(
-            analysis.getId(), AnalysisStatus.STARTED, false, null);
+            analysis.getId(), AnalysisStatus.STARTED, null, null);
 
         List<AnalysisStatusHistory> statusHistory = this.analysisService
             .getStatusHistory(analysis.getId());

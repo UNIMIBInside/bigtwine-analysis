@@ -131,7 +131,7 @@ public class ProcessingOutputDispatcher {
         Analysis analysis = this.analysisService.saveAnalysisStatusChange(
             event.getAnalysisId(),
             AnalysisStatusMapper.INSTANCE.analysisStatusFromEventEnum(event.getStatus()),
-            event.isUserInitiated(),
+            event.getUser(),
             event.getMessage());
 
         if (analysis != null) {
