@@ -61,6 +61,9 @@ public class Analysis implements Serializable {
     @Field("progress")
     private double progress;
 
+    @Field("results_count")
+    private long resultsCount;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
         return id;
@@ -172,6 +175,19 @@ public class Analysis implements Serializable {
 
     public void setProgress(double progress) {
         this.progress = progress;
+    }
+
+    public long getResultsCount() {
+        return resultsCount;
+    }
+
+    public Analysis resultsCount(long resultsCount) {
+        this.setResultsCount(resultsCount);
+        return this;
+    }
+
+    public void setResultsCount(long resultsCount) {
+        this.resultsCount = resultsCount;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove

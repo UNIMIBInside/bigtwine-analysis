@@ -12,6 +12,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMa
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangedConsumerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisStatusHistoryRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
@@ -45,6 +46,7 @@ public class AnalysisService {
 
     private final AnalysisRepository analysisRepository;
     private final AnalysisStatusHistoryRepository analysisStatusHistoryRepository;
+    private final AnalysisResultsRepository analysisResultsRepository;
 
     private final AnalysisStatusValidator analysisStatusValidator;
     private final AnalysisInputValidatorLocator inputValidatorLocator;
@@ -54,11 +56,13 @@ public class AnalysisService {
     public AnalysisService(
         AnalysisRepository analysisRepository,
         AnalysisStatusHistoryRepository analysisStatusHistoryRepository,
+        AnalysisResultsRepository analysisResultsRepository,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisStatusChangeRequestProducerChannel channel) {
         this.analysisRepository = analysisRepository;
         this.analysisStatusHistoryRepository = analysisStatusHistoryRepository;
+        this.analysisResultsRepository = analysisResultsRepository;
         this.analysisStatusValidator = analysisStatusValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
@@ -271,6 +275,11 @@ public class AnalysisService {
 
         if (newStatus != oldStatus) {
             analysis.setStatus(newStatus);
+
+            if (newStatus != AnalysisStatus.STARTED) {
+                long resultsCount = this.analysisResultsRepository.countByAnalysisId(analysisId);
+                analysis.setResultsCount(resultsCount);
+            }
 
             try {
                 analysis = this.save(analysis);

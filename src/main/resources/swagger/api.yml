@@ -423,6 +423,11 @@ components:
           format: double
           description: "A negative value if the input is an endless streaming, a value between [0, 1] otherwise"
           readOnly: true
+        resultsCount:
+          type: number
+          format: int64
+          description: "The number of results available for this analysis. While started, this value can be outdated."
+          readOnly: true
         createDate:
           type: string
           format: date-time
