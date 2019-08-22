@@ -1,9 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
-import it.unimib.disco.bigtwine.commons.models.LinkedEntity;
-import it.unimib.disco.bigtwine.commons.models.TwitterStatus;
-import it.unimib.disco.bigtwine.commons.models.TwitterUser;
+import it.unimib.disco.bigtwine.commons.models.dto.LinkedEntityDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
 import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
@@ -80,18 +78,18 @@ public class ProcessingOutputDispatcherIntTest {
 
     @Test
     public void testDispatch() {
-        TwitterUser user = new TwitterUserDTO();
+        TwitterUserDTO user = new TwitterUserDTO();
         user.setId("testuser-1");
         user.setScreenName("testuser-1");
 
-        TwitterStatus status = new TwitterStatusDTO();
+        TwitterStatusDTO status = new TwitterStatusDTO();
         status.setId("teststatus-1");
         status.setText("text");
         status.setUser(user);
 
         NeelProcessedTweetDTO tweetPayload = new NeelProcessedTweetDTO();
         tweetPayload.setStatus(status);
-        tweetPayload.setEntities(new LinkedEntity[0]);
+        tweetPayload.setEntities(new LinkedEntityDTO[0]);
 
         AnalysisResultProducedEvent e = new AnalysisResultProducedEvent();
         e.setAnalysisId(this.analysis.getId());
