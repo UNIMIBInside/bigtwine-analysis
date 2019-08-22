@@ -216,7 +216,7 @@ public class AnalysisResultsApiIntTest {
 
         RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
-            .contentType(MediaType.APPLICATION_JSON);
+            .contentType(MediaType.TEXT_PLAIN);
 
         this.restApiMvc.perform(requestBuilder)
             .andExpect(status().isOk())
@@ -232,7 +232,7 @@ public class AnalysisResultsApiIntTest {
 
         RequestBuilder requestBuilder = get("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
-            .contentType(MediaType.APPLICATION_JSON);
+            .contentType(MediaType.TEXT_PLAIN);
 
         this.restApiMvc.perform(requestBuilder)
             .andExpect(status().isOk())
