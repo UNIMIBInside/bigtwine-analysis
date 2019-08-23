@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
@@ -68,6 +69,9 @@ public class Analysis implements Serializable {
 
     @Field("results_count")
     private long resultsCount;
+
+    @Field("user_settings")
+    private Map<String, Object> userSettings = null;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
@@ -214,6 +218,19 @@ public class Analysis implements Serializable {
 
     public void setResultsCount(long resultsCount) {
         this.resultsCount = resultsCount;
+    }
+
+    public Map<String, Object> getUserSettings() {
+        return userSettings;
+    }
+
+    public Analysis userSettings(Map<String, Object> userSettings) {
+        this.setUserSettings(userSettings);
+        return this;
+    }
+
+    public void setUserSettings(Map<String, Object> userSettings) {
+        this.userSettings = userSettings;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove

@@ -75,6 +75,14 @@ public class AnalysisService {
         if (analysis.getVisibility() == null) {
             analysis.setVisibility(Analysis.DEFAULT_VISIBILITY);
         }
+
+        if (analysis.getStatusHistory() == null) {
+            analysis.setStatusHistory(new ArrayList<>());
+        }
+
+        if (analysis.getUserSettings() == null) {
+            analysis.setUserSettings(new HashMap<>());
+        }
     }
 
     /**

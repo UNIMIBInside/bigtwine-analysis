@@ -452,6 +452,9 @@ components:
           format: int64
           description: "The number of results available for this analysis. While started, this value can be outdated."
           readOnly: true
+        userSettings:
+          type: object
+          additionalProperties: true
         createDate:
           type: string
           format: date-time
@@ -466,6 +469,9 @@ components:
           $ref: '#/components/schemas/AnalysisStatusEnum'
         visibility:
           $ref: '#/components/schemas/AnalysisVisibilityEnum'
+        userSettings:
+          type: object
+          additionalProperties: true
     AnalysisStatusHistoryDTO:
       type: object
       properties:

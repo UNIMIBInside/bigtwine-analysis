@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,9 @@ import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -59,7 +62,8 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     private ResponseEntity<AnalysisDTO> updateAnalysis(
         String analysisId,
         AnalysisStatusEnum status,
-        AnalysisVisibilityEnum visibility) {
+        AnalysisVisibilityEnum visibility,
+        Map<String, Object> userSettings) {
         Optional<Analysis> analysisOpt = this.analysisService.findOne(analysisId);
 
         if (!analysisOpt.isPresent()) {
@@ -72,10 +76,13 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             AnalysisUtil.AccessType.DELETE : AnalysisUtil.AccessType.UPDATE);
         AnalysisUtil.checkAnalysisOwnership(analysis, accessType);
 
-        if (visibility != null) {
-            AnalysisVisibility newVisibility = AnalysisMapper.INSTANCE.visibilityFromVisibilityEnum(visibility);
+        if (visibility != null || userSettings != null) {
+            if (visibility != null) {
+                AnalysisVisibility newVisibility = AnalysisMapper.INSTANCE.visibilityFromVisibilityEnum(visibility);
+                analysis.setVisibility(newVisibility);
+            }
 
-            analysis.setVisibility(newVisibility);
+            analysis.setUserSettings((userSettings != null) ? userSettings : new HashMap<>());
 
             try {
                 analysis = analysisService.save(analysis);
@@ -157,7 +164,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new BadRequestException("Page size must be between 1 and 100");
         }
 
-        Pageable page = PageRequest.of(pageNum, pageSize);
+        Pageable page = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "updateDate"));
         Page<Analysis> pageObj;
 
         if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
@@ -197,14 +204,18 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
     @Override
     public ResponseEntity<Void> deleteAnalysisV1(String analysisId) {
-        ResponseEntity<AnalysisDTO> response = this.updateAnalysis(analysisId, AnalysisStatusEnum.CANCELLED, null);
+        ResponseEntity<AnalysisDTO> response = this.updateAnalysis(analysisId, AnalysisStatusEnum.CANCELLED, null, null);
 
         return new ResponseEntity<>(response.getStatusCode());
     }
 
     @Override
     public ResponseEntity<AnalysisDTO> patchAnalysisV1(String analysisId, AnalysisUpdatableDTO analysisDTO) {
-       return this.updateAnalysis(analysisId, analysisDTO.getStatus(), analysisDTO.getVisibility());
+       return this.updateAnalysis(
+           analysisId,
+           analysisDTO.getStatus(),
+           analysisDTO.getVisibility(),
+           analysisDTO.getUserSettings());
     }
 
     @Override
