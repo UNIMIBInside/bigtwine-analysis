@@ -10,6 +10,7 @@ import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChange
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
+import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisUpdateNotApplicable;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
@@ -108,6 +109,14 @@ public class AnalysisService {
             boolean statusChangeAllowed = this.analysisStatusValidator.validate(oldAnalysis.getStatus(), analysis.getStatus());
             if (isStatusChanged && !statusChangeAllowed) {
                 throw new InvalidAnalysisStatusException(oldAnalysis.getStatus(), analysis.getStatus());
+            }
+        }
+
+        // Validate user settings
+        if (oldAnalysis != null && analysis.getStatus() != AnalysisStatus.READY) {
+            if ((oldAnalysis.getUserSettings() == null && analysis.getUserSettings() != null && analysis.getUserSettings().size() > 0) ||
+                !oldAnalysis.getUserSettings().equals(analysis.getUserSettings())) {
+                throw new AnalysisUpdateNotApplicable("User settings cannot be changed when analysis status is not ready");
             }
         }
     }

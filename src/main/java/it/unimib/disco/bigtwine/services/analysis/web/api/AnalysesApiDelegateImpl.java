@@ -8,7 +8,6 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
-import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
@@ -86,7 +85,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
             try {
                 analysis = analysisService.save(analysis);
-            } catch (InvalidAnalysisStatusException e) {
+            } catch (ValidationException e) {
                 throw new BadRequestException(e.getMessage());
             }
         }
@@ -96,7 +95,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
             try {
                 this.analysisService.requestStatusChange(analysis, newStatus, true);
-            } catch (InvalidAnalysisStatusException e) {
+            } catch (ValidationException e) {
                 throw new BadRequestException(e.getMessage());
             }
         }
