@@ -1,12 +1,17 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedEvent;
+import it.unimib.disco.bigtwine.commons.messaging.JobControlEvent;
+import it.unimib.disco.bigtwine.commons.models.JobActionEnum;
+import it.unimib.disco.bigtwine.commons.models.JobTypeEnum;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisExport;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
+import it.unimib.disco.bigtwine.services.analysis.messaging.JobControlEventsProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
@@ -15,6 +20,7 @@ import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStat
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,18 +51,21 @@ public class AnalysisService {
     private final AnalysisInputValidatorLocator inputValidatorLocator;
 
     private final MessageChannel statusChangeRequestsChannel;
+    private final MessageChannel jobControlChannel;
 
     public AnalysisService(
         AnalysisRepository analysisRepository,
         AnalysisResultsRepository analysisResultsRepository,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
-        AnalysisStatusChangeRequestProducerChannel channel) {
+        AnalysisStatusChangeRequestProducerChannel channel,
+        JobControlEventsProducerChannel jobControlChannel) {
         this.analysisRepository = analysisRepository;
         this.analysisResultsRepository = analysisResultsRepository;
         this.analysisStatusValidator = analysisStatusValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
+        this.jobControlChannel = jobControlChannel.jobControlEventsChannel();
     }
 
     /**
@@ -271,6 +280,37 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
+    public Analysis startAnalysisResultsExport(String analisysId) {
+        Analysis analysis = this.findOne(analisysId).orElse(null);
+        if (analysis == null) {
+            return null;
+        }
+
+        AnalysisExport export = new AnalysisExport();
+        export.setDocumentId(ObjectId.get().toHexString());
+        analysis.setExport(export);
+
+        try {
+            analysis = this.save(analysis);
+        } catch (ValidationException e) {
+            log.error("Cannot start analysis results", e);
+            return null;
+        }
+
+        JobControlEvent event = new JobControlEvent();
+        event.setAnalysisId(analisysId);
+        event.setAction(JobActionEnum.START);
+        event.setJobType(JobTypeEnum.EXPORT);
+
+        Message<JobControlEvent> message = MessageBuilder
+            .withPayload(event)
+            .build();
+
+        this.jobControlChannel.send(message);
+
+        return analysis;
+    }
+
     public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, User user, String message) {
         Optional<Analysis> analysisOpt = this.findOne(analysisId);
 
@@ -323,6 +363,33 @@ public class AnalysisService {
 
         Analysis analysis = analysisOpt.get();
         analysis.setProgress(progress);
+
+        try {
+            return this.save(analysis);
+        } catch (ValidationException e) {
+            log.error("Cannot save progress update", e);
+            return null;
+        }
+    }
+
+    public Analysis saveAnalysisExportProgressUpdate(
+        String analysisId, double progress, boolean isCompleted, boolean isFailed, String message) {
+        Optional<Analysis> analysisOpt = this.findOne(analysisId);
+
+        if(!(analysisOpt.isPresent())) {
+            return null;
+        }
+
+        Analysis analysis = analysisOpt.get();
+        if (analysis.getExport() == null) {
+            return null;
+        }
+
+        AnalysisExport export = analysis.getExport();
+        export.setProgress(progress);
+        export.setCompleted(isCompleted);
+        export.setFailed(isFailed);
+        export.setMessage(message);
 
         try {
             return this.save(analysis);

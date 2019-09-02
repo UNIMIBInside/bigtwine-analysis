@@ -1,12 +1,18 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisExport;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisExportDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultsCount;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.PagedAnalysisResults;
@@ -24,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,5 +146,33 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
             .count(count);
 
         return ResponseEntity.ok(body);
+    }
+
+    @Override
+    public ResponseEntity<AnalysisExportDTO> exportAnalysisResultsV1(String analysisId) {
+        Analysis analysis = this.getAnalysisById(analysisId);
+        boolean isOwner = AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        EnumSet<AnalysisStatus> acceptedStatuses = EnumSet.of(
+            AnalysisStatus.COMPLETED,
+            AnalysisStatus.FAILED,
+            AnalysisStatus.CANCELLED);
+
+        if (!isOwner) {
+            throw new UnauthorizedException("Only the analysis owner can start the export");
+        }
+
+        if (!acceptedStatuses.contains(analysis.getStatus())) {
+            throw new BadRequestException("Export not available, invalid analysis status: " + analysis.getStatus());
+        }
+
+        if (analysis.getExport() == null) {
+            analysis = this.analysisService.startAnalysisResultsExport(analysis.getId());
+        }
+
+        AnalysisExport export = analysis.getExport();
+        AnalysisExportDTO exportDTO = AnalysisMapper.INSTANCE
+            .analysisExportDTOFromAnalysisExport(export);
+
+        return ResponseEntity.ok(exportDTO);
     }
 }

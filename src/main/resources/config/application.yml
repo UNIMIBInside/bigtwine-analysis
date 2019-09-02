@@ -107,6 +107,9 @@ spring:
                     content-type: application/json
                 analysisProgressUpdateChannel:
                     destination: analysis-progress-updates
+                jobControlEventsChannel:
+                    destination: job-control-events
+                    content-type: application/json
     servlet:
         multipart:
             enabled: false

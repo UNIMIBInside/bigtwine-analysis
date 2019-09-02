@@ -147,7 +147,18 @@ public class ProcessingOutputDispatcher {
         Analysis analysis = null;
 
         if (event.getJobType() == JobTypeEnum.PROCESSING) {
-            analysis = this.analysisService.saveAnalysisProgressUpdate(event.getAnalysisId(), event.getProgress());
+            analysis = this.analysisService.saveAnalysisProgressUpdate(
+                event.getAnalysisId(),
+                event.getProgress()
+            );
+        } else if (event.getJobType() == JobTypeEnum.EXPORT) {
+            analysis = this.analysisService.saveAnalysisExportProgressUpdate(
+                event.getAnalysisId(),
+                event.getProgress(),
+                event.isCompleted(),
+                event.isFailed(),
+                event.getMessage()
+            );
         }
 
         if (analysis != null) {

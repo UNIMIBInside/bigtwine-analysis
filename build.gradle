@@ -211,7 +211,7 @@ dependencies {
     testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
     compile 'commons-fileupload:commons-fileupload:1.4'
-    compile 'org.bitbucket.bigtwine:commons:9f5e2213ce'
+    compile group: 'org.bitbucket.bigtwine', name: 'commons', version: '7281691b88'
 }
 
 task cleanResources(type: Delete) {

@@ -15,7 +15,7 @@ public class TwitterStatus implements Serializable {
 
     @Indexed
     @NotNull
-    @Field("uid")
+    @Field("id")
     private String id;
 
     @TextIndexed

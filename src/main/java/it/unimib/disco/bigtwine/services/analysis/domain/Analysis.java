@@ -73,6 +73,9 @@ public class Analysis implements Serializable {
     @Field("user_settings")
     private Map<String, Object> userSettings = null;
 
+    @Field("export")
+    private AnalysisExport export;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
         return id;
@@ -233,6 +236,19 @@ public class Analysis implements Serializable {
         this.userSettings = userSettings;
     }
 
+    public AnalysisExport getExport() {
+        return export;
+    }
+
+    public Analysis export(AnalysisExport export) {
+        this.setExport(export);
+        return this;
+    }
+
+    public void setExport(AnalysisExport export) {
+        this.export = export;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
@@ -267,6 +283,7 @@ public class Analysis implements Serializable {
             ", updateDate='" + getUpdateDate() + "'" +
             ", input='" + getInput() + "'" +
             ", progress='" + getProgress() + "'" +
+            ", export='" + getExport() + "'" +
             "}";
     }
 }

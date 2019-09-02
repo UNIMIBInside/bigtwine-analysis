@@ -249,6 +249,36 @@ paths:
           $ref: '#/components/responses/AnalysisNotFoundError'
       tags:
         - 'Analysis Results'
+  /analysis-results/{analysisId}/export:
+    summary: 'Start the export on the analysis results'
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        description: 'The uid of the analysis'
+        schema:
+          type: string
+    get:
+      summary: 'Start the export on the analysis results'
+      description: ""
+      operationId: exportAnalysisResultsV1
+      responses:
+        '200':
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisExportDTO'
+        '400':
+          description: Analysis not ready for an export (current status must be CANCELLED, FAILED or COMPLETED)
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/UnaccessibleError'
+        '404':
+          $ref: '#/components/responses/AnalysisNotFoundError'
+      tags:
+        - 'Analysis Results'
   /documents:
     summary: ""
     post:
@@ -455,6 +485,8 @@ components:
         userSettings:
           type: object
           additionalProperties: true
+        export:
+          $ref: '#/components/schemas/AnalysisExportDTO'
         createDate:
           type: string
           format: date-time
@@ -517,6 +549,20 @@ components:
         count:
           type: integer
           format: int64
+    AnalysisExportDTO:
+      type: object
+      properties:
+        documentId:
+          type: string
+        progress:
+          type: number
+          format: double
+        completed:
+          type: boolean
+        failed:
+          type: boolean
+        message:
+          type: string
     NeelProcessedTweetDTO:
       type: object
       properties:

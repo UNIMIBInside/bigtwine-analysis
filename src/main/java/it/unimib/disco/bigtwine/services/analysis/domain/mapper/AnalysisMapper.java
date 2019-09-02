@@ -126,4 +126,7 @@ public interface AnalysisMapper {
             return 0;
         }
     }
+
+    AnalysisExportDTO analysisExportDTOFromAnalysisExport(AnalysisExport export);
+    AnalysisExport analysisExportFromAnalysisExportDTO(AnalysisExportDTO export);
 }
