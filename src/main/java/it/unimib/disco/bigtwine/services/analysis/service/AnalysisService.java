@@ -124,7 +124,7 @@ public class AnalysisService {
         // Validate user settings
         if (oldAnalysis != null && analysis.getStatus() != AnalysisStatus.READY) {
             if ((oldAnalysis.getUserSettings() == null && analysis.getUserSettings() != null && analysis.getUserSettings().size() > 0) ||
-                !oldAnalysis.getUserSettings().equals(analysis.getUserSettings())) {
+                (oldAnalysis.getUserSettings() != null && !oldAnalysis.getUserSettings().equals(analysis.getUserSettings()))) {
                 throw new AnalysisUpdateNotApplicable("User settings cannot be changed when analysis status is not ready");
             }
         }
