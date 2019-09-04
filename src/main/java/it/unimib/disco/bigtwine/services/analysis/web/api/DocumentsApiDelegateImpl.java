@@ -7,7 +7,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthenticatedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 @Service
 public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
@@ -44,16 +47,27 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     private final String METADATA_USERID_KEY = "userid";
     private final String METADATA_USERNAME_KEY = "username";
+    private final String METADATA_DOCTYPE_KEY = "doctype";
+    private final String METADATA_ANALYSISID_KEY = "analysisid";
+
+    private final String DOCTYPE_USER_UPLOAD = "user-upload";
+    private final String DOCTYPE_RESULTS_EXPORT = "results-export";
 
     private final NativeWebRequest request;
     private GridFsTemplate gridFsTemplate;
     private MongoDbFactory dbFactory;
+    private AnalysisService analysisService;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    public DocumentsApiDelegateImpl(NativeWebRequest request, GridFsTemplate gridFsTemplate, MongoDbFactory dbFactory) {
+    public DocumentsApiDelegateImpl(
+        NativeWebRequest request,
+        GridFsTemplate gridFsTemplate,
+        MongoDbFactory dbFactory,
+        AnalysisService analysisService) {
         this.request = request;
         this.gridFsTemplate = gridFsTemplate;
         this.dbFactory = dbFactory;
+        this.analysisService = analysisService;
     }
 
     private GridFSFile getFile(String objectId) {
@@ -112,8 +126,22 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
         GridFSFile file = this.getFile(documentId);
 
-        if (!userId.equals(file.getMetadata().get(METADATA_USERID_KEY))) {
-            throw new UnauthorizedException("Only the uploader can download this document");
+        String docType = (String)file.getMetadata().get(METADATA_DOCTYPE_KEY);
+        String docUploader = (String)file.getMetadata().get(METADATA_USERID_KEY);
+        String docAnalysis = (String)file.getMetadata().get(METADATA_ANALYSISID_KEY);
+
+        if (docType != null && docType.equals(DOCTYPE_RESULTS_EXPORT) && docAnalysis != null) {
+            Optional<Analysis> analysis = this.analysisService.findOne(docAnalysis);
+
+            if (!(analysis.isPresent() && analysis.get().getOwner().getUid().equals(userId))) {
+                throw new UnauthorizedException(String.format(
+                    "Only the owner of the analysis '%s' can download this document",
+                    docAnalysis));
+            }
+        } else {
+            if (!userId.equals(docUploader)) {
+                throw new UnauthorizedException("Only the uploader can download this document");
+            }
         }
 
         InputStream stream = this.getGridFs(null).openDownloadStream(file.getObjectId());
@@ -149,6 +177,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
                     DBObject metadata = new BasicDBObject();
                     metadata.put(METADATA_USERID_KEY, userId);
                     metadata.put(METADATA_USERNAME_KEY, username);
+                    metadata.put(METADATA_DOCTYPE_KEY, DOCTYPE_USER_UPLOAD);
                     objectId = gridFsTemplate.store(stream, item.getName(), item.getContentType(), metadata);
                 }
             }
