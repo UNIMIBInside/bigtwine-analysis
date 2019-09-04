@@ -19,6 +19,7 @@ import java.io.IOException;
 public class JWTFilter extends GenericFilterBean {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String AUTHORIZATION_PARAM = "access_token";
 
     private TokenProvider tokenProvider;
 
@@ -42,6 +43,11 @@ public class JWTFilter extends GenericFilterBean {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
+        } else if (request.getMethod().equals("GET")) {
+            String token = request.getParameter(AUTHORIZATION_PARAM);
+            if (StringUtils.hasText(token)) {
+                return token;
+            }
         }
         return null;
     }
