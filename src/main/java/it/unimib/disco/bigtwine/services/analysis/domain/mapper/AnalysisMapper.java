@@ -40,10 +40,12 @@ public interface AnalysisMapper {
         return dateTime == null ? null : Instant.from(dateTime);
     }
 
+    @Mapping(target = "tings", ignore = true)
     Analysis analysisFromAnalysisDTO(AnalysisDTO analysisDTO);
 
     List<Analysis> analysesFromAnalysisDTOs(List<AnalysisDTO> analysisDTOs);
 
+    @Mapping(target = "tings", ignore = true)
     AnalysisDTO analysisDtoFromAnalysis(Analysis analysis);
 
     User userDTOToUser(UserDTO user);

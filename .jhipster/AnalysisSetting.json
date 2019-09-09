@@ -1,0 +1,45 @@
+{
+    "name": "AnalysisSetting",
+    "fields": [
+        {
+            "fieldName": "name",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "defaultValue",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "userCanOverride",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "userRoles",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "analysisTypes",
+            "fieldType": "AnalysisType",
+            "fieldValues": "TWITTER_NEEL"
+        },
+        {
+            "fieldName": "analysisInputTypes",
+            "fieldType": "AnalysisInputType",
+            "fieldValues": "QUERY,DATASET"
+        },
+        {
+            "fieldName": "priority",
+            "fieldType": "Integer"
+        }
+    ],
+    "changelogDate": "20190907074037",
+    "entityTableName": "analyses.setting",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "no",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "clientRootFolder": "analysis",
+    "applications": "*",
+    "microserviceName": "analysis"
+}

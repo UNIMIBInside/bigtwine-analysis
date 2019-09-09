@@ -152,6 +152,36 @@ paths:
       tags:
         - 'Analysis'
 
+  /analyses/{analysisId}/default-settings:
+    summary: 'Get the default settings of the analysis for the current user'
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        description: 'The uid of the analysis to retrieve'
+        schema:
+          type: string
+    get:
+      summary: 'Get the default settings of the analysis for the current user'
+      description: ""
+      operationId: getAnalysisDefaultSettingsV1
+      responses:
+        '200':
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/UnaccessibleError'
+        '404':
+          $ref: '#/components/responses/AnalysisNotFoundError'
+      tags:
+        - 'Analysis'
+
   /analysis-results/{analysisId}:
     summary: 'Get the result of an analysis'
     parameters:
@@ -482,7 +512,7 @@ components:
           format: int64
           description: "The number of results available for this analysis. While started, this value can be outdated."
           readOnly: true
-        userSettings:
+        settings:
           type: object
           additionalProperties: true
         export:
@@ -501,7 +531,7 @@ components:
           $ref: '#/components/schemas/AnalysisStatusEnum'
         visibility:
           $ref: '#/components/schemas/AnalysisVisibilityEnum'
-        userSettings:
+        settings:
           type: object
           additionalProperties: true
     AnalysisStatusHistoryDTO:

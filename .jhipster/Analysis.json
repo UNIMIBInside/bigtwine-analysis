@@ -12,7 +12,7 @@
         {
             "fieldName": "inputType",
             "fieldType": "AnalysisInputType",
-            "fieldValues": "QUERY,DOCUMENT",
+            "fieldValues": "QUERY,DATASET",
             "fieldValidateRules": [
                 "required"
             ]
@@ -34,8 +34,15 @@
             ]
         },
         {
-            "fieldName": "ownerId",
+            "fieldName": "owner",
             "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "progress",
+            "fieldType": "Double",
             "fieldValidateRules": [
                 "required"
             ]
@@ -55,19 +62,23 @@
             ]
         },
         {
-            "fieldName": "query",
+            "fieldName": "input",
             "fieldType": "String"
         },
         {
-            "fieldName": "documentId",
+            "fieldName": "settings",
             "fieldType": "String"
+        },
+        {
+            "fieldName": "resultsCount",
+            "fieldType": "Long"
         }
     ],
     "relationships": [],
     "changelogDate": "20190219210930",
-    "entityTableName": "analysis",
+    "entityTableName": "analyses",
     "dto": "no",
-    "pagination": "no",
+    "pagination": "pagination",
     "service": "serviceClass",
     "jpaMetamodelFiltering": false,
     "fluentMethods": true,

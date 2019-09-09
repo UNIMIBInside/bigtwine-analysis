@@ -1,0 +1,22 @@
+@paginate(pagination)
+entity AnalysisSetting {
+	name String
+    defaultValue String
+    userCanOverride Boolean
+}
+
+relationship ManyToMany {
+	AnalysisSetting{userRoles} to Authority
+}
+
+relationship ManyToMany {
+	AnalysisSetting{analysisTypes} to AnalysisType
+}
+
+relationship ManyToMany {
+	AnalysisSetting{analysisInputTypes} to AnalysisInputType
+}
+
+entity AnalysisType
+entity AnalysisInputType
+entity Authority

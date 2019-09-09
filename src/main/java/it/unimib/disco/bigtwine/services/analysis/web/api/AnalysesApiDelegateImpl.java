@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.ValidationException;
-import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -45,10 +44,6 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     public AnalysesApiDelegateImpl(NativeWebRequest request, AnalysisService analysisService) {
         this.request = request;
         this.analysisService = analysisService;
-    }
-
-    private boolean checkAnalysisOwnership(@NotNull Analysis analysis, String ownerId) {
-        return ownerId != null && analysis.getOwner() != null && ownerId.equals(analysis.getOwner().getUid());
     }
 
     private Optional<String> getCurrentUserIdentifier() {
@@ -81,7 +76,8 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
                 analysis.setVisibility(newVisibility);
             }
 
-            analysis.setUserSettings((userSettings != null) ? userSettings : new HashMap<>());
+            analysis.setSettings((userSettings != null) ? userSettings : new HashMap<>());
+            analysisService.cleanAnalysisSettings(analysis, SecurityUtils.getCurrentUserRoles());
 
             try {
                 analysis = analysisService.save(analysis);
@@ -115,6 +111,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         User owner = this.getCurrentUser().orElseThrow(UnauthorizedException::new);
 
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
+        analysisService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());
         a.setOwner(owner);
 
         try {
@@ -214,7 +211,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
            analysisId,
            analysisDTO.getStatus(),
            analysisDTO.getVisibility(),
-           analysisDTO.getUserSettings());
+           analysisDTO.getSettings());
     }
 
     @Override
@@ -232,5 +229,22 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             .statusHistoryDTOsFromStatusHistories(statusHistory);
 
         return new ResponseEntity<>(statusHistoryDTOs, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Map<String, Object>> getAnalysisDefaultSettingsV1(String analysisId) {
+        Optional<Analysis> analysis = this.analysisService.findOne(analysisId);
+
+        if (!analysis.isPresent()) {
+            throw new NoSuchEntityException(Analysis.class, analysisId);
+        }
+
+        AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
+        List<String> userRoles = SecurityUtils.getCurrentUserRoles();
+        Map<String, Object> defaults = this.analysisService
+            .getAnalysisDefaultSettings(analysisId, userRoles);
+
+
+        return ResponseEntity.ok(defaults);
     }
 }

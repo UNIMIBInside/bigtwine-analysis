@@ -1,11 +1,12 @@
 package it.unimib.disco.bigtwine.services.analysis.security;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for Spring Security.
@@ -96,5 +97,15 @@ public final class SecurityUtils {
             .map(authentication -> authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(authority)))
             .orElse(false);
+    }
+
+    public static List<String> getCurrentUserRoles() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(securityContext.getAuthentication())
+            .map(authentication -> authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .distinct()
+                .collect(Collectors.toList()))
+            .orElse(Collections.emptyList());
     }
 }

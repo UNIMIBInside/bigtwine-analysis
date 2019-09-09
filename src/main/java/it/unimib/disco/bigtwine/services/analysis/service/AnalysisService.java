@@ -4,16 +4,17 @@ import it.unimib.disco.bigtwine.commons.messaging.AnalysisStatusChangeRequestedE
 import it.unimib.disco.bigtwine.commons.messaging.JobControlEvent;
 import it.unimib.disco.bigtwine.commons.models.JobActionEnum;
 import it.unimib.disco.bigtwine.commons.models.JobTypeEnum;
-import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisExport;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
-import it.unimib.disco.bigtwine.services.analysis.domain.User;
+import it.unimib.disco.bigtwine.services.analysis.domain.*;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.JobControlEventsProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
+import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisUpdateNotApplicable;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
@@ -35,6 +36,8 @@ import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing Analysis.
@@ -46,6 +49,7 @@ public class AnalysisService {
 
     private final AnalysisRepository analysisRepository;
     private final AnalysisResultsRepository analysisResultsRepository;
+    private final AnalysisSettingRepository analysisSettingRepository;
 
     private final AnalysisStatusValidator analysisStatusValidator;
     private final AnalysisInputValidatorLocator inputValidatorLocator;
@@ -56,12 +60,14 @@ public class AnalysisService {
     public AnalysisService(
         AnalysisRepository analysisRepository,
         AnalysisResultsRepository analysisResultsRepository,
+        AnalysisSettingRepository analysisSettingRepository,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisStatusChangeRequestProducerChannel channel,
         JobControlEventsProducerChannel jobControlChannel) {
         this.analysisRepository = analysisRepository;
         this.analysisResultsRepository = analysisResultsRepository;
+        this.analysisSettingRepository = analysisSettingRepository;
         this.analysisStatusValidator = analysisStatusValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
@@ -90,8 +96,12 @@ public class AnalysisService {
             analysis.setStatusHistory(new ArrayList<>());
         }
 
-        if (analysis.getUserSettings() == null) {
-            analysis.setUserSettings(new HashMap<>());
+        if (analysis.getSettings() == null) {
+            Map<String, Object> defaults = this.getAnalysisDefaultSettings(
+                    analysis.getType(),
+                    analysis.getInput().getType(),
+                    SecurityUtils.getCurrentUserRoles());
+            analysis.setSettings(defaults);
         }
     }
 
@@ -123,8 +133,8 @@ public class AnalysisService {
 
         // Validate user settings
         if (oldAnalysis != null && analysis.getStatus() != AnalysisStatus.READY) {
-            if ((oldAnalysis.getUserSettings() == null && analysis.getUserSettings() != null && analysis.getUserSettings().size() > 0) ||
-                (oldAnalysis.getUserSettings() != null && !oldAnalysis.getUserSettings().equals(analysis.getUserSettings()))) {
+            if ((oldAnalysis.getSettings() == null && analysis.getSettings() != null && analysis.getSettings().size() > 0) ||
+                (oldAnalysis.getSettings() != null && !oldAnalysis.getSettings().equals(analysis.getSettings()))) {
                 throw new AnalysisUpdateNotApplicable("User settings cannot be changed when analysis status is not ready");
             }
         }
@@ -248,6 +258,50 @@ public class AnalysisService {
         } else {
             return analysis.getStatusHistory();
         }
+    }
+
+    /**
+     * Restituisce le impostazioni predefinite per l'analisi e i ruoli utente indicati
+     *
+     * @param id L'id dell'analisi di cui si vogliono le impostazioni predefinite
+     * @param userRoles I ruoli utente con cui filtrare le impostazioni
+     * @return le impostazioni predefinite (nome impostazione => valore predefinito)
+     */
+    public Map<String, Object> getAnalysisDefaultSettings(String id, List<String> userRoles) {
+        Analysis analysis = this.findOne(id).orElse(null);
+        if (analysis == null) {
+            return null;
+        }
+
+        return this.getAnalysisDefaultSettings(analysis.getType(), analysis.getInput().getType(), userRoles);
+    }
+
+    private Map<String, Object> getAnalysisDefaultSettings(AnalysisType type, AnalysisInputType inputType, List<String> userRoles) {
+        List<AnalysisSetting> settings = this.analysisSettingRepository
+            .findByRolesAndAnalysisDistinct(userRoles, type, inputType);
+
+        return settings.stream()
+            .collect(Collectors.toMap(AnalysisSetting::getName, AnalysisSetting::getDefaultValue));
+    }
+
+    public void cleanAnalysisSettings(Analysis analysis, List<String> userRoles) {
+        if (analysis.getSettings() == null || analysis.getSettings().size() == 0) {
+            return;
+        }
+
+        Map<String, AnalysisSetting> settings = this.analysisSettingRepository
+            .findByRolesAndAnalysisDistinct(userRoles, analysis.getType(), analysis.getInput().getType())
+            .stream()
+            .collect(Collectors.toMap(AnalysisSetting::getName, Function.identity()));
+
+        Map<String, Object> cleanedSettings = new HashMap<>(analysis.getSettings());
+        for (Map.Entry<String, Object> option: analysis.getSettings().entrySet()) {
+            if (settings.containsKey(option.getKey()) && !settings.get(option.getKey()).isUserCanOverride()) {
+                cleanedSettings.replace(option.getKey(), settings.get(option.getKey()).getDefaultValue());
+            }
+        }
+
+        analysis.setSettings(cleanedSettings);
     }
 
     public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {

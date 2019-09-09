@@ -71,7 +71,7 @@ public class Analysis implements Serializable {
     private long resultsCount;
 
     @Field("user_settings")
-    private Map<String, Object> userSettings = null;
+    private Map<String, Object> settings = null;
 
     @Field("export")
     private AnalysisExport export;
@@ -223,17 +223,17 @@ public class Analysis implements Serializable {
         this.resultsCount = resultsCount;
     }
 
-    public Map<String, Object> getUserSettings() {
-        return userSettings;
+    public Map<String, Object> getSettings() {
+        return settings;
     }
 
-    public Analysis userSettings(Map<String, Object> userSettings) {
-        this.setUserSettings(userSettings);
+    public Analysis settings(Map<String, Object> settings) {
+        this.setSettings(settings);
         return this;
     }
 
-    public void setUserSettings(Map<String, Object> userSettings) {
-        this.userSettings = userSettings;
+    public void setSettings(Map<String, Object> settings) {
+        this.settings = settings;
     }
 
     public AnalysisExport getExport() {
