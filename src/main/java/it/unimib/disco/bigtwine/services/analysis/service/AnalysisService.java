@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Analysis.
@@ -221,6 +222,27 @@ public class AnalysisService {
      */
     public Long countByOwner(String owner) {
         return analysisRepository.countByOwnerUid(owner);
+    }
+
+    /**
+     * Return the analyses in db with the status 'status'
+     *
+     * @param status The status to filter
+     * @param page The page you want
+     * @return A stream of analysis with the status 'status'
+     */
+    public Stream<Analysis> findByStatus(AnalysisStatus status, Pageable page) {
+        return analysisRepository.findByStatus(status, page);
+    }
+
+    /**
+     * Return the total number of analyses in db with the status 'status'
+     *
+     * @param status The status to filter
+     * @return Total number of analysis with the status 'status'
+     */
+    public Long countByStatus(AnalysisStatus status) {
+        return this.analysisRepository.countByStatus(status);
     }
 
 

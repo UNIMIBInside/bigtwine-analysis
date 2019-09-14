@@ -110,6 +110,11 @@ spring:
                 jobControlEventsChannel:
                     destination: job-control-events
                     content-type: application/json
+                cronTaskChannel:
+                    destination: cron-task
+                cronTaskCompletionChannel:
+                    destination: cron-task-completion
+                    content-type: application/json
     servlet:
         multipart:
             enabled: false

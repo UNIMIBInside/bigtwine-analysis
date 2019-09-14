@@ -29,7 +29,9 @@ import org.springframework.messaging.support.GenericMessage;
     AnalysisStatusChangeRequestProducerChannel.class,
     AnalysisUpdatesProducerChannel.class,
     AnalysisProgressUpdateConsumerChannel.class,
-    JobControlEventsProducerChannel.class
+    JobControlEventsProducerChannel.class,
+    CronTaskCompletionProducerChannel.class,
+    CronTaskConsumerChannel.class
 })
 public class MessagingConfiguration {
 

@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
+import it.unimib.disco.bigtwine.services.analysis.config.Constants;
+import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
@@ -83,6 +85,14 @@ public class TokenProvider {
             .signWith(key, SignatureAlgorithm.HS512)
             .setExpiration(validity)
             .compact();
+    }
+
+    public String createSystemToken() {
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN));
+        Authentication authentication = new UsernamePasswordAuthenticationToken(Constants.SYSTEM_ACCOUNT, null, authorities);
+
+        return this.createToken(authentication, false);
     }
 
     public Authentication getAuthentication(String token) {
