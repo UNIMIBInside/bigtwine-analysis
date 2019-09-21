@@ -1,10 +1,10 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.AnalysisResultProducedEvent;
-import it.unimib.disco.bigtwine.commons.models.dto.LinkedEntityDTO;
-import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
-import it.unimib.disco.bigtwine.commons.models.dto.TwitterStatusDTO;
-import it.unimib.disco.bigtwine.commons.models.dto.TwitterUserDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.LinkedEntityDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.NeelProcessedTweetDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.TwitterStatusDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.TwitterUserDTO;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;

@@ -282,16 +282,16 @@ public class AnalysisResourceIntTest {
         restAnalysisMockMvc.perform(get("/api/analyses?sort=uid,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].uid").value(hasItem(analysis.getId())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(analysis.getId())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].visibility").value(hasItem(DEFAULT_VISIBILITY.toString())))
-            .andExpect(jsonPath("$.[*].owner").value(hasItem(DEFAULT_OWNER)))
+            .andExpect(jsonPath("$.[*].owner.uid").value(hasItem(DEFAULT_OWNER.getUid())))
             .andExpect(jsonPath("$.[*].createDate").value(hasItem(DEFAULT_CREATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].updateDate").value(hasItem(DEFAULT_UPDATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].input.tokens").value(hasItem(DEFAULT_INPUT.getTokens())));
     }
-    
+
     @Test
     public void getAnalysis() throws Exception {
         // Initialize the database
@@ -301,7 +301,7 @@ public class AnalysisResourceIntTest {
         restAnalysisMockMvc.perform(get("/api/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.uid").value(analysis.getId()))
+            .andExpect(jsonPath("$.id").value(analysis.getId()))
             .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
             .andExpect(jsonPath("$.visibility").value(DEFAULT_VISIBILITY.toString()))

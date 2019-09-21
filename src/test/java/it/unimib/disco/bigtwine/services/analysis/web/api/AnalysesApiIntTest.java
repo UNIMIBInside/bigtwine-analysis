@@ -31,8 +31,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -123,7 +122,7 @@ public class AnalysesApiIntTest {
         assertThat(analysisList).hasSize(countBeforeCreate + 1);
 
         Analysis testAnalysis = analysisList.get(analysisList.size() - 1);
-        assertThat(testAnalysis.getOwner()).isEqualTo("testuser-1");
+        assertThat(testAnalysis.getOwner().getUid()).isEqualTo("testuser-1");
         assertThat(testAnalysis.getType()).isEqualTo(AnalysisType.TWITTER_NEEL);
         assertThat(((QueryAnalysisInput)testAnalysis.getInput()).getTokens()).isEqualTo(Arrays.asList("query", "di", "prova"));
         assertThat(testAnalysis.getStatus()).isEqualTo(Analysis.DEFAULT_STATUS);
@@ -190,7 +189,7 @@ public class AnalysesApiIntTest {
         this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.uid").value(analysis.getId()));
+            .andExpect(jsonPath("$.id").value(analysis.getId()));
     }
 
     @Test
@@ -204,7 +203,7 @@ public class AnalysesApiIntTest {
         this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.uid").value(analysis.getId()));
+            .andExpect(jsonPath("$.id").value(analysis.getId()));
     }
 
     @Test
@@ -242,8 +241,8 @@ public class AnalysesApiIntTest {
             .andExpect(jsonPath("$.totalCount").value(2))
             .andExpect(jsonPath("$.count").value(2))
             .andExpect(jsonPath("$.objects.length()").value(2))
-            .andExpect(jsonPath("$.objects[0].uid").value(a1.getId()))
-            .andExpect(jsonPath("$.objects[1].uid").value(a3.getId()));
+            .andExpect(jsonPath("$.objects[0].id").value(a1.getId()))
+            .andExpect(jsonPath("$.objects[1].id").value(a3.getId()));
     }
 
     @Test
@@ -371,13 +370,14 @@ public class AnalysesApiIntTest {
             .owner(new User()
                 .uid("testuser-1")
                 .username("testuser-1"))
-            .status(AnalysisStatus.READY);
+            .status(AnalysisStatus.READY)
+            .statusHistory(new ArrayList<>());
         analysis = this.analysisRepository.save(analysis);
 
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .status(AnalysisStatusEnum.STARTED);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());

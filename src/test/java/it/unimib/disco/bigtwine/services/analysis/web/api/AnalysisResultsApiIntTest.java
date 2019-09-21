@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -92,7 +93,7 @@ public class AnalysisResultsApiIntTest {
         NeelProcessedTweet tweet = new NeelProcessedTweet();
         tweet.setStatus(status);
         tweet.setEntities(Collections.emptyList());
-        
+
         return tweet;
     }
 
@@ -212,9 +213,9 @@ public class AnalysisResultsApiIntTest {
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testSearchAnalysisResults() throws Exception {
-        String query = "{\"payload.status.text\": \"text1\"}";
+        String query = "{$text: {$search: \"text1\", $caseSensitive: false}}";
 
-        RequestBuilder requestBuilder = get("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
+        RequestBuilder requestBuilder = post("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
             .contentType(MediaType.TEXT_PLAIN);
 
@@ -228,9 +229,9 @@ public class AnalysisResultsApiIntTest {
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testSearchAnalysisResultsWithAnalysisIdOverwrite() throws Exception {
-        String query = "{\"analysisId\": \"" + privateAnalysis.getId() + "\"}";
+        String query = "{\"analysis.id\": {$oid: \"" + privateAnalysis.getId() + "\"}}";
 
-        RequestBuilder requestBuilder = get("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
+        RequestBuilder requestBuilder = post("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
             .content(query)
             .contentType(MediaType.TEXT_PLAIN);
 

@@ -1,10 +1,13 @@
 package it.unimib.disco.bigtwine.services.analysis.domain.mapper;
 
-import it.unimib.disco.bigtwine.commons.models.Coordinate;
-import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.CoordinatesDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.LinkedEntityDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.NeelProcessedTweetDTO;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResultPayload;
+import it.unimib.disco.bigtwine.services.analysis.domain.LinkedEntity;
 import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
@@ -20,12 +23,12 @@ public interface NeelProcessedTweetMapper extends AnalysisResultPayloadMapper {
 
     NeelProcessedTweet neelProcessedTweetFromDto(NeelProcessedTweetDTO tweet);
 
-    default GeoJsonPoint geoJsonPointFromCoordinate(Coordinate coordinate) {
-        if (coordinate == null) {
+    default GeoJsonPoint geoJsonPointFromCoordinate(CoordinatesDTO coordinates) {
+        if (coordinates == null) {
             return null;
         }
 
-        return new GeoJsonPoint(coordinate.getLongitude(), coordinate.getLatitude());
+        return new GeoJsonPoint(coordinates.getLongitude(), coordinates.getLatitude());
     }
 
     default URL urlFromString(String urlString) throws MalformedURLException {
@@ -34,6 +37,9 @@ public interface NeelProcessedTweetMapper extends AnalysisResultPayloadMapper {
         }
         return new URL(urlString);
     }
+
+    @Mapping(source = "nil", target = "isNil")
+    LinkedEntity linkedEntityDTOToLinkedEntity(LinkedEntityDTO linkedEntityDTO);
 
     @Override
     default AnalysisResultPayload map(Object object) {

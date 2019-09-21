@@ -1,6 +1,6 @@
 package it.unimib.disco.bigtwine.services.analysis.config;
 
-import it.unimib.disco.bigtwine.commons.models.dto.NeelProcessedTweetDTO;
+import it.unimib.disco.bigtwine.commons.messaging.dto.NeelProcessedTweetDTO;
 import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
