@@ -1,6 +1,4 @@
 version: 0.2
-env:
-    git-credential-helper: yes
 phases:
     install:
         runtime-versions:
@@ -12,13 +10,16 @@ phases:
         commands:
             - echo Logging in to Amazon ECR...
             - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+            - export IMAGE_TAG=$(./gradlew properties -q | grep "^version:*" | awk '{print $2}')
     build:
         commands:
             - echo Build started on `date`
-            - ./gradlew -Pprod jib --debug
+            - ./gradlew -Pprod jibDockerBuild
     post_build:
         commands:
             - echo Build completed on `date`
+            - echo Pushing the Docker image...
+            - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 cache:
     paths:
         - '/root/.gradle/wrapper/**/*'
