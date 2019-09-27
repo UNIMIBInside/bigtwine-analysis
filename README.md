@@ -1,4 +1,5 @@
-# analysisId
+# Analysis service
+![AWS CodeBuild](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoidXZheGpVSHJKK3BLM1NiaEN4b3EyY25LaEUrVDJuY3hCWlVSQis3SXBZeTZ1aHkxSUpVUHlkYjRlLzhrbXF0b0QrU3dYWFMrenVCa3hYb2luakxFOEVNPSIsIml2UGFyYW1ldGVyU3BlYyI6IjVPOG52bnBDRGovVUZIRzYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
 This application was generated using JHipster 5.7.2, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v5.7.2](https://www.jhipster.tech/documentation-archive/v5.7.2).
 
