@@ -70,7 +70,7 @@ public class Analysis implements Serializable {
     @Field("results_count")
     private long resultsCount;
 
-    @Field("user_settings")
+    @Field("settings")
     private Map<String, Object> settings = null;
 
     @Field("export")
