@@ -67,6 +67,9 @@ public class CronListener {
      */
     private void stopAnalyses(int task, int taskCount) {
         long totalCount = this.analysisService.countByStatus(AnalysisStatus.STARTED);
+        if (totalCount == 0 || taskCount == 0) {
+            return;
+        }
         int pageSize = (int)Math.ceil(totalCount / (double)taskCount);
         Pageable page = PageRequest.of(task, pageSize, Sort.by(Sort.Direction.ASC, "id"));
 
