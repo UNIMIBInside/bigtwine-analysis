@@ -94,11 +94,13 @@ spring:
             bindings:
                 analysisResultsChannel:
                     destination: analysis-results
+                    group: analysis
                 analysisResultsForwardedChannel:
                     destination: analysis-results-forwarded
                     content-type: application/json
                 analysisStatusChangedChannel:
                     destination: analysis-status-changes
+                    group: analysis
                 analysisStatusChangeRequestsChannel:
                     destination: analysis-status-change-requests
                     content-type: application/json
@@ -107,11 +109,13 @@ spring:
                     content-type: application/json
                 analysisProgressUpdateChannel:
                     destination: analysis-progress-updates
+                    group: analysis
                 jobControlEventsChannel:
                     destination: job-control-events
                     content-type: application/json
                 cronTaskChannel:
                     destination: cron-task
+                    group: analysis
                 cronTaskCompletionChannel:
                     destination: cron-task-completion
                     content-type: application/json
