@@ -48,7 +48,7 @@ dependencyManagement {
 defaultTasks 'bootRun'
 
 group = 'it.unimib.disco.bigtwine.services'
-version = '0.9.1'
+version = '0.9.2'
 
 description = ''
 

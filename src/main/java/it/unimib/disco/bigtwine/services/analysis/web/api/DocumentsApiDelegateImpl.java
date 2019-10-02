@@ -6,6 +6,7 @@ import com.mongodb.MongoGridFSException;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
@@ -21,6 +22,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.ResponseEntity;
@@ -39,19 +42,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     private final Logger log = LoggerFactory.getLogger(DocumentsApiDelegateImpl.class);
 
-    private final String METADATA_USERID_KEY = "userid";
-    private final String METADATA_USERNAME_KEY = "username";
-    private final String METADATA_DOCTYPE_KEY = "doctype";
-    private final String METADATA_ANALYSISID_KEY = "analysisid";
-
-    private final String DOCTYPE_USER_UPLOAD = "user-upload";
-    private final String DOCTYPE_RESULTS_EXPORT = "results-export";
+    private static final String METADATA_USERID_KEY = "userid";
+    private static final String METADATA_USERNAME_KEY = "username";
+    private static final String METADATA_DOCTYPE_KEY = "doctype";
+    private static final String METADATA_ANALYSISID_KEY = "analysisid";
+    private static final String METADATA_ANALYSISTYPE_KEY = "analysistype";
+    private static final String METADATA_CATEGORY_KEY = "category";
 
     private final NativeWebRequest request;
     private GridFsTemplate gridFsTemplate;
@@ -97,11 +101,15 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
         return new DocumentDTO()
             .documentId(file.getObjectId().toString())
+            .documentType(file.getMetadata().getString(METADATA_DOCTYPE_KEY))
             .filename(file.getFilename())
             .size(file.getLength())
             .user(new UserDTO()
                 .uid(file.getMetadata().getString(METADATA_USERID_KEY))
                 .username(file.getMetadata().getString(METADATA_USERNAME_KEY)))
+            .category(file.getMetadata().getString(METADATA_CATEGORY_KEY))
+            .analysisType(file.getMetadata().getString(METADATA_ANALYSISTYPE_KEY))
+            .analysisId(file.getMetadata().getString(METADATA_ANALYSISID_KEY))
             .uploadDate(OffsetDateTime.ofInstant(file.getUploadDate().toInstant(), ZoneOffset.UTC))
             .contentType(contentType);
     }
@@ -111,38 +119,39 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
         return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
     }
 
+    private void checkFileOwnership(GridFSFile file) {
+        String userId = AnalysisUtil.getCurrentUserIdentifier()
+            .orElseThrow(UnauthenticatedException::new);
+        String docAnalysis = (String)file.getMetadata().get(METADATA_ANALYSISID_KEY);
+
+        if (StringUtils.isNotBlank(docAnalysis)) {
+            Optional<Analysis> analysis = this.analysisService.findOne(docAnalysis);
+
+            if (!(analysis.isPresent() && analysis.get().getOwner().getUid().equals(userId))) {
+                throw new UnauthorizedException(String.format(
+                    "Only the owner of the analysis '%s' can access this document",
+                    docAnalysis));
+            }
+        } else {
+            String docUploader = (String)file.getMetadata().get(METADATA_USERID_KEY);
+            if (!userId.equals(docUploader)) {
+                throw new UnauthorizedException("Only the uploader can access this document");
+            }
+        }
+    }
+
     @Override
     public ResponseEntity<DocumentDTO> getDocumentMetaV1(String documentId) {
-        AnalysisUtil.getCurrentUserIdentifier()
-            .orElseThrow(UnauthenticatedException::new);
         GridFSFile file = this.getFile(documentId);
+        this.checkFileOwnership(file);
 
         return ResponseEntity.ok(this.createDocumentFromFile(file));
     }
 
     @Override
     public ResponseEntity<Resource> downloadDocumentV1(String documentId) {
-        String userId = AnalysisUtil.getCurrentUserIdentifier().orElseThrow(UnauthenticatedException::new);
-
         GridFSFile file = this.getFile(documentId);
-
-        String docType = (String)file.getMetadata().get(METADATA_DOCTYPE_KEY);
-        String docUploader = (String)file.getMetadata().get(METADATA_USERID_KEY);
-        String docAnalysis = (String)file.getMetadata().get(METADATA_ANALYSISID_KEY);
-
-        if (docType != null && docType.equals(DOCTYPE_RESULTS_EXPORT) && docAnalysis != null) {
-            Optional<Analysis> analysis = this.analysisService.findOne(docAnalysis);
-
-            if (!(analysis.isPresent() && analysis.get().getOwner().getUid().equals(userId))) {
-                throw new UnauthorizedException(String.format(
-                    "Only the owner of the analysis '%s' can download this document",
-                    docAnalysis));
-            }
-        } else {
-            if (!userId.equals(docUploader)) {
-                throw new UnauthorizedException("Only the uploader can download this document");
-            }
-        }
+        this.checkFileOwnership(file);
 
         InputStream stream = this.getGridFs(null).openDownloadStream(file.getObjectId());
         Resource resource = new GridFsResource(file, stream);
@@ -151,7 +160,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     }
 
     @Override
-    public ResponseEntity<DocumentDTO> uploadDocumentV1() {
+    public ResponseEntity<DocumentDTO> uploadDocumentV1(String documentType, String analysisType, String category) {
         String userId = SecurityUtils.getCurrentUserId().orElseThrow(UnauthenticatedException::new);
         String username = SecurityUtils.getCurrentUserLogin().orElse(null);
         HttpServletRequest request = (HttpServletRequest) this.request.getNativeRequest();
@@ -177,7 +186,19 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
                     DBObject metadata = new BasicDBObject();
                     metadata.put(METADATA_USERID_KEY, userId);
                     metadata.put(METADATA_USERNAME_KEY, username);
-                    metadata.put(METADATA_DOCTYPE_KEY, DOCTYPE_USER_UPLOAD);
+
+                    if (StringUtils.isNotBlank(documentType)) {
+                        metadata.put(METADATA_DOCTYPE_KEY, documentType);
+                    }
+
+                    if (analysisType != null) {
+                        metadata.put(METADATA_ANALYSISTYPE_KEY, analysisType.toString());
+                    }
+
+                    if (StringUtils.isNotBlank(category)) {
+                        metadata.put(METADATA_CATEGORY_KEY, category);
+                    }
+
                     objectId = gridFsTemplate.store(stream, item.getName(), item.getContentType(), metadata);
                 }
             }
@@ -204,5 +225,36 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
         } else {
             throw new UploadFailedException("Document upload failed");
         }
+    }
+
+    @Override
+    public ResponseEntity<List<DocumentDTO>> listDocumentsMetaV1(String documentType, String analysisType, String category) {
+        String userId = AnalysisUtil.getCurrentUserIdentifier()
+            .orElseThrow(UnauthenticatedException::new);
+        Query query = new Query(GridFsCriteria.whereMetaData(METADATA_USERID_KEY).is(userId));
+
+        if (documentType != null) {
+            query.addCriteria(GridFsCriteria.whereMetaData(METADATA_DOCTYPE_KEY).is(documentType));
+        }
+
+        if (analysisType != null) {
+            query.addCriteria(GridFsCriteria.whereMetaData(METADATA_ANALYSISTYPE_KEY).is(analysisType.toString()));
+        }
+
+        if (category != null) {
+            query.addCriteria(GridFsCriteria.whereMetaData(METADATA_CATEGORY_KEY).is(category));
+        }
+
+        query.limit(100);
+
+        GridFSFindIterable files = gridFsTemplate.find(query);
+        final List<DocumentDTO> documents = new ArrayList<>();
+        files
+            .iterator()
+            .forEachRemaining(f -> {
+                documents.add(this.createDocumentFromFile(f));
+            });
+
+        return ResponseEntity.ok(documents);
     }
 }

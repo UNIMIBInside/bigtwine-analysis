@@ -320,6 +320,13 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              properties:
+                documentType:
+                  type: string
+                analysisType:
+                  type: string
+                category:
+                  type: string
       responses:
         '201':
           description: "File uploaded"
@@ -327,6 +334,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocumentDTO'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      tags:
+        - 'Documents'
+    get:
+      summary: "Get list of latest documents uploaded by the current user"
+      description: ""
+      operationId: listDocumentsMetaV1
+      parameters:
+        - name: documentType
+          in: query
+          description: 'Filter by document type'
+          required: false
+          schema:
+            type: string
+        - name: analysisType
+          in: query
+          description: 'Filter by analysis type'
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: 'Filter by document category'
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "The documents specs"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentDTO'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
       tags:
@@ -708,6 +751,14 @@ components:
       type: object
       properties:
         documentId:
+          type: string
+        documentType:
+          type: string
+        analysisType:
+          type: string
+        analysisId:
+          type: string
+        category:
           type: string
         filename:
           type: string
