@@ -3,6 +3,7 @@ package it.unimib.disco.bigtwine.services.analysis.web.api;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
@@ -137,10 +138,10 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     }
 
     @Override
-    public ResponseEntity<PagedAnalyses> listAnalysesV1(Integer pageNum, Integer pageSize) {
-        String ownerId = this.getCurrentUserIdentifier().orElse(null);
+    public ResponseEntity<PagedAnalyses> listAnalysesV1(Integer pageNum, Integer pageSize, AnalysisTypeEnum aType, Boolean owned) {
+        String userId = this.getCurrentUserIdentifier().orElse(null);
 
-        if (ownerId == null) {
+        if (userId == null) {
             throw new UnauthorizedException();
         }
 
@@ -163,10 +164,11 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         Pageable page = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "updateDate"));
         Page<Analysis> pageObj;
 
-        if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
-            pageObj = this.analysisService.findAll(page);
-        }else {
-            pageObj = this.analysisService.findByOwner(ownerId, page);
+        AnalysisType analysisType = AnalysisMapper.INSTANCE.analysisTypeFromTypeEnum(aType);
+        if (owned) {
+            pageObj = this.analysisService.findByOwnerAndType(userId, analysisType, page);
+        } else {
+            pageObj = this.analysisService.findVisibleByType(userId, analysisType, page);
         }
 
         List<Analysis> analyses = pageObj.getContent();

@@ -2,6 +2,8 @@ package it.unimib.disco.bigtwine.services.analysis.repository;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -20,6 +22,13 @@ import java.util.stream.Stream;
 public interface AnalysisRepository extends MongoRepository<Analysis, String> {
     List<Analysis> findByOwnerUid(String ownerId);
     Page<Analysis> findByOwnerUid(String ownerId, Pageable page);
+    Page<Analysis> findByType(AnalysisType analysisType, Pageable page);
+    Page<Analysis> findByOwnerUidOrVisibility(String ownerId, AnalysisVisibility visibility, Pageable page);
+    Page<Analysis> findByTypeAndVisibility(AnalysisType analysisType, AnalysisVisibility visibility, Pageable page);
+    Page<Analysis> findByTypeAndOwnerUid(AnalysisType analysisType, String ownerId, Pageable page);
+
+    @Query("{$and: [{'type' : ?1}, {$or: [{'owner.uid': ?1}, {'visibility': 'PUBLIC'}]}]}")
+    Page<Analysis> findVisibleByType(String ownerId, AnalysisType analysisType, Pageable page);
     long countByOwnerUid(String owner);
     long countByStatus(AnalysisStatus status);
     Stream<Analysis> findByStatus(AnalysisStatus status, Pageable page);

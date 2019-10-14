@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.util.BeanUtil;
 import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisErrorCode;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import org.mapstruct.*;
@@ -61,6 +62,8 @@ public interface AnalysisMapper {
     List<AnalysisDTO> analysisDtosFromAnalyses(List<Analysis> analyses);
 
     AnalysisVisibility visibilityFromVisibilityEnum(AnalysisVisibilityEnum visibility);
+
+    AnalysisType analysisTypeFromTypeEnum(AnalysisTypeEnum analysisTypeEnum);
 
     default AnalysisInput analysisInputFromObject(Object input) {
         if (input instanceof AnalysisInputDTO) {

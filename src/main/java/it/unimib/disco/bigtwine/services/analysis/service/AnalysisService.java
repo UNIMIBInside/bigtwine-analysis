@@ -8,12 +8,14 @@ import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisStatusMapper;
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.messaging.JobControlEventsProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
+import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisUpdateNotApplicable;
@@ -245,6 +247,77 @@ public class AnalysisService {
         return this.analysisRepository.countByStatus(status);
     }
 
+    /**
+     * Return the analyses in db of type 'analysisType'
+     *
+     * @param analysisType The type to filter
+     * @param page The page you want
+     * @return A list of analysis of type 'analysisType'
+     */
+    public Page<Analysis> findByType(AnalysisType analysisType, Pageable page) {
+        log.debug("Request to get all Analyses of a type");
+        if (analysisType == null) {
+            return this.findAll(page);
+        } else {
+            return analysisRepository.findByType(analysisType, page);
+        }
+    }
+
+    /**
+     * Return the analyses in db of type 'analysisType' and owned by the user 'owner'
+     *
+     * @param owner Owner of the analysis
+     * @param analysisType The type to filter
+     * @param page The page you want
+     * @return A list of analysis of type 'analysisType' and owned by the user 'owner'
+     */
+    public Page<Analysis> findByOwnerAndType(String owner, AnalysisType analysisType, Pageable page) {
+        log.debug("Request to get all Analyses of a type owned by the user");
+        if (analysisType == null) {
+            return this.findByOwner(owner, page);
+        } else {
+            return analysisRepository.findByTypeAndOwnerUid(analysisType, owner, page);
+        }
+    }
+
+    /**
+     * Return the analyses in db visible to the user 'user'
+     *
+     * @param user Owner of the analysis
+     * @param page The page you want
+     * @return A list of analysis visible to the user 'user'
+     */
+    public Page<Analysis> findVisible(String user, Pageable page) {
+        log.debug("Request to get all Analyses of a type owned by the user");
+        boolean isAdmin = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN);
+        if (isAdmin) {
+            return this.findAll(page);
+        } else {
+            return analysisRepository.findByOwnerUidOrVisibility(user, AnalysisVisibility.PUBLIC, page);
+        }
+    }
+
+    /**
+     * Return the analyses in db of type 'analysisType' and visible to the user 'user'
+     *
+     * @param user Owner of the analysis
+     * @param analysisType The type to filter
+     * @param page The page you want
+     * @return A list of analysis of type 'analysisType' and visible to the user 'user'
+     */
+    public Page<Analysis> findVisibleByType(String user, AnalysisType analysisType, Pageable page) {
+        log.debug("Request to get all Analyses of a type visible to the user");
+        if (analysisType == null) {
+            return this.findVisible(user, page);
+        } else {
+            boolean isAdmin = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN);
+            if (isAdmin) {
+                return this.findByType(analysisType, page);
+            } else {
+                return analysisRepository.findVisibleByType(user, analysisType, page);
+            }
+        }
+    }
 
     /**
      * Get one analysis by uid.

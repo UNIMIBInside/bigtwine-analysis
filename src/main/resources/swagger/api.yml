@@ -35,6 +35,19 @@ paths:
       parameters:
         - $ref: '#/components/parameters/pageParam'
         - $ref: '#/components/parameters/pageSizeParam'
+        - name: analysisType
+          in: query
+          description: 'Filter by analysis type'
+          required: false
+          schema:
+            $ref: '#/components/schemas/AnalysisTypeEnum'
+        - name: owned
+          in: query
+          description: 'Return only analyses owned by current user'
+          required: false
+          schema:
+            type: boolean
+            default: true
       responses:
         '200':
           description: ""
