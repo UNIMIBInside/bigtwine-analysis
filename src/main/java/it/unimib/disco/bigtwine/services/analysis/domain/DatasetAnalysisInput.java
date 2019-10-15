@@ -7,11 +7,14 @@ import java.util.Objects;
 
 public class DatasetAnalysisInput implements AnalysisInput {
     private String documentId;
+    private String name;
+    private long size;
 
     public DatasetAnalysisInput() {
     }
 
     @JsonProperty("type")
+    @Override
     public AnalysisInputType getType() {
         return AnalysisInputType.DATASET;
     }
@@ -27,6 +30,32 @@ public class DatasetAnalysisInput implements AnalysisInput {
     public DatasetAnalysisInput documentId(String documentId) {
         this.setDocumentId(documentId);
         return this;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public DatasetAnalysisInput name(String name) {
+        this.setName(name);
+        return this;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public DatasetAnalysisInput size(long size) {
+        this.setSize(size);
+        return this;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
     }
 
     @Override

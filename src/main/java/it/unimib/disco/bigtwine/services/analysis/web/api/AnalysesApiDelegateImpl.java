@@ -1,19 +1,17 @@
 package it.unimib.disco.bigtwine.services.analysis.web.api;
 
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
-import it.unimib.disco.bigtwine.services.analysis.domain.User;
+import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
-import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
+import it.unimib.disco.bigtwine.services.analysis.service.DocumentService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
-import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -40,11 +39,16 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     private final Logger log = LoggerFactory.getLogger(AnalysesApiDelegateImpl.class);
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
+    private final DocumentService documentService;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    public AnalysesApiDelegateImpl(NativeWebRequest request, AnalysisService analysisService) {
+    public AnalysesApiDelegateImpl(
+        NativeWebRequest request,
+        AnalysisService analysisService,
+        DocumentService documentService) {
         this.request = request;
         this.analysisService = analysisService;
+        this.documentService = documentService;
     }
 
     private Optional<String> getCurrentUserIdentifier() {
@@ -102,6 +106,22 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         return new ResponseEntity<>(updatedAnalysisDTO, HttpStatus.OK);
     }
 
+    private void autofillAnalysisProperties(Analysis analysis) {
+        User owner = this.getCurrentUser().orElseThrow(UnauthorizedException::new);
+        analysis.setOwner(owner);
+
+        if (analysis.getInput() instanceof DatasetAnalysisInput) {
+            DatasetAnalysisInput input = (DatasetAnalysisInput)analysis.getInput();
+            if (input.getDocumentId() != null) {
+                Optional<Document> docOpt = this.documentService.findOne(input.getDocumentId());
+                if (docOpt.isPresent()) {
+                    input.setName(docOpt.get().getFilename());
+                    input.setSize(docOpt.get().getSize());
+                }
+            }
+        }
+    }
+
     @Override
     public Optional<NativeWebRequest> getRequest() {
         return Optional.ofNullable(request);
@@ -109,11 +129,10 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
     @Override
     public ResponseEntity<AnalysisDTO> createAnalysisV1(AnalysisDTO analysis) {
-        User owner = this.getCurrentUser().orElseThrow(UnauthorizedException::new);
-
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
         analysisService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());
-        a.setOwner(owner);
+
+        this.autofillAnalysisProperties(a);
 
         try {
             a = this.analysisService.save(a);

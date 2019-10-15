@@ -525,6 +525,15 @@ components:
               $ref: '#/components/schemas/AnalysisInputTypeEnum'
             documentId:
               type: string
+            name:
+              description: 'Name of the dataset'
+              type: string
+              readOnly: true
+            size:
+              description: 'Size of the dataset in bytes'
+              type: number
+              format: int64
+              readOnly: true
     AnalysisDTO:
       type: object
       required:
@@ -763,9 +772,9 @@ components:
     DocumentDTO:
       type: object
       properties:
-        documentId:
+        id:
           type: string
-        documentType:
+        type:
           type: string
         analysisType:
           type: string
