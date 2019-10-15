@@ -495,6 +495,9 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/AnalysisInputTypeEnum'
+        bounded:
+          type: boolean
+          readOnly: true
     QueryAnalysisInputDTO:
       allOf:
         - $ref: '#/components/schemas/AnalysisInputDTO'
@@ -505,6 +508,9 @@ components:
           properties:
             type:
               $ref: '#/components/schemas/AnalysisInputTypeEnum'
+            bounded:
+              type: boolean
+              readOnly: true
             tokens:
               type: array
               items:
@@ -523,6 +529,9 @@ components:
           properties:
             type:
               $ref: '#/components/schemas/AnalysisInputTypeEnum'
+            bounded:
+              type: boolean
+              readOnly: true
             documentId:
               type: string
             name:

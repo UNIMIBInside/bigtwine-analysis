@@ -2,23 +2,27 @@ package it.unimib.disco.bigtwine.services.analysis.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
-import org.springframework.data.annotation.Transient;
 
 import java.util.List;
 import java.util.Objects;
 
 public class QueryAnalysisInput implements AnalysisInput {
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Transient
-    private final AnalysisInputType type = AnalysisInputType.QUERY;
     private List<String> tokens;
     private JoinOperator joinOperator;
 
     public QueryAnalysisInput() {
     }
 
+    @Override
+    @JsonProperty("type")
     public AnalysisInputType getType() {
-        return this.type;
+        return AnalysisInputType.QUERY;
+    }
+
+    @Override
+    @JsonProperty("isBounded")
+    public boolean isBounded() {
+        return false;
     }
 
     public List<String> getTokens() {

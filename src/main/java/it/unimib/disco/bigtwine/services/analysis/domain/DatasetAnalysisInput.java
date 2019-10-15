@@ -19,6 +19,12 @@ public class DatasetAnalysisInput implements AnalysisInput {
         return AnalysisInputType.DATASET;
     }
 
+    @Override
+    @JsonProperty("isBounded")
+    public boolean isBounded() {
+        return true;
+    }
+
     public String getDocumentId() {
         return documentId;
     }

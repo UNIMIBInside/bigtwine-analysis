@@ -15,4 +15,5 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInp
 })
 public interface AnalysisInput {
     AnalysisInputType getType();
+    boolean isBounded();
 }
