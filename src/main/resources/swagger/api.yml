@@ -628,12 +628,12 @@ components:
     AnalysisSettingTypeEnum:
       type: string
       enum:
-        - NUMBER
-        - STRING
-        - TEXT
-        - BOOLEAN
-        - SINGLE_CHOICE
-        - MULTIPLE_CHOICES
+        - number
+        - string
+        - text
+        - boolean
+        - single-choice
+        - multiple-choices
     AnalysisSettingChoiceDTO:
       type: object
       properties:
