@@ -5,8 +5,10 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSta
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
+import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisSettingMapper;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisSettingService;
 import it.unimib.disco.bigtwine.services.analysis.service.DocumentService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
@@ -19,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -39,15 +40,18 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     private final Logger log = LoggerFactory.getLogger(AnalysesApiDelegateImpl.class);
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
+    private final AnalysisSettingService analysisSettingService;
     private final DocumentService documentService;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public AnalysesApiDelegateImpl(
         NativeWebRequest request,
         AnalysisService analysisService,
+        AnalysisSettingService analysisSettingService,
         DocumentService documentService) {
         this.request = request;
         this.analysisService = analysisService;
+        this.analysisSettingService = analysisSettingService;
         this.documentService = documentService;
     }
 
@@ -82,7 +86,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             }
 
             analysis.setSettings((userSettings != null) ? userSettings : new HashMap<>());
-            analysisService.cleanAnalysisSettings(analysis, SecurityUtils.getCurrentUserRoles());
+            analysisSettingService.cleanAnalysisSettings(analysis, SecurityUtils.getCurrentUserRoles());
 
             try {
                 analysis = analysisService.save(analysis);
@@ -130,7 +134,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     @Override
     public ResponseEntity<AnalysisDTO> createAnalysisV1(AnalysisDTO analysis) {
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
-        analysisService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());
+        analysisSettingService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());
 
         this.autofillAnalysisProperties(a);
 
@@ -253,7 +257,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     }
 
     @Override
-    public ResponseEntity<Map<String, Object>> getAnalysisDefaultSettingsV1(String analysisId) {
+    public ResponseEntity<List<AnalysisSettingDTO>> getAnalysisSettingsV1(String analysisId) {
         Optional<Analysis> analysis = this.analysisService.findOne(analysisId);
 
         if (!analysis.isPresent()) {
@@ -261,11 +265,12 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         }
 
         AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
+
         List<String> userRoles = SecurityUtils.getCurrentUserRoles();
-        Map<String, Object> defaults = this.analysisService
-            .getAnalysisDefaultSettings(analysisId, userRoles);
+        List<AnalysisSettingResolved> settings = this.analysisSettingService
+            .resolveAnalysisSettings(analysis.get(), userRoles, false);
 
 
-        return ResponseEntity.ok(defaults);
+        return ResponseEntity.ok(AnalysisSettingMapper.INSTANCE.dtosFromAnalysisSettingResolved(settings));
     }
 }

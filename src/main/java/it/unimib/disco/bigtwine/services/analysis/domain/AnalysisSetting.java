@@ -1,16 +1,25 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.annotations.ApiModelProperty;
 import it.unimib.disco.bigtwine.services.analysis.config.Constants;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.*;
+
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Objects;
+import java.util.*;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingType;
 
 /**
  * A AnalysisSetting.
@@ -23,26 +32,44 @@ public class AnalysisSetting implements Serializable {
     @Id
     private String id;
 
+    /**
+     * Setting name, should be alphanumeric and lowercase
+     */
+    @NotNull
+    @Pattern(regexp = "[a-z0-9-]+")
+    @ApiModelProperty(value = "Setting name, should be alphanumeric and lowercase", required = true)
     @Field("name")
     private String name;
 
-    @Field("default_value")
-    private Object defaultValue;
+    @NotNull
+    @Field("type")
+    private AnalysisSettingType type;
 
-    @Field("user_can_override")
-    private Boolean userCanOverride;
+    @Field("description")
+    private String description;
 
-    @Field("user_roles")
-    private Set<String> userRoles = new HashSet<>();
+    @Field("user_visible")
+    private Boolean userVisible;
 
-    @Field("analysis_types")
-    private Set<AnalysisType> analysisTypes = new HashSet<>();
+    /**
+     * Each option on separated line with the following format: <value>:<name>
+     */
+    @ApiModelProperty(value = "Each option on separated line with the following format: <value>:<name>")
+    @Transient
+    @JsonSerialize
+    @JsonDeserialize
+    private String options;
+
+    @Field("choices")
+    @JsonIgnore
+    @AccessType(AccessType.Type.PROPERTY)
+    private List<AnalysisSettingChoice> choices = new ArrayList<>();
+
+    @Field("analysis_type")
+    private AnalysisType analysisType;
 
     @Field("analysis_input_types")
     private Set<AnalysisInputType> analysisInputTypes = new HashSet<>();
-
-    @Field("priority")
-    private Integer priority;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
@@ -66,76 +93,71 @@ public class AnalysisSetting implements Serializable {
         this.name = name;
     }
 
-    public Object getDefaultValue() {
-        return defaultValue;
+    public String getDescription() {
+        return description;
     }
 
-    public AnalysisSetting defaultValue(Object defaultValue) {
-        this.defaultValue = defaultValue;
+    public AnalysisSetting description(String description) {
+        this.description = description;
         return this;
     }
 
-    public void setDefaultValue(Object defaultValue) {
-        this.defaultValue = defaultValue;
-    }
-
-    public Boolean isUserCanOverride() {
-        return userCanOverride;
-    }
-
-    public AnalysisSetting userCanOverride(Boolean userCanOverride) {
-        this.userCanOverride = userCanOverride;
+    public AnalysisSetting setDescription(String description) {
+        this.description = description;
         return this;
     }
 
-    public void setUserCanOverride(Boolean userCanOverride) {
-        this.userCanOverride = userCanOverride;
+    public AnalysisSettingType getType() {
+        return type;
     }
 
-    public Set<String> getUserRoles() {
-        return userRoles;
-    }
-
-    public AnalysisSetting userRoles(Set<String> authorities) {
-        this.userRoles = authorities;
+    public AnalysisSetting type(AnalysisSettingType type) {
+        this.type = type;
         return this;
     }
 
-    public AnalysisSetting addUserRoles(String authority) {
-        this.userRoles.add(authority);
+    public void setType(AnalysisSettingType type) {
+        this.type = type;
+    }
+
+    public Boolean isUserVisible() {
+        return userVisible;
+    }
+
+    public AnalysisSetting userVisible(Boolean userVisible) {
+        this.userVisible = userVisible;
         return this;
     }
 
-    public AnalysisSetting removeUserRoles(String authority) {
-        this.userRoles.remove(authority);
+    public void setUserVisible(Boolean userVisible) {
+        this.userVisible = userVisible;
+    }
+
+    public String getOptions() {
+        return options;
+    }
+
+    public AnalysisSetting options(String options) {
+        this.setOptions(options);
         return this;
     }
 
-    public void setUserRoles(Set<String> authorities) {
-        this.userRoles = authorities;
+    public void setOptions(String options) {
+        this.options = options;
+        this.rebuildChoices();
     }
 
-    public Set<AnalysisType> getAnalysisTypes() {
-        return analysisTypes;
+    public AnalysisType getAnalysisType() {
+        return analysisType;
     }
 
-    public AnalysisSetting analysisTypes(Set<AnalysisType> analysisTypes) {
-        this.analysisTypes = analysisTypes;
+    public AnalysisSetting analysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
         return this;
     }
 
-    public AnalysisSetting addAnalysisTypes(AnalysisType analysisType) {
-        this.analysisTypes.add(analysisType);
-        return this;
-    }
-
-    public AnalysisSetting removeAnalysisTypes(AnalysisType analysisType) {
-        this.analysisTypes.remove(analysisType);
-        return this;
-    }
-
-    public void setAnalysisTypes(Set<AnalysisType> analysisTypes) {
-        this.analysisTypes = analysisTypes;
+    public void setAnalysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
     }
 
     public Set<AnalysisInputType> getAnalysisInputTypes() {
@@ -160,21 +182,57 @@ public class AnalysisSetting implements Serializable {
     public void setAnalysisInputTypes(Set<AnalysisInputType> analysisInputTypes) {
         this.analysisInputTypes = analysisInputTypes;
     }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
-    public Integer getPriority() {
-        return priority;
+    public List<AnalysisSettingChoice> getChoices() {
+        return this.choices;
     }
 
-    public AnalysisSetting priority(Integer priority) {
-        this.priority = priority;
+    public AnalysisSetting choices(List<AnalysisSettingChoice> choices) {
+        this.setChoices(choices);
         return this;
     }
 
-    public void setPriority(Integer priority) {
-        this.priority = priority;
+    public void setChoices(List<AnalysisSettingChoice> choices) {
+        this.choices = choices;
+        this.rebuildOptions();
     }
 
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
+    private void rebuildChoices() {
+        if (StringUtils.isBlank(this.options)) {
+            this.choices = Collections.emptyList();
+        } else {
+            List<AnalysisSettingChoice> choices = new ArrayList<>();
+            String[] lines = this.options.split("\\\\r?\\\\n");
+
+            for (String line: lines) {
+                String[] parts = line.split(":");
+
+                if (parts.length != 2 || StringUtils.isBlank(parts[0]) || StringUtils.isBlank(parts[1])) {
+                    continue;
+                }
+
+                choices.add(new AnalysisSettingChoice()
+                    .value(parts[0].trim())
+                    .name(parts[1].trim()));
+            }
+
+            this.choices = choices;
+        }
+    }
+
+    private void rebuildOptions() {
+        if (choices != null && choices.size() > 0) {
+            StringBuilder optionsBuilder = new StringBuilder();
+            for (AnalysisSettingChoice choice : choices) {
+                optionsBuilder.append(String.format("%s:%s\n", choice.getValue(), choice.getName()));
+            }
+
+            this.options = optionsBuilder.toString();
+        } else {
+            this.options = "";
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -201,8 +259,9 @@ public class AnalysisSetting implements Serializable {
         return "AnalysisSetting{" +
             "id=" + getId() +
             ", name='" + getName() + "'" +
-            ", defaultValue='" + getDefaultValue() + "'" +
-            ", userCanOverride='" + isUserCanOverride() + "'" +
+            ", type='" + getType() + "'" +
+            ", userVisible='" + isUserVisible() + "'" +
+            ", options='" + getOptions() + "'" +
             "}";
     }
 }

@@ -5,6 +5,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInp
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -21,30 +22,27 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 @Repository
 public interface AnalysisSettingRepository extends MongoRepository<AnalysisSetting, String> {
-    @Query("{$and:[{$or:[{user_roles:[]},{user_roles:{$in: ?0}}]},{$or:[{analysis_types:[]},{analysis_types:{$in:[?1]}}]},{$or:[{analysis_input_types:[]},{analysis_input_types:{$in:[?2]}}]}]}}")
-    List<AnalysisSetting> findByRolesAndAnalysis(List<String> roles, AnalysisType analysisType, AnalysisInputType inputType);
+    @Query("{}")
+    Page<AnalysisSetting> findAllWithEagerRelationships(Pageable pageable);
+
+    @Query("{}")
+    List<AnalysisSetting> findAllWithEagerRelationships();
+
+    @Query("{'id': ?0}")
+    Optional<AnalysisSetting> findOneWithEagerRelationships(String id);
 
     Optional<AnalysisSetting> findOneById(String id);
 
-    default List<AnalysisSetting> findByRolesAndAnalysisDistinct(List<String> roles, AnalysisType analysisType, AnalysisInputType inputType) {
-        List<AnalysisSetting> allSettings = this.findByRolesAndAnalysis(roles, analysisType, inputType)
-            .stream()
-            .sorted(Comparator.comparing(AnalysisSetting::getName).thenComparing(
-                Comparator.comparing(AnalysisSetting::getPriority).reversed()))
-            .collect(Collectors.toList());
+    @Query("{$and: [{$or: [{analysis_type: null}, {analysis_type: ?0}]}, {$or: [{analysis_input_types: []}, {analysis_input_types: {$in: [ ?1 ]}}]}]}")
+    List<AnalysisSetting> findByAnalysis(AnalysisType analysisType, AnalysisInputType inputType, Sort sort);
 
-        List<AnalysisSetting> settings = new ArrayList<>();
-        String lastSettName = null;
-        for (AnalysisSetting setting: allSettings) {
-            if (setting.getName().equals(lastSettName)) {
-                continue;
-            }
-
-            lastSettName = setting.getName();
-            settings.add(setting);
-        }
-
-        return settings;
+    default List<AnalysisSetting> findByAnalysis(AnalysisType analysisType, AnalysisInputType inputType) {
+        return findByAnalysis(analysisType, inputType, Sort.by(Sort.Direction.DESC, "analysis_type"));
     }
 
+    default List<AnalysisSetting> findVisibleByAnalysis(AnalysisType analysisType, AnalysisInputType inputType) {
+        return this.findByAnalysis(analysisType, inputType).stream()
+            .filter(AnalysisSetting::isUserVisible)
+            .collect(Collectors.toList());
+    }
 }

@@ -52,7 +52,7 @@ public class AnalysisService {
 
     private final AnalysisRepository analysisRepository;
     private final AnalysisResultsRepository analysisResultsRepository;
-    private final AnalysisSettingRepository analysisSettingRepository;
+    private final AnalysisSettingService analysisSettingService;
 
     private final AnalysisStatusValidator analysisStatusValidator;
     private final AnalysisInputValidatorLocator inputValidatorLocator;
@@ -63,14 +63,14 @@ public class AnalysisService {
     public AnalysisService(
         AnalysisRepository analysisRepository,
         AnalysisResultsRepository analysisResultsRepository,
-        AnalysisSettingRepository analysisSettingRepository,
+        AnalysisSettingService analysisSettingService,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisStatusChangeRequestProducerChannel channel,
         JobControlEventsProducerChannel jobControlChannel) {
         this.analysisRepository = analysisRepository;
         this.analysisResultsRepository = analysisResultsRepository;
-        this.analysisSettingRepository = analysisSettingRepository;
+        this.analysisSettingService = analysisSettingService;
         this.analysisStatusValidator = analysisStatusValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
@@ -100,10 +100,8 @@ public class AnalysisService {
         }
 
         if (analysis.getSettings() == null) {
-            Map<String, Object> defaults = this.getAnalysisDefaultSettings(
-                    analysis.getType(),
-                    analysis.getInput().getType(),
-                    SecurityUtils.getCurrentUserRoles());
+            Map<String, Object> defaults = this.analysisSettingService
+                .getAnalysisSettingsDefaultValues(analysis, SecurityUtils.getCurrentUserRoles());
             analysis.setSettings(defaults);
         }
     }
@@ -353,50 +351,6 @@ public class AnalysisService {
         } else {
             return analysis.getStatusHistory();
         }
-    }
-
-    /**
-     * Restituisce le impostazioni predefinite per l'analisi e i ruoli utente indicati
-     *
-     * @param id L'id dell'analisi di cui si vogliono le impostazioni predefinite
-     * @param userRoles I ruoli utente con cui filtrare le impostazioni
-     * @return le impostazioni predefinite (nome impostazione => valore predefinito)
-     */
-    public Map<String, Object> getAnalysisDefaultSettings(String id, List<String> userRoles) {
-        Analysis analysis = this.findOne(id).orElse(null);
-        if (analysis == null) {
-            return null;
-        }
-
-        return this.getAnalysisDefaultSettings(analysis.getType(), analysis.getInput().getType(), userRoles);
-    }
-
-    private Map<String, Object> getAnalysisDefaultSettings(AnalysisType type, AnalysisInputType inputType, List<String> userRoles) {
-        List<AnalysisSetting> settings = this.analysisSettingRepository
-            .findByRolesAndAnalysisDistinct(userRoles, type, inputType);
-
-        return settings.stream()
-            .collect(Collectors.toMap(AnalysisSetting::getName, AnalysisSetting::getDefaultValue));
-    }
-
-    public void cleanAnalysisSettings(Analysis analysis, List<String> userRoles) {
-        if (analysis.getSettings() == null || analysis.getSettings().size() == 0) {
-            return;
-        }
-
-        Map<String, AnalysisSetting> settings = this.analysisSettingRepository
-            .findByRolesAndAnalysisDistinct(userRoles, analysis.getType(), analysis.getInput().getType())
-            .stream()
-            .collect(Collectors.toMap(AnalysisSetting::getName, Function.identity()));
-
-        Map<String, Object> cleanedSettings = new HashMap<>(analysis.getSettings());
-        for (Map.Entry<String, Object> option: analysis.getSettings().entrySet()) {
-            if (settings.containsKey(option.getKey()) && !settings.get(option.getKey()).isUserCanOverride()) {
-                cleanedSettings.replace(option.getKey(), settings.get(option.getKey()).getDefaultValue());
-            }
-        }
-
-        analysis.setSettings(cleanedSettings);
     }
 
     public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {

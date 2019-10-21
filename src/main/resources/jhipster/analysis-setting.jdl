@@ -1,22 +1,56 @@
+enum AnalysisSettingType {
+	NUMBER,
+    STRING,
+    TEXT,
+    BOOLEAN,
+    SINGLE_CHOICE,
+    MULTIPLE_CHOICES
+}
+
 @paginate(pagination)
+@service(serviceClass)
 entity AnalysisSetting {
-	name String
-    defaultValue String
+	/** Setting name, should be alphanumeric and lowercase  */
+	name String required pattern(/[a-z0-9-]+/)
+    type AnalysisSettingType required
+    description String
+    userVisible Boolean
+    /** Each option on separated line with the following format: <value>:<name>  */
+    options TextBlob
+}
+
+@paginate(pagination)
+entity AnalysisDefaultSetting {
+	defaultValue Object required
     userCanOverride Boolean
+    priority Integer
 }
 
-relationship ManyToMany {
-	AnalysisSetting{userRoles} to Authority
-}
-
-relationship ManyToMany {
-	AnalysisSetting{analysisTypes} to AnalysisType
+relationship ManyToOne {
+	AnalysisSetting{analysisType} to AnalysisType
 }
 
 relationship ManyToMany {
 	AnalysisSetting{analysisInputTypes} to AnalysisInputType
 }
 
+relationship ManyToMany {
+	AnalysisDefaultSetting{userRoles} to Authority
+}
+
+relationship ManyToOne {
+	AnalysisDefaultSetting{setting(name) required} to AnalysisSetting
+}
+
+@skipServer
+@skipClient
 entity AnalysisType
+
+@skipServer
+@skipClient
 entity AnalysisInputType
+
+@skipServer
+@skipClient
 entity Authority
+

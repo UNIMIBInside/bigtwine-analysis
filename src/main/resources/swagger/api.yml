@@ -165,8 +165,8 @@ paths:
       tags:
         - 'Analysis'
 
-  /analyses/{analysisId}/default-settings:
-    summary: 'Get the default settings of the analysis for the current user'
+  /analyses/{analysisId}/settings:
+    summary: 'Get the settings of the analysis for the current user'
     parameters:
       - name: analysisId
         in: path
@@ -177,15 +177,16 @@ paths:
     get:
       summary: 'Get the default settings of the analysis for the current user'
       description: ""
-      operationId: getAnalysisDefaultSettingsV1
+      operationId: getAnalysisSettingsV1
       responses:
         '200':
           description: ""
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnalysisSettingDTO'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -624,6 +625,38 @@ components:
         date:
           type: string
           format: date-time
+    AnalysisSettingTypeEnum:
+      type: string
+      enum:
+        - NUMBER
+        - STRING
+        - TEXT
+        - BOOLEAN
+        - SINGLE_CHOICE
+        - MULTIPLE_CHOICES
+    AnalysisSettingChoiceDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        value: {}
+    AnalysisSettingDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AnalysisSettingTypeEnum'
+        editable:
+          type: boolean
+        description:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisSettingChoiceDTO'
+        defaultValue: {}
+        currentValue: {}
     PagedAnalyses:
       allOf:
         - $ref: '#/components/schemas/PagedResponse'

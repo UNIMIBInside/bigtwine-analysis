@@ -9,6 +9,7 @@ public final class Constants {
     public static final String ANALYSIS_DB_COLLECTION = "analyses";
     public static final String ANALYSIS_RESULTS_DB_COLLECTION = "analyses.results";
     public static final String ANALYSIS_SETTINGS_DB_COLLECTION = "analyses.settings";
+    public static final String ANALYSIS_DEFAULT_SETTINGS_DB_COLLECTION = "analyses.default_settings";
 
     // Regex for acceptable logins
     public static final String LOGIN_REGEX = "^[_.@A-Za-z0-9-]*$";

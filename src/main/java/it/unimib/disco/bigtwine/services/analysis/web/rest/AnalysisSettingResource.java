@@ -2,7 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSetting;
-import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisSettingService;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.errors.BadRequestAlertException;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.util.HeaderUtil;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.util.PaginationUtil;
@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -33,10 +34,10 @@ public class AnalysisSettingResource {
 
     private static final String ENTITY_NAME = "analysisAnalysisSetting";
 
-    private final AnalysisSettingRepository analysisSettingRepository;
+    private final AnalysisSettingService analysisSettingService;
 
-    public AnalysisSettingResource(AnalysisSettingRepository analysisSettingRepository) {
-        this.analysisSettingRepository = analysisSettingRepository;
+    public AnalysisSettingResource(AnalysisSettingService analysisSettingService) {
+        this.analysisSettingService = analysisSettingService;
     }
 
     /**
@@ -48,12 +49,12 @@ public class AnalysisSettingResource {
      */
     @PostMapping("/analysis-settings")
     @Timed
-    public ResponseEntity<AnalysisSetting> createAnalysisSetting(@RequestBody AnalysisSetting analysisSetting) throws URISyntaxException {
+    public ResponseEntity<AnalysisSetting> createAnalysisSetting(@Valid @RequestBody AnalysisSetting analysisSetting) throws URISyntaxException {
         log.debug("REST request to save AnalysisSetting : {}", analysisSetting);
         if (analysisSetting.getId() != null) {
             throw new BadRequestAlertException("A new analysisSetting cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        AnalysisSetting result = analysisSettingRepository.save(analysisSetting);
+        AnalysisSetting result = analysisSettingService.save(analysisSetting);
         return ResponseEntity.created(new URI("/api/analysis-settings/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -70,12 +71,12 @@ public class AnalysisSettingResource {
      */
     @PutMapping("/analysis-settings")
     @Timed
-    public ResponseEntity<AnalysisSetting> updateAnalysisSetting(@RequestBody AnalysisSetting analysisSetting) throws URISyntaxException {
+    public ResponseEntity<AnalysisSetting> updateAnalysisSetting(@Valid @RequestBody AnalysisSetting analysisSetting) throws URISyntaxException {
         log.debug("REST request to update AnalysisSetting : {}", analysisSetting);
         if (analysisSetting.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        AnalysisSetting result = analysisSettingRepository.save(analysisSetting);
+        AnalysisSetting result = analysisSettingService.save(analysisSetting);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, analysisSetting.getId().toString()))
             .body(result);
@@ -85,15 +86,20 @@ public class AnalysisSettingResource {
      * GET  /analysis-settings : get all the analysisSettings.
      *
      * @param pageable the pagination information
+     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many)
      * @return the ResponseEntity with status 200 (OK) and the list of analysisSettings in body
      */
     @GetMapping("/analysis-settings")
     @Timed
-    public ResponseEntity<List<AnalysisSetting>> getAllAnalysisSettings(Pageable pageable) {
+    public ResponseEntity<List<AnalysisSetting>> getAllAnalysisSettings(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
         log.debug("REST request to get a page of AnalysisSettings");
-        Page<AnalysisSetting> page = analysisSettingRepository.findAll(pageable);
-
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/analysis-settings");
+        Page<AnalysisSetting> page;
+        if (eagerload) {
+            page = analysisSettingService.findAllWithEagerRelationships(pageable);
+        } else {
+            page = analysisSettingService.findAll(pageable);
+        }
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, String.format("/api/analysis-settings?eagerload=%b", eagerload));
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
@@ -107,7 +113,7 @@ public class AnalysisSettingResource {
     @Timed
     public ResponseEntity<AnalysisSetting> getAnalysisSetting(@PathVariable String id) {
         log.debug("REST request to get AnalysisSetting : {}", id);
-        Optional<AnalysisSetting> analysisSetting = analysisSettingRepository.findOneById(id);
+        Optional<AnalysisSetting> analysisSetting = analysisSettingService.findOne(id);
         return ResponseUtil.wrapOrNotFound(analysisSetting);
     }
 
@@ -121,8 +127,7 @@ public class AnalysisSettingResource {
     @Timed
     public ResponseEntity<Void> deleteAnalysisSetting(@PathVariable String id) {
         log.debug("REST request to delete AnalysisSetting : {}", id);
-
-        analysisSettingRepository.deleteById(id);
+        analysisSettingService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id)).build();
     }
 }
