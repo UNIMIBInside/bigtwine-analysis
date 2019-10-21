@@ -1,6 +1,8 @@
 package it.unimib.disco.bigtwine.services.analysis.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModelProperty;
@@ -203,7 +205,8 @@ public class AnalysisSetting implements Serializable {
             this.choices = Collections.emptyList();
         } else {
             List<AnalysisSettingChoice> choices = new ArrayList<>();
-            String[] lines = this.options.split("\\\\r?\\\\n");
+            String[] lines = this.options.split("\\r?\\n");
+            ObjectMapper mapper = new ObjectMapper();
 
             for (String line: lines) {
                 String[] parts = line.split(":");
@@ -212,8 +215,23 @@ public class AnalysisSetting implements Serializable {
                     continue;
                 }
 
+                String strValue = parts[0].trim();
+                Object value;
+                try {
+                    JsonNode node = mapper.readTree(strValue);
+                    if (node.isNumber()) {
+                        value = node.numberValue();
+                    } else if (node.isBoolean()) {
+                        value = node.booleanValue();
+                    } else {
+                        value = strValue;
+                    }
+                } catch (Exception e) {
+                    value = strValue;
+                }
+
                 choices.add(new AnalysisSettingChoice()
-                    .value(parts[0].trim())
+                    .value(value)
                     .name(parts[1].trim()));
             }
 
@@ -225,7 +243,7 @@ public class AnalysisSetting implements Serializable {
         if (choices != null && choices.size() > 0) {
             StringBuilder optionsBuilder = new StringBuilder();
             for (AnalysisSettingChoice choice : choices) {
-                optionsBuilder.append(String.format("%s:%s\n", choice.getValue(), choice.getName()));
+                optionsBuilder.append(String.format("%s:%s\n", choice.getValue().toString(), choice.getName()));
             }
 
             this.options = optionsBuilder.toString();
