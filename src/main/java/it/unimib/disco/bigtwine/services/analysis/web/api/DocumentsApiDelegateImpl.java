@@ -17,6 +17,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,22 +115,40 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
         try {
             FileItemIterator iterStream = upload.getItemIterator(request);
 
+            InputStream fileInputStream = null;
+            document = new Document()
+                .user(new User().uid(userId).username(username));
+
             while (iterStream.hasNext()) {
                 FileItemStream item = iterStream.next();
-                InputStream stream = item.openStream();
 
-                if (!item.isFormField()) {
-                    // Process the InputStream
-                    document = new Document()
-                        .user(new User().uid(userId).username(username))
-                        .type(documentType)
+                if (item.isFormField()) {
+                    String formFieldValue = Streams.asString(item.openStream());
+
+                    switch (item.getFieldName()) {
+                        case "analysisType":
+                            document.setAnalysisType(formFieldValue);
+                            break;
+                        case "documentType":
+                            document.setType(formFieldValue);
+                            break;
+                        case "documentCategory":
+                            document.setCategory(formFieldValue);
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    fileInputStream = item.openStream();
+                    document
                         .filename(item.getName())
-                        .contentType(item.getContentType())
-                        .analysisType(analysisType)
-                        .category(category);
-
-                    document = this.documentService.uploadFromStream(stream, document);
+                        .contentType(item.getContentType());
+                    break;
                 }
+            }
+
+            if (fileInputStream != null) {
+                document = this.documentService.uploadFromStream(fileInputStream, document);
             }
         } catch (FileUploadException e) {
             log.debug("File upload exception", e);

@@ -2,6 +2,7 @@ package it.unimib.disco.bigtwine.services.analysis.domain.mapper;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Document;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.DocumentDTO;
+import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.TimeZone;
 
+@Mapper
 public interface DocumentMapper {
     DocumentMapper INSTANCE = Mappers.getMapper( DocumentMapper.class );
 
