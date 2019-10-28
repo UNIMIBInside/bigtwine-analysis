@@ -176,14 +176,6 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             pageSize = 100;
         }
 
-        if (pageNum < 0) {
-            throw new BadRequestException("Page num must be greater of equal to 0");
-        }
-
-        if (pageSize < 1 || pageSize > 100) {
-            throw new BadRequestException("Page size must be between 1 and 100");
-        }
-
         Pageable page = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "updateDate"));
         Page<Analysis> pageObj;
 
