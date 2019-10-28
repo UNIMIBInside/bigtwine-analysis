@@ -22,6 +22,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -169,12 +172,16 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<DocumentDTO>> listDocumentsMetaV1(String documentType, String analysisType, String category) {
+    public ResponseEntity<List<DocumentDTO>> listDocumentsMetaV1(Integer page, Integer pageSize, String documentType, String analysisType, String category) {
         String userId = AnalysisUtil.getCurrentUserIdentifier()
             .orElseThrow(UnauthenticatedException::new);
 
+        Pageable pageReq = PageRequest.of(
+            page != null ? page : 0,
+            pageSize != null ? pageSize : 100,
+            Sort.by(Sort.Direction.DESC, "uploadDate"));
         final List<Document> documents = this.documentService
-            .findBy(userId, documentType, analysisType, category, 100);
+            .findBy(userId, documentType, analysisType, category, pageReq);
 
         return ResponseEntity.ok(DocumentMapper.INSTANCE.dtosFromDocuments(documents));
     }

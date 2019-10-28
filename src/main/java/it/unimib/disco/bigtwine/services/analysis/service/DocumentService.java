@@ -13,6 +13,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -93,7 +94,7 @@ public class DocumentService {
         return Optional.of(createDocumentFromFile(file));
     }
 
-    public List<Document> findBy(String userId, String documentType, String analysisType, String category, int limit) {
+    public List<Document> findBy(String userId, String documentType, String analysisType, String category, Pageable page) {
         Query query = new Query(GridFsCriteria.whereMetaData(MetadataKey.USERID).is(userId));
 
         if (documentType != null) {
@@ -108,7 +109,8 @@ public class DocumentService {
             query.addCriteria(GridFsCriteria.whereMetaData(MetadataKey.CATEGORY).is(category));
         }
 
-        query.limit(limit);
+        query.limit(page.getPageSize());
+        query.skip(page.getOffset());
 
         GridFSFindIterable files = gridFsTemplate.find(query);
         final List<Document> documents = new ArrayList<>();

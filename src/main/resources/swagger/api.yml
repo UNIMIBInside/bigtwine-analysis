@@ -357,6 +357,8 @@ paths:
       description: ""
       operationId: listDocumentsMetaV1
       parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
         - name: documentType
           in: query
           description: 'Filter by document type'
