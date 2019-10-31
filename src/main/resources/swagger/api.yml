@@ -302,10 +302,16 @@ paths:
         description: 'The uid of the analysis'
         schema:
           type: string
-    get:
+    post:
       summary: 'Start the export on the analysis results'
       description: ""
-      operationId: exportAnalysisResultsV1
+      operationId: startAnalysisResultsExportV1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisExportDTO'
       responses:
         '200':
           description: ""
@@ -693,15 +699,21 @@ components:
       properties:
         documentId:
           type: string
+        format:
+          type: string
         progress:
           type: number
           format: double
+          readOnly: true
         completed:
           type: boolean
+          readOnly: true
         failed:
           type: boolean
+          readOnly: true
         message:
           type: string
+          readOnly: true
     NeelProcessedTweetDTO:
       type: object
       properties:

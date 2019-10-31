@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
 
+import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -149,29 +150,23 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
     }
 
     @Override
-    public ResponseEntity<AnalysisExportDTO> exportAnalysisResultsV1(String analysisId) {
+    public ResponseEntity<AnalysisExportDTO> startAnalysisResultsExportV1(String analysisId, AnalysisExportDTO analysisExportDTO) {
         Analysis analysis = this.getAnalysisById(analysisId);
         boolean isOwner = AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
-        EnumSet<AnalysisStatus> acceptedStatuses = EnumSet.of(
-            AnalysisStatus.COMPLETED,
-            AnalysisStatus.FAILED,
-            AnalysisStatus.CANCELLED);
 
         if (!isOwner) {
             throw new UnauthorizedException("Only the analysis owner can start the export");
         }
 
-        if (!acceptedStatuses.contains(analysis.getStatus())) {
-            throw new BadRequestException("Export not available, invalid analysis status: " + analysis.getStatus());
+        AnalysisExport export = AnalysisMapper.INSTANCE.analysisExportFromAnalysisExportDTO(analysisExportDTO);
+
+        try {
+            analysis = this.analysisService.startAnalysisResultsExport(analysis.getId(), export);
+        } catch (ValidationException e) {
+            throw new BadRequestException(e.getMessage());
         }
 
-        if (analysis.getExport() == null) {
-            analysis = this.analysisService.startAnalysisResultsExport(analysis.getId());
-        }
-
-        AnalysisExport export = analysis.getExport();
-        AnalysisExportDTO exportDTO = AnalysisMapper.INSTANCE
-            .analysisExportDTOFromAnalysisExport(export);
+        AnalysisExportDTO exportDTO = AnalysisMapper.INSTANCE.analysisExportDTOFromAnalysisExport(analysis.getExport());
 
         return ResponseEntity.ok(exportDTO);
     }

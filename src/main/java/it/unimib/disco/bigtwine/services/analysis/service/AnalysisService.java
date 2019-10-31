@@ -5,7 +5,6 @@ import it.unimib.disco.bigtwine.commons.messaging.JobControlEvent;
 import it.unimib.disco.bigtwine.commons.models.JobActionEnum;
 import it.unimib.disco.bigtwine.commons.models.JobTypeEnum;
 import it.unimib.disco.bigtwine.services.analysis.domain.*;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -14,9 +13,9 @@ import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChange
 import it.unimib.disco.bigtwine.services.analysis.messaging.JobControlEventsProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
-import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
+import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisUpdateNotApplicable;
 import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
@@ -38,8 +37,6 @@ import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -56,6 +53,7 @@ public class AnalysisService {
 
     private final AnalysisStatusValidator analysisStatusValidator;
     private final AnalysisInputValidatorLocator inputValidatorLocator;
+    private final AnalysisExportFormatValidator exportFormatValidator;
 
     private final MessageChannel statusChangeRequestsChannel;
     private final MessageChannel jobControlChannel;
@@ -66,12 +64,14 @@ public class AnalysisService {
         AnalysisSettingService analysisSettingService,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
+        AnalysisExportFormatValidator exportFormatValidator,
         AnalysisStatusChangeRequestProducerChannel channel,
         JobControlEventsProducerChannel jobControlChannel) {
         this.analysisRepository = analysisRepository;
         this.analysisResultsRepository = analysisResultsRepository;
         this.analysisSettingService = analysisSettingService;
         this.analysisStatusValidator = analysisStatusValidator;
+        this.exportFormatValidator = exportFormatValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
         this.jobControlChannel = jobControlChannel.jobControlEventsChannel();
@@ -383,22 +383,36 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    public Analysis startAnalysisResultsExport(String analisysId) {
+    public Analysis startAnalysisResultsExport(String analisysId, AnalysisExport export) {
         Analysis analysis = this.findOne(analisysId).orElse(null);
         if (analysis == null) {
             return null;
         }
 
-        AnalysisExport export = new AnalysisExport();
-        export.setDocumentId(ObjectId.get().toHexString());
-        analysis.setExport(export);
-
-        try {
-            analysis = this.save(analysis);
-        } catch (ValidationException e) {
-            log.error("Cannot start analysis results", e);
-            return null;
+        if (analysis.getExport() != null) {
+            return analysis;
         }
+
+        EnumSet<AnalysisStatus> acceptedStatuses = EnumSet.of(
+            AnalysisStatus.COMPLETED,
+            AnalysisStatus.FAILED,
+            AnalysisStatus.CANCELLED);
+
+        if (!acceptedStatuses.contains(analysis.getStatus())) {
+            throw new ValidationException("Export not available, invalid analysis status: " + analysis.getStatus());
+        }
+
+        String format = export.getFormat();
+        if (format == null || !this.exportFormatValidator.validate(analysis.getType(), format)) {
+            throw new ValidationException("Unrecognized export format: " + format);
+        }
+
+        if (export.getDocumentId() == null || !ObjectId.isValid(export.getDocumentId()) ) {
+            export.setDocumentId(ObjectId.get().toHexString());
+        }
+
+        analysis.setExport(export);
+        analysis = this.save(analysis);
 
         JobControlEvent event = new JobControlEvent();
         event.setAnalysisId(analisysId);

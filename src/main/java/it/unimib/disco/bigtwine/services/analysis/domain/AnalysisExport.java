@@ -10,6 +10,9 @@ public class AnalysisExport implements Serializable {
     @Field("document_id")
     private String documentId;
 
+    @Field("format")
+    private String format;
+
     @Field("progress")
     private double progress;
 
@@ -40,6 +43,20 @@ public class AnalysisExport implements Serializable {
 
     public double getProgress() {
         return progress;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public AnalysisExport format(String format) {
+        this.setFormat(format);
+        return this;
+    }
+
+    public AnalysisExport setFormat(String format) {
+        this.format = format;
+        return this;
     }
 
     public AnalysisExport progress(double progress) {

@@ -3,10 +3,12 @@ package it.unimib.disco.bigtwine.services.analysis.config;
 import it.unimib.disco.bigtwine.commons.messaging.dto.NeelProcessedTweetDTO;
 import it.unimib.disco.bigtwine.services.analysis.domain.NeelProcessedTweet;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPayloadMapperLocator;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.NeelProcessedTweetMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.TwitterNeelAnalysisResultMapper;
+import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusStaticValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
@@ -15,6 +17,9 @@ import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.Data
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.QueryAnalysisInputValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 @Configuration
 public class AnalysisConfiguration {
@@ -47,5 +52,15 @@ public class AnalysisConfiguration {
         locator.registerMapper(NeelProcessedTweet.class, TwitterNeelAnalysisResultMapper.INSTANCE);
 
         return locator;
+    }
+
+    @Bean
+    public AnalysisExportFormatValidator analysisExportFormatValidator() {
+        AnalysisExportFormatValidator validator = new AnalysisExportFormatValidator();
+        validator.registerSupportedFormats(AnalysisType.TWITTER_NEEL, new HashSet<>(
+            Arrays.asList("json", "tsv", "twitter-neel-challenge")
+        ));
+
+        return validator;
     }
 }
