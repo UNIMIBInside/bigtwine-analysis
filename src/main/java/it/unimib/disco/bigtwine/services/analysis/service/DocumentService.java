@@ -109,8 +109,7 @@ public class DocumentService {
             query.addCriteria(GridFsCriteria.whereMetaData(MetadataKey.CATEGORY).is(category));
         }
 
-        query.limit(page.getPageSize());
-        query.skip(page.getOffset());
+        query.with(page);
 
         GridFSFindIterable files = gridFsTemplate.find(query);
         final List<Document> documents = new ArrayList<>();
