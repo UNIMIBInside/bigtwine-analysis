@@ -13,6 +13,8 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 import it.unimib.disco.bigtwine.services.analysis.messaging.AnalysisStatusChangeRequestProducerChannel;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisSettingService;
+import it.unimib.disco.bigtwine.services.analysis.service.DocumentService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.TestUtil;
 import org.junit.Before;
@@ -50,6 +52,12 @@ public class AnalysesApiIntTest {
     private AnalysisService analysisService;
 
     @Autowired
+    private AnalysisSettingService analysisSettingService;
+
+    @Autowired
+    private DocumentService documentService;
+
+    @Autowired
     private AnalysisRepository analysisRepository;
 
     @Autowired
@@ -64,7 +72,7 @@ public class AnalysesApiIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        AnalysesApiDelegate delegate = new AnalysesApiDelegateImpl(null, analysisService);
+        AnalysesApiDelegate delegate = new AnalysesApiDelegateImpl(null, analysisService, analysisSettingService, documentService);
         AnalysesApiController controller = new AnalysesApiController(delegate);
         this.restApiMvc = MockMvcBuilders.standaloneSetup(controller)
             .build();
