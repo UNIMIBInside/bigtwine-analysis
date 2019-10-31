@@ -76,7 +76,7 @@ public class AnalysisResource {
     public ResponseEntity<Analysis> updateAnalysis(@Valid @RequestBody Analysis analysis) throws URISyntaxException {
         log.debug("REST request to update Analysis : {}", analysis);
         if (analysis.getId() == null) {
-            throw new BadRequestAlertException("Invalid uid", ENTITY_NAME, "idnull");
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         Analysis result = analysisService.save(analysis);
         return ResponseEntity.ok()
@@ -101,9 +101,9 @@ public class AnalysisResource {
     }
 
     /**
-     * GET  /analyses/:uid : get the "uid" analysis.
+     * GET  /analyses/:id : get the "id" analysis.
      *
-     * @param id the uid of the analysis to retrieve
+     * @param id the id of the analysis to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the analysis, or with status 404 (Not Found)
      */
     @GetMapping("/analyses/{id}")
@@ -115,9 +115,9 @@ public class AnalysisResource {
     }
 
     /**
-     * DELETE  /analyses/:uid : delete the "uid" analysis.
+     * DELETE  /analyses/:id : delete the "id" analysis.
      *
-     * @param id the uid of the analysis to delete
+     * @param id the id of the analysis to delete
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/analyses/{id}")

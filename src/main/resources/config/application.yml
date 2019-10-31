@@ -25,7 +25,7 @@ eureka:
         registry-fetch-interval-seconds: 10
     instance:
         appname: analysis
-        instanceId: analysis:${spring.application.instance-uid:${random.value}}
+        instanceId: analysis:${spring.application.instance-id:${random.value}}
         lease-renewal-interval-in-seconds: 5
         lease-expiration-duration-in-seconds: 10
         status-page-url-path: ${management.endpoints.web.base-path}/info
@@ -34,8 +34,8 @@ eureka:
             zone: primary # This is needed for the load balancer
             profile: ${spring.profiles.active}
             version: ${info.project.version:}
-            git-version: ${git.commit.uid.describe:}
-            git-commit: ${git.commit.uid.abbrev:}
+            git-version: ${git.commit.id.describe:}
+            git-commit: ${git.commit.id.abbrev:}
             git-branch: ${git.branch:}
 ribbon:
     eureka:

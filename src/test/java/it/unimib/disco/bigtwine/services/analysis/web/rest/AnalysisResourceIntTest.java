@@ -279,14 +279,14 @@ public class AnalysisResourceIntTest {
         analysisRepository.save(analysis);
 
         // Get all the analysisList
-        restAnalysisMockMvc.perform(get("/api/analyses?sort=uid,desc"))
+        restAnalysisMockMvc.perform(get("/api/analyses?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(analysis.getId())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].visibility").value(hasItem(DEFAULT_VISIBILITY.toString())))
-            .andExpect(jsonPath("$.[*].owner.uid").value(hasItem(DEFAULT_OWNER.getUid())))
+            .andExpect(jsonPath("$.[*].owner.id").value(hasItem(DEFAULT_OWNER.getUid())))
             .andExpect(jsonPath("$.[*].createDate").value(hasItem(DEFAULT_CREATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].updateDate").value(hasItem(DEFAULT_UPDATE_DATE.toString())))
             .andExpect(jsonPath("$.[*].input.tokens").value(hasItem(DEFAULT_INPUT.getTokens())));
@@ -298,7 +298,7 @@ public class AnalysisResourceIntTest {
         analysisRepository.save(analysis);
 
         // Get the analysis
-        restAnalysisMockMvc.perform(get("/api/analyses/{uid}", analysis.getId()))
+        restAnalysisMockMvc.perform(get("/api/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysis.getId()))
@@ -316,7 +316,7 @@ public class AnalysisResourceIntTest {
     @Test
     public void getNonExistingAnalysis() throws Exception {
         // Get the analysis
-        restAnalysisMockMvc.perform(get("/api/analyses/{uid}", Long.MAX_VALUE))
+        restAnalysisMockMvc.perform(get("/api/analyses/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
     }
 
@@ -381,7 +381,7 @@ public class AnalysisResourceIntTest {
         int databaseSizeBeforeDelete = analysisRepository.findAll().size();
 
         // Get the analysis
-        restAnalysisMockMvc.perform(delete("/api/analyses/{uid}", analysis.getId())
+        restAnalysisMockMvc.perform(delete("/api/analyses/{id}", analysis.getId())
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 

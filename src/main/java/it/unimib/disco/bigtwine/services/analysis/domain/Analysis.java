@@ -274,7 +274,7 @@ public class Analysis implements Serializable {
     @Override
     public String toString() {
         return "Analysis{" +
-            "uid=" + getId() +
+            "id=" + getId() +
             ", type='" + getType() + "'" +
             ", status='" + getStatus() + "'" +
             ", visibility='" + getVisibility() + "'" +

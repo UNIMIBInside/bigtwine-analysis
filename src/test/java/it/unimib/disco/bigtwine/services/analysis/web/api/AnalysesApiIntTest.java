@@ -186,7 +186,7 @@ public class AnalysesApiIntTest {
             .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysis.getId()));
@@ -200,7 +200,7 @@ public class AnalysesApiIntTest {
             .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysis.getId()));
@@ -214,7 +214,7 @@ public class AnalysesApiIntTest {
             .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analyses/{uid}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
@@ -252,7 +252,7 @@ public class AnalysesApiIntTest {
             .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(delete("/api/public/analyses/{uid}", analysis.getId()))
+        this.restApiMvc.perform(delete("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isOk());
 
         AnalysisStatus statusBeforeDelete = analysis.getStatus();
@@ -285,7 +285,7 @@ public class AnalysesApiIntTest {
             .owner(new User().uid("testuser-2").username("testuser-2"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(delete("/api/public/analyses/{uid}", analysis.getId()))
+        this.restApiMvc.perform(delete("/api/public/analyses/{id}", analysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
@@ -301,7 +301,7 @@ public class AnalysesApiIntTest {
             .status(AnalysisStatusEnum.STARTED);
         AnalysisStatus statusBeforeUpdate = analysis.getStatus();
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());
@@ -334,7 +334,7 @@ public class AnalysesApiIntTest {
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .visibility(AnalysisVisibilityEnum.PUBLIC);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isOk());
@@ -357,7 +357,7 @@ public class AnalysesApiIntTest {
         AnalysisUpdatableDTO analysisUpdate = new AnalysisUpdatableDTO()
             .visibility(AnalysisVisibilityEnum.PUBLIC);
 
-        this.restApiMvc.perform(patch("/api/public/analyses/{uid}", analysis.getId())
+        this.restApiMvc.perform(patch("/api/public/analyses/{id}", analysis.getId())
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(analysisUpdate)))
             .andExpect(status().isUnauthorized());

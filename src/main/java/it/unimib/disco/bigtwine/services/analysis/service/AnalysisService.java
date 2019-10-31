@@ -318,9 +318,9 @@ public class AnalysisService {
     }
 
     /**
-     * Get one analysis by uid.
+     * Get one analysis by id.
      *
-     * @param id the uid of the entity
+     * @param id the id of the entity
      * @return the entity
      */
     public Optional<Analysis> findOne(String id) {
@@ -329,9 +329,9 @@ public class AnalysisService {
     }
 
     /**
-     * Delete the analysis by uid.
+     * Delete the analysis by id.
      *
-     * @param id the uid of the entity
+     * @param id the id of the entity
      */
     public void delete(String id) {
         log.debug("Request to delete Analysis : {}", id);
@@ -341,7 +341,7 @@ public class AnalysisService {
     /**
      * Restituisce la lista di tutti i cambi di stato dell'analisi indicata
      *
-     * @param id the uid of the entity
+     * @param id the id of the entity
      * @return A change list of the analysis status
      */
     public List<AnalysisStatusHistory> getStatusHistory(String id) {
@@ -355,7 +355,7 @@ public class AnalysisService {
 
     public void requestStatusChange(@NotNull Analysis analysis,@NotNull AnalysisStatus newStatus, boolean userRequested) {
         if (analysis.getId() == null) {
-            throw new IllegalArgumentException("analysis hasn't an uid");
+            throw new IllegalArgumentException("analysis hasn't an id");
         }
 
         if (!this.analysisStatusValidator.validate(analysis.getStatus(), newStatus)) {

@@ -68,7 +68,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis to retrieve'
+        description: 'The id of the analysis to retrieve'
         schema:
           type: string
     get:
@@ -140,7 +140,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis to retrieve'
+        description: 'The id of the analysis to retrieve'
         schema:
           type: string
     get:
@@ -171,7 +171,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis to retrieve'
+        description: 'The id of the analysis to retrieve'
         schema:
           type: string
     get:
@@ -203,7 +203,7 @@ paths:
         name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis'
+        description: 'The id of the analysis'
         schema:
           type: string
     get:
@@ -234,7 +234,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis'
+        description: 'The id of the analysis'
         schema:
           type: string
     post:
@@ -271,7 +271,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis'
+        description: 'The id of the analysis'
         schema:
           type: string
     get:
@@ -299,7 +299,7 @@ paths:
       - name: analysisId
         in: path
         required: true
-        description: 'The uid of the analysis'
+        description: 'The id of the analysis'
         schema:
           type: string
     post:
@@ -402,7 +402,7 @@ paths:
       - name: documentId
         in: path
         required: true
-        description: 'The uid of the document'
+        description: 'The id of the document'
         schema:
           type: string
     get:
@@ -428,7 +428,7 @@ paths:
       - name: documentId
         in: path
         required: true
-        description: 'The uid of the document'
+        description: 'The id of the document'
         schema:
           type: string
     get:
@@ -749,7 +749,7 @@ components:
     TwitterStatusDTO:
       type: object
       required:
-        - uid
+        - id
         - text
       properties:
         id:

@@ -176,7 +176,7 @@ public class AnalysisResultsApiIntTest {
             .owner(new User().uid("testuser-1").username("testuser-1"));
         analysis = this.analysisRepository.save(analysis);
 
-        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", analysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", analysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.objects.length()").value(0));
@@ -185,21 +185,21 @@ public class AnalysisResultsApiIntTest {
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultNotFound() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", "invalid-uid"))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", "invalid-id"))
             .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResultUnauthorized() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", privateAnalysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", privateAnalysis.getId()))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
     public void testListAnalysisResult() throws Exception {
-        this.restApiMvc.perform(get("/api/public/analysis-results/{uid}", ownedAnalysis.getId()))
+        this.restApiMvc.perform(get("/api/public/analysis-results/{id}", ownedAnalysis.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.totalCount").value(3))
@@ -231,7 +231,7 @@ public class AnalysisResultsApiIntTest {
     public void testSearchAnalysisResultsWithAnalysisIdOverwrite() throws Exception {
         String query = "{\"analysis.id\": {$oid: \"" + privateAnalysis.getId() + "\"}}";
 
-        RequestBuilder requestBuilder = post("/api/public/analysis-results/{uid}/search", ownedAnalysis.getId())
+        RequestBuilder requestBuilder = post("/api/public/analysis-results/{id}/search", ownedAnalysis.getId())
             .content(query)
             .contentType(MediaType.TEXT_PLAIN);
 

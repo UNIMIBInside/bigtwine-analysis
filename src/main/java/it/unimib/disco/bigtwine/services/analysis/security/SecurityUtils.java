@@ -36,9 +36,9 @@ public final class SecurityUtils {
     }
 
     /**
-     * Get the uid of the current user
+     * Get the id of the current user
      *
-     * @return the uid of the current user
+     * @return the id of the current user
      */
     public static Optional<String> getCurrentUserId() {
         SecurityContext securityContext = SecurityContextHolder.getContext();

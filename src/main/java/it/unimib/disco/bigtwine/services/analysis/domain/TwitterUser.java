@@ -14,7 +14,7 @@ public class TwitterUser implements Serializable {
 
     @Indexed
     @NotNull
-    @Field("uid")
+    @Field("id")
     private String id;
 
     @NotNull

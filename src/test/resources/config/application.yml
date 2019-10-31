@@ -18,7 +18,7 @@ eureka:
         enabled: false
     instance:
         appname: analysis
-        instanceId: analysis:${spring.application.instance-uid:${random.value}}
+        instanceId: analysis:${spring.application.instance-id:${random.value}}
 
 spring:
     application:
