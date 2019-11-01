@@ -9,7 +9,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPa
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.NeelProcessedTweetMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.TwitterNeelAnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisInputTypeValidator;
+import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputTypeValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusStaticValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;

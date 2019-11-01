@@ -1,8 +1,7 @@
-package it.unimib.disco.bigtwine.services.analysis.validation;
+package it.unimib.disco.bigtwine.services.analysis.validation.analysis.input;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
 
 import java.util.HashMap;
 import java.util.Map;
