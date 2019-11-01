@@ -48,7 +48,7 @@ dependencyManagement {
 defaultTasks 'bootRun'
 
 group = 'it.unimib.disco.bigtwine.services'
-version = '0.9.6'
+version = '0.9.7'
 
 description = ''
 
@@ -211,7 +211,7 @@ dependencies {
     testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
     compile 'commons-fileupload:commons-fileupload:1.4'
-    compile group: 'org.bitbucket.bigtwine', name: 'commons', version: '36dbb056dc'
+    compile group: 'org.bitbucket.bigtwine', name: 'commons', version: '59ef64df29'
 }
 
 task cleanResources(type: Delete) {

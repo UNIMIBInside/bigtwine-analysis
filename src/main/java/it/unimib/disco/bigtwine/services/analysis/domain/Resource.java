@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Resource implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -30,6 +31,9 @@ public class Resource implements Serializable {
     @GeoSpatialIndexed
     @Field("coordinates")
     private GeoJsonPoint coordinates;
+
+    @Field("extra")
+    private Map<String, Object> extra;
 
     public Resource() {
     }
@@ -80,5 +84,13 @@ public class Resource implements Serializable {
 
     public void setCoordinates(GeoJsonPoint coordinates) {
         this.coordinates = coordinates;
+    }
+
+    public Map<String, Object> getExtra() {
+        return extra;
+    }
+
+    public void setExtra(Map<String, Object> extra) {
+        this.extra = extra;
     }
 }

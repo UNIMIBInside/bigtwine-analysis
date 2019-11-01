@@ -825,6 +825,9 @@ components:
           type: string
         coordinates:
           $ref: '#/components/schemas/CoordinatesDTO'
+        extra:
+          type: object
+          additionalProperties: {}
     DocumentDTO:
       type: object
       properties:
