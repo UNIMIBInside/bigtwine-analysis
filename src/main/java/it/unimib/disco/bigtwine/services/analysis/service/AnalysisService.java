@@ -15,10 +15,7 @@ import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
-import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisUpdateNotApplicable;
-import it.unimib.disco.bigtwine.services.analysis.validation.InvalidAnalysisStatusException;
+import it.unimib.disco.bigtwine.services.analysis.validation.*;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
@@ -52,6 +49,7 @@ public class AnalysisService {
     private final AnalysisSettingService analysisSettingService;
 
     private final AnalysisStatusValidator analysisStatusValidator;
+    private final AnalysisInputTypeValidator inputTypeValidator;
     private final AnalysisInputValidatorLocator inputValidatorLocator;
     private final AnalysisExportFormatValidator exportFormatValidator;
 
@@ -63,6 +61,7 @@ public class AnalysisService {
         AnalysisResultsRepository analysisResultsRepository,
         AnalysisSettingService analysisSettingService,
         AnalysisStatusValidator analysisStatusValidator,
+        AnalysisInputTypeValidator inputTypeValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
         AnalysisExportFormatValidator exportFormatValidator,
         AnalysisStatusChangeRequestProducerChannel channel,
@@ -72,6 +71,7 @@ public class AnalysisService {
         this.analysisSettingService = analysisSettingService;
         this.analysisStatusValidator = analysisStatusValidator;
         this.exportFormatValidator = exportFormatValidator;
+        this.inputTypeValidator = inputTypeValidator;
         this.inputValidatorLocator = inputValidatorLocator;
         this.statusChangeRequestsChannel = channel.analysisStatusChangeRequestsChannel();
         this.jobControlChannel = jobControlChannel.jobControlEventsChannel();
@@ -119,6 +119,7 @@ public class AnalysisService {
             throw new InvalidAnalysisInputProvidedException("Input not provided");
         }
 
+        this.inputTypeValidator.validate(analysis.getType(), analysis.getInput().getType());
         this.inputValidatorLocator
             .getValidator(analysis.getInput().getType())
             .validate(analysis.getInput());

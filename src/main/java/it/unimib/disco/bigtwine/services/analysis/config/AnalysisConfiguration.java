@@ -9,6 +9,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPa
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.NeelProcessedTweetMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.TwitterNeelAnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
+import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisInputTypeValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusStaticValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
@@ -59,6 +60,16 @@ public class AnalysisConfiguration {
         AnalysisExportFormatValidator validator = new AnalysisExportFormatValidator();
         validator.registerSupportedFormats(AnalysisType.TWITTER_NEEL, new HashSet<>(
             Arrays.asList("json", "tsv", "twitter-neel-challenge")
+        ));
+
+        return validator;
+    }
+
+    @Bean
+    public AnalysisInputTypeValidator analysisInputTypeValidator() {
+        AnalysisInputTypeValidator validator = new AnalysisInputTypeValidator();
+        validator.registerSupportedTypes(AnalysisType.TWITTER_NEEL, new HashSet<>(
+            Arrays.asList(AnalysisInputType.QUERY, AnalysisInputType.DATASET)
         ));
 
         return validator;
