@@ -98,6 +98,11 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         if (status != null) {
             AnalysisStatus newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
 
+            if ((newStatus == AnalysisStatus.CANCELLED || newStatus == AnalysisStatus.COMPLETED) &&
+                !AnalysisUtil.canTerminateAnalysis(analysis)) {
+                throw new UnauthorizedException();
+            }
+
             try {
                 this.analysisService.requestStatusChange(analysis, newStatus, true);
             } catch (ValidationException e) {
@@ -134,6 +139,11 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     @Override
     public ResponseEntity<AnalysisDTO> createAnalysisV1(AnalysisDTO analysis) {
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
+
+        if (!AnalysisUtil.canCreateAnalysis(a)) {
+            throw new UnauthorizedException();
+        }
+
         analysisSettingService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());
 
         this.autofillAnalysisProperties(a);

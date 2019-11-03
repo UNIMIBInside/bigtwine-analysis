@@ -48,9 +48,9 @@ public final class AnalysisUtil {
 
         if (isOwner || isSuperUser) {
             return isOwner;
-        }else {
+        } else {
             // Non siamo né i proprietari dell'analisi né un admin
-            if (accessType == AccessType.DELETE) {
+            if (accessType == AccessType.DELETE || accessType == AccessType.UPDATE) {
                 throw new UnauthorizedException();
             }
 
@@ -60,5 +60,26 @@ public final class AnalysisUtil {
         }
 
         return false;
+    }
+
+    /**
+     * Controlla che l'utente corrente possa creare nuove analisi
+     * @param analysis L'analisi che si vorrebbe create
+     * @return Restituisce true se l'utente corrente può creare nuove analisi
+     */
+    public static boolean canCreateAnalysis(@NotNull Analysis analysis) {
+        boolean isDemoUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.DEMO);
+        return !isDemoUser;
+    }
+
+    /**
+     * Controlla che l'utente corrente possa terminare l'analisi indicata.
+     * Con terminare si intende cambiare lo stato dell'analisi in uno degli stati terminali (COMPLETED, CANCELLED)
+     * @param analysis L'analisi che si vorrebbe terminare
+     * @return Restituisce true se l'utente corrente può terminare l'analisi
+     */
+    public static boolean canTerminateAnalysis(@NotNull Analysis analysis) {
+        boolean isDemoUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.DEMO);
+        return !isDemoUser;
     }
 }
