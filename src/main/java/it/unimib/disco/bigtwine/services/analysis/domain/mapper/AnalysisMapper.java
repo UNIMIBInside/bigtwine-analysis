@@ -1,9 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.domain.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.BeanUtil;
 import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisErrorCode;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
@@ -12,12 +10,10 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.BeanUtils;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -39,6 +35,16 @@ public interface AnalysisMapper {
 
     default Instant fromOffsetDateTime(OffsetDateTime dateTime) {
         return dateTime == null ? null : Instant.from(dateTime);
+    }
+
+    default GeoJsonPoint geoJsonPointFromCoordinatesDTO(CoordinatesDTO coords) {
+        return new GeoJsonPoint(coords.getLongitude(), coords.getLatitude());
+    }
+
+    default CoordinatesDTO coordinatesFromGeoJsonPoint(GeoJsonPoint point) {
+        return new CoordinatesDTO()
+                .longitude(point.getX())
+                .latitude(point.getY());
     }
 
     @Mapping(target = "tings", ignore = true)
@@ -86,7 +92,7 @@ public interface AnalysisMapper {
     default AnalysisInput analysisInputFromMap(Map<Object, Object> input) {
         if (input.containsKey("type") && input.get("type") instanceof String) {
             String type = (String)input.get("type");
-            input.replace("type", type.toUpperCase());
+            input.replace("type", type.toUpperCase().replace("-", "_"));
         }
 
         return this.getObjectMapper().convertValue(input, AnalysisInput.class);
@@ -97,6 +103,8 @@ public interface AnalysisMapper {
             return this.queryAnalysisInputDtoFromQueryAnalysisInput((QueryAnalysisInput)input);
         } else if (input instanceof DatasetAnalysisInput) {
             return this.datasetAnalysisInputDtoFromDatasetAnalysisInput((DatasetAnalysisInput)input);
+        } else if (input instanceof GeoAreaAnalysisInput) {
+            return this.geoAreaAnalysisInputDtoFromGeoAreaAnalysisInput((GeoAreaAnalysisInput)input);
         } else {
             throw new UnsupportedOperationException("Unsupported input type " + input.getClass());
         }
@@ -106,9 +114,13 @@ public interface AnalysisMapper {
 
     DatasetAnalysisInputDTO datasetAnalysisInputDtoFromDatasetAnalysisInput(DatasetAnalysisInput input);
 
+    GeoAreaAnalysisInputDTO geoAreaAnalysisInputDtoFromGeoAreaAnalysisInput(GeoAreaAnalysisInput input);
+
     QueryAnalysisInput queryAnalysisInputFromQueryAnalysisInputDTO(QueryAnalysisInputDTO input);
 
     DatasetAnalysisInput datasetAnalysisInputFromDatasetAnalysisInputDTO(DatasetAnalysisInputDTO input);
+
+    GeoAreaAnalysisInput geoAreaAnalysisInputFromGeoAreaAnalysisInputDTO(GeoAreaAnalysisInputDTO input);
 
     AnalysisStatus statusFromStatusEnum(AnalysisStatusEnum status);
 

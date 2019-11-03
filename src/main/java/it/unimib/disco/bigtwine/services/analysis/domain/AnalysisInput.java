@@ -12,6 +12,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInp
 @JsonSubTypes({
     @JsonSubTypes.Type(value = QueryAnalysisInput.class, name = AnalysisInputType.Constants.QUERY_VALUE),
     @JsonSubTypes.Type(value = DatasetAnalysisInput.class, name = AnalysisInputType.Constants.DATASET_VALUE),
+    @JsonSubTypes.Type(value = GeoAreaAnalysisInput.class, name = AnalysisInputType.Constants.GEO_AREA_VALUE),
 })
 public interface AnalysisInput {
     AnalysisInputType getType();

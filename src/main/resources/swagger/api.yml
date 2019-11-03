@@ -497,6 +497,7 @@ components:
       enum:
         - query
         - dataset
+        - geo-area
     AnalysisInputDTO:
       type: object
       required:
@@ -552,6 +553,28 @@ components:
               type: number
               format: int64
               readOnly: true
+    GeoAreaAnalysisInputDTO:
+      allOf:
+        - $ref: '#/components/schemas/AnalysisInputDTO'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/AnalysisInputTypeEnum'
+            description:
+              type: string
+            boundingBoxes:
+              type: array
+              items:
+                $ref: '#/components/schemas/BoundingBoxDTO'
+    BoundingBoxDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        northEastCoords:
+          $ref: '#/components/schemas/CoordinatesDTO'
+        southWestCoords:
+          $ref: '#/components/schemas/CoordinatesDTO'
     AnalysisDTO:
       type: object
       required:
@@ -580,11 +603,13 @@ components:
           oneOf:
             - $ref: '#/components/schemas/QueryAnalysisInputDTO'
             - $ref: '#/components/schemas/DatasetAnalysisInputDTO'
+            - $ref: '#/components/schemas/GeoAreaAnalysisInputDTO'
           discriminator:
             propertyName: type
             mapping:
               query: '#/components/schemas/QueryAnalysisInputDTO'
               dataset: '#/components/schemas/DatasetAnalysisInputDTO'
+              geo-area: '#/components/schemas/BoundingBoxesAnalysisInputDTO'
         progress:
           type: number
           format: double

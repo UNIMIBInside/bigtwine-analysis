@@ -9,13 +9,9 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultPa
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.NeelProcessedTweetMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.TwitterNeelAnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisExportFormatValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputTypeValidator;
+import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.*;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusStaticValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.AnalysisStatusValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorRegistry;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.DatasetAnalysisInputValidator;
-import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.QueryAnalysisInputValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,6 +31,7 @@ public class AnalysisConfiguration {
         AnalysisInputValidatorRegistry registry = new AnalysisInputValidatorRegistry();
         registry.registerInputValidator(new QueryAnalysisInputValidator(), AnalysisInputType.QUERY);
         registry.registerInputValidator(new DatasetAnalysisInputValidator(), AnalysisInputType.DATASET);
+        registry.registerInputValidator(new GeoAreaAnalysisInputValidator(), AnalysisInputType.GEO_AREA);
 
         return registry;
     }
@@ -69,7 +66,7 @@ public class AnalysisConfiguration {
     public AnalysisInputTypeValidator analysisInputTypeValidator() {
         AnalysisInputTypeValidator validator = new AnalysisInputTypeValidator();
         validator.registerSupportedTypes(AnalysisType.TWITTER_NEEL, new HashSet<>(
-            Arrays.asList(AnalysisInputType.QUERY, AnalysisInputType.DATASET)
+            Arrays.asList(AnalysisInputType.QUERY, AnalysisInputType.DATASET, AnalysisInputType.GEO_AREA)
         ));
 
         return validator;
