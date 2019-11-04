@@ -154,6 +154,7 @@ public class ProcessingOutputDispatcher {
         } else if (event.getJobType() == JobTypeEnum.EXPORT) {
             analysis = this.analysisService.saveAnalysisExportProgressUpdate(
                 event.getAnalysisId(),
+                event.getReference(),
                 event.getProgress(),
                 event.isCompleted(),
                 event.isFailed(),

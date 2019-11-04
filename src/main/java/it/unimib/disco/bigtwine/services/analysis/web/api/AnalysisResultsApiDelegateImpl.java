@@ -161,12 +161,12 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         AnalysisExport export = AnalysisMapper.INSTANCE.analysisExportFromAnalysisExportDTO(analysisExportDTO);
 
         try {
-            analysis = this.analysisService.startAnalysisResultsExport(analysis.getId(), export);
+            export = this.analysisService.startAnalysisResultsExport(analysis.getId(), export);
         } catch (ValidationException e) {
             throw new BadRequestException(e.getMessage());
         }
 
-        AnalysisExportDTO exportDTO = AnalysisMapper.INSTANCE.analysisExportDTOFromAnalysisExport(analysis.getExport());
+        AnalysisExportDTO exportDTO = AnalysisMapper.INSTANCE.analysisExportDTOFromAnalysisExport(export);
 
         return ResponseEntity.ok(exportDTO);
     }

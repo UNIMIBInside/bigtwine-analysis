@@ -385,14 +385,15 @@ public class AnalysisService {
         this.statusChangeRequestsChannel.send(message);
     }
 
-    public Analysis startAnalysisResultsExport(String analisysId, AnalysisExport export) {
+    public AnalysisExport startAnalysisResultsExport(String analisysId, AnalysisExport export) {
         Analysis analysis = this.findOne(analisysId).orElse(null);
         if (analysis == null) {
             return null;
         }
 
-        if (analysis.getExport() != null) {
-            return analysis;
+        String format = export.getFormat();
+        if (format == null || !this.exportFormatValidator.validate(analysis.getType(), format)) {
+            throw new ValidationException("Unrecognized export format: " + format);
         }
 
         EnumSet<AnalysisStatus> acceptedStatuses = EnumSet.of(
@@ -404,22 +405,29 @@ public class AnalysisService {
             throw new ValidationException("Export not available, invalid analysis status: " + analysis.getStatus());
         }
 
-        String format = export.getFormat();
-        if (format == null || !this.exportFormatValidator.validate(analysis.getType(), format)) {
-            throw new ValidationException("Unrecognized export format: " + format);
+        if (analysis.getExports() != null && analysis.getExports().size() > 0) {
+            boolean formatPresent = analysis
+                .getExports()
+                .stream()
+                .anyMatch(exp1 -> format.equals(exp1.getFormat()));
+
+            if (formatPresent) {
+                throw new ValidationException(String.format("Export with format '%s' already present", format));
+            }
         }
 
         if (export.getDocumentId() == null || !ObjectId.isValid(export.getDocumentId()) ) {
             export.setDocumentId(ObjectId.get().toHexString());
         }
 
-        analysis.setExport(export);
-        analysis = this.save(analysis);
+        analysis.addExport(export);
+        this.save(analysis);
 
         JobControlEvent event = new JobControlEvent();
         event.setAnalysisId(analisysId);
         event.setAction(JobActionEnum.START);
         event.setJobType(JobTypeEnum.EXPORT);
+        event.setReference(format);
 
         Message<JobControlEvent> message = MessageBuilder
             .withPayload(event)
@@ -427,7 +435,7 @@ public class AnalysisService {
 
         this.jobControlChannel.send(message);
 
-        return analysis;
+        return export;
     }
 
     public Analysis saveAnalysisStatusChange(String analysisId, AnalysisStatus newStatus, User user, String message) {
@@ -492,7 +500,11 @@ public class AnalysisService {
     }
 
     public Analysis saveAnalysisExportProgressUpdate(
-        String analysisId, double progress, boolean isCompleted, boolean isFailed, String message) {
+        String analysisId, String format, double progress, boolean isCompleted, boolean isFailed, String message) {
+        if (analysisId == null || format == null) {
+            return null;
+        }
+
         Optional<Analysis> analysisOpt = this.findOne(analysisId);
 
         if(!(analysisOpt.isPresent())) {
@@ -500,11 +512,21 @@ public class AnalysisService {
         }
 
         Analysis analysis = analysisOpt.get();
-        if (analysis.getExport() == null) {
+        if (analysis.getExports() == null || analysis.getExports().size() == 0) {
             return null;
         }
 
-        AnalysisExport export = analysis.getExport();
+        AnalysisExport export = analysis
+            .getExports()
+            .stream()
+            .filter(e -> format.equals(e.getFormat()))
+            .findFirst()
+            .orElse(null);
+
+        if (export == null) {
+            return null;
+        }
+
         export.setProgress(progress);
         export.setCompleted(isCompleted);
         export.setFailed(isFailed);

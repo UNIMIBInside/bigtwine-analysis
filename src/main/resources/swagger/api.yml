@@ -623,8 +623,10 @@ components:
         settings:
           type: object
           additionalProperties: true
-        export:
-          $ref: '#/components/schemas/AnalysisExportDTO'
+        exports:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisExportDTO'
         createDate:
           type: string
           format: date-time
