@@ -56,7 +56,7 @@ public class AnalysisConfiguration {
     public AnalysisExportFormatValidator analysisExportFormatValidator() {
         AnalysisExportFormatValidator validator = new AnalysisExportFormatValidator();
         validator.registerSupportedFormats(AnalysisType.TWITTER_NEEL, new HashSet<>(
-            Arrays.asList("json", "tsv", "twitter-neel-challenge")
+            Arrays.asList("json", "tsv", "twitter-neel-challenge", "twitter-neel-dataset")
         ));
 
         return validator;
