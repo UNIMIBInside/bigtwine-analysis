@@ -3,7 +3,6 @@ package it.unimib.disco.bigtwine.services.analysis.web.api;
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisExport;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisResult;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapper;
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
@@ -16,7 +15,7 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisExportDT
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultsCount;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.PagedAnalysisResults;
-import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.ValidationException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +40,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
     private final Logger log = LoggerFactory.getLogger(AnalysesApiDelegateImpl.class);
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
+    private final AnalysisAuthorizationManager analysisAuthManager;
     private final AnalysisResultsRepository resultsRepository;
     private final AnalysisResultMapperLocator resultMapperLocator;
     private final MongoTemplate mongoTemplate;
@@ -51,11 +50,13 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
     public AnalysisResultsApiDelegateImpl(
         NativeWebRequest request,
         AnalysisService analysisService,
+        AnalysisAuthorizationManager analysisAuthManager,
         AnalysisResultsRepository resultsRepository,
         AnalysisResultMapperLocator resultMapperLocator,
         MongoTemplate mongoTemplate) {
         this.request = request;
         this.analysisService = analysisService;
+        this.analysisAuthManager = analysisAuthManager;
         this.resultsRepository = resultsRepository;
         this.resultMapperLocator = resultMapperLocator;
         this.mongoTemplate = mongoTemplate;
@@ -71,7 +72,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
             new NoSuchEntityException(String.format("Analysis with id '%s' not found", analysisId))
         );
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
 
         return analysis;
     }
@@ -152,7 +153,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
     @Override
     public ResponseEntity<AnalysisExportDTO> startAnalysisResultsExportV1(String analysisId, AnalysisExportDTO analysisExportDTO) {
         Analysis analysis = this.getAnalysisById(analysisId);
-        boolean isOwner = AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        boolean isOwner = analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
 
         if (!isOwner) {
             throw new UnauthorizedException("Only the analysis owner can start the export");

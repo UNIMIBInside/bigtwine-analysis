@@ -1,4 +1,4 @@
-package it.unimib.disco.bigtwine.services.analysis.web.api.util;
+package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 import it.unimib.disco.bigtwine.services.analysis.SpringSecurityWebAuxTestConfig;
@@ -7,9 +7,11 @@ import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityCont
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -18,7 +20,7 @@ import static org.junit.Assert.*;
 /**
  * Test class for the AnalysisUtil class.
  *
- * @see AnalysisUtil
+ * @see AnalysisAuthorizationManager
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
@@ -26,7 +28,10 @@ import static org.junit.Assert.*;
     SpringSecurityWebAuxTestConfig.class,
     WithMockCustomUserSecurityContextFactory.class
 })
-public class AnalysisUtilTest {
+public class AnalysisAuthorizationManagerTest {
+
+    @Autowired
+    public AnalysisAuthorizationManager analysisAuthManager;
 
     @Test
     @WithMockCustomUser(userId = "testuser-1")
@@ -35,7 +40,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
+        assertTrue(analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ));
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -45,7 +50,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
     }
 
     @Test
@@ -55,7 +60,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
+        assertTrue(analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ));
     }
 
     @Test
@@ -65,7 +70,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
+        assertFalse(analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ));
     }
 
     @Test
@@ -74,7 +79,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PUBLIC);
 
-        assertFalse(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ));
+        assertFalse(analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ));
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -83,7 +88,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -93,7 +98,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.DELETE);
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -103,7 +108,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PUBLIC);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.DELETE);
     }
 
     @Test
@@ -113,7 +118,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        assertTrue(AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.DELETE));
+        assertTrue(analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.DELETE));
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -123,7 +128,7 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-2").username("testuser-2"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.UPDATE);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.UPDATE);
     }
 
     @Test
@@ -133,6 +138,6 @@ public class AnalysisUtilTest {
             .owner(new User().uid("testuser-1").username("testuser-1"))
             .visibility(AnalysisVisibility.PRIVATE);
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.UPDATE);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.UPDATE);
     }
 }

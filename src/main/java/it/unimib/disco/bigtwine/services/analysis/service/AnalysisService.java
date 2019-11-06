@@ -19,7 +19,6 @@ import it.unimib.disco.bigtwine.services.analysis.validation.*;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputTypeValidator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.AnalysisInputValidatorLocator;
 import it.unimib.disco.bigtwine.services.analysis.validation.analysis.input.InvalidAnalysisInputProvidedException;
-import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +47,7 @@ public class AnalysisService {
     private final AnalysisRepository analysisRepository;
     private final AnalysisResultsRepository analysisResultsRepository;
     private final AnalysisSettingService analysisSettingService;
+    private final AnalysisAuthorizationManager analysisAuthManager;
 
     private final AnalysisStatusValidator analysisStatusValidator;
     private final AnalysisInputTypeValidator inputTypeValidator;
@@ -61,6 +61,7 @@ public class AnalysisService {
         AnalysisRepository analysisRepository,
         AnalysisResultsRepository analysisResultsRepository,
         AnalysisSettingService analysisSettingService,
+        AnalysisAuthorizationManager analysisAuthManager,
         AnalysisStatusValidator analysisStatusValidator,
         AnalysisInputTypeValidator inputTypeValidator,
         AnalysisInputValidatorLocator inputValidatorLocator,
@@ -70,6 +71,7 @@ public class AnalysisService {
         this.analysisRepository = analysisRepository;
         this.analysisResultsRepository = analysisResultsRepository;
         this.analysisSettingService = analysisSettingService;
+        this.analysisAuthManager = analysisAuthManager;
         this.analysisStatusValidator = analysisStatusValidator;
         this.exportFormatValidator = exportFormatValidator;
         this.inputTypeValidator = inputTypeValidator;
@@ -370,7 +372,7 @@ public class AnalysisService {
 
         User user = null;
         if (userRequested) {
-            user = AnalysisUtil.getCurrentUser().orElse(null);
+            user = analysisAuthManager.getCurrentUser().orElse(null);
         }
 
         AnalysisStatusChangeRequestedEvent event = new AnalysisStatusChangeRequestedEvent();

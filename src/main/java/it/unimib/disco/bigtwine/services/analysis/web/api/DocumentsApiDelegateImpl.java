@@ -12,7 +12,7 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.errors.Unauthenticated
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UploadFailedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.DocumentDTO;
-import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -40,21 +40,24 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     private final Logger log = LoggerFactory.getLogger(DocumentsApiDelegateImpl.class);
 
     private final NativeWebRequest request;
-    private DocumentService documentService;
-    private AnalysisService analysisService;
+    private final DocumentService documentService;
+    private final AnalysisService analysisService;
+    private final AnalysisAuthorizationManager analysisAuthManager;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public DocumentsApiDelegateImpl(
         NativeWebRequest request,
         DocumentService documentService,
-        AnalysisService analysisService) {
+        AnalysisService analysisService,
+        AnalysisAuthorizationManager analysisAuthManager) {
         this.request = request;
         this.documentService = documentService;
         this.analysisService = analysisService;
+        this.analysisAuthManager = analysisAuthManager;
     }
 
     private void checkFileOwnership(Document doc) {
-        String userId = AnalysisUtil.getCurrentUserIdentifier()
+        String userId = analysisAuthManager.getCurrentUserIdentifier()
             .orElseThrow(UnauthenticatedException::new);
         String docAnalysis = doc.getAnalysisId();
 
@@ -173,7 +176,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<List<DocumentDTO>> listDocumentsMetaV1(Integer page, Integer pageSize, String documentType, String analysisType, String category) {
-        String userId = AnalysisUtil.getCurrentUserIdentifier()
+        String userId = analysisAuthManager.getCurrentUserIdentifier()
             .orElseThrow(UnauthenticatedException::new);
 
         Pageable pageReq = PageRequest.of(

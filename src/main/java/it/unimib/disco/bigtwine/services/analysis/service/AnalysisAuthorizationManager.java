@@ -1,4 +1,4 @@
-package it.unimib.disco.bigtwine.services.analysis.web.api.util;
+package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.User;
@@ -6,21 +6,25 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
+import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.NotNull;
 import java.util.Optional;
 
-public final class AnalysisUtil {
+@Service
+public class AnalysisAuthorizationManager {
 
     public enum AccessType {
         READ, UPDATE, DELETE
     }
 
-    public static Optional<String> getCurrentUserIdentifier() {
+    public AnalysisAuthorizationManager() {}
+
+    public Optional<String> getCurrentUserIdentifier() {
         return SecurityUtils.getCurrentUserId();
     }
 
-    public static Optional<User> getCurrentUser() {
+    public Optional<User> getCurrentUser() {
         String userId = SecurityUtils.getCurrentUserId().orElse(null);
         if (userId == null) {
             return Optional.empty();
@@ -41,7 +45,7 @@ public final class AnalysisUtil {
      * @return true se l'utente corrente è proprietario dell'analisi, false altrimenti
      * @throws UnauthorizedException Nel caso l'analisi non sia accessibile dall'utente corrente
      */
-    public static boolean checkAnalysisOwnership(@NotNull Analysis analysis, AccessType accessType) {
+    public boolean checkAnalysisOwnership(@NotNull Analysis analysis, AccessType accessType) {
         String ownerId = getCurrentUserIdentifier().orElse(null);
         boolean isOwner = ownerId != null && analysis.getOwner() != null && ownerId.equals(analysis.getOwner().getUid());
         boolean isSuperUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN);
@@ -67,7 +71,7 @@ public final class AnalysisUtil {
      * @param analysis L'analisi che si vorrebbe create
      * @return Restituisce true se l'utente corrente può creare nuove analisi
      */
-    public static boolean canCreateAnalysis(@NotNull Analysis analysis) {
+    public boolean canCreateAnalysis(@NotNull Analysis analysis) {
         boolean isDemoUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.DEMO);
         return !isDemoUser;
     }
@@ -78,7 +82,7 @@ public final class AnalysisUtil {
      * @param analysis L'analisi che si vorrebbe terminare
      * @return Restituisce true se l'utente corrente può terminare l'analisi
      */
-    public static boolean canTerminateAnalysis(@NotNull Analysis analysis) {
+    public boolean canTerminateAnalysis(@NotNull Analysis analysis) {
         boolean isDemoUser = SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.DEMO);
         return !isDemoUser;
     }

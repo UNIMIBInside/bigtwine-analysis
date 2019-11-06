@@ -14,7 +14,7 @@ import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestExcep
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
-import it.unimib.disco.bigtwine.services.analysis.web.api.util.AnalysisUtil;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -41,6 +41,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     private final NativeWebRequest request;
     private final AnalysisService analysisService;
     private final AnalysisSettingService analysisSettingService;
+    private final AnalysisAuthorizationManager analysisAuthManager;
     private final DocumentService documentService;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -48,10 +49,12 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         NativeWebRequest request,
         AnalysisService analysisService,
         AnalysisSettingService analysisSettingService,
+        AnalysisAuthorizationManager analysisAuthManager,
         DocumentService documentService) {
         this.request = request;
         this.analysisService = analysisService;
         this.analysisSettingService = analysisSettingService;
+        this.analysisAuthManager = analysisAuthManager;
         this.documentService = documentService;
     }
 
@@ -59,7 +62,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         return SecurityUtils.getCurrentUserId();
     }
     private Optional<User> getCurrentUser() {
-        return AnalysisUtil.getCurrentUser();
+        return analysisAuthManager.getCurrentUser();
     }
 
     private ResponseEntity<AnalysisDTO> updateAnalysis(
@@ -75,9 +78,9 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
         Analysis analysis = analysisOpt.get();
 
-        AnalysisUtil.AccessType accessType = (status == AnalysisStatusEnum.CANCELLED ?
-            AnalysisUtil.AccessType.DELETE : AnalysisUtil.AccessType.UPDATE);
-        AnalysisUtil.checkAnalysisOwnership(analysis, accessType);
+        AnalysisAuthorizationManager.AccessType accessType = (status == AnalysisStatusEnum.CANCELLED ?
+            AnalysisAuthorizationManager.AccessType.DELETE : AnalysisAuthorizationManager.AccessType.UPDATE);
+        analysisAuthManager.checkAnalysisOwnership(analysis, accessType);
 
         if (visibility != null || userSettings != null) {
             if (visibility != null) {
@@ -99,7 +102,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             AnalysisStatus newStatus = AnalysisMapper.INSTANCE.statusFromStatusEnum(status);
 
             if ((newStatus == AnalysisStatus.CANCELLED || newStatus == AnalysisStatus.COMPLETED) &&
-                !AnalysisUtil.canTerminateAnalysis(analysis)) {
+                !analysisAuthManager.canTerminateAnalysis(analysis)) {
                 throw new UnauthorizedException();
             }
 
@@ -140,7 +143,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
     public ResponseEntity<AnalysisDTO> createAnalysisV1(AnalysisDTO analysis) {
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
 
-        if (!AnalysisUtil.canCreateAnalysis(a)) {
+        if (!analysisAuthManager.canCreateAnalysis(a)) {
             throw new UnauthorizedException();
         }
 
@@ -218,7 +221,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new NoSuchEntityException(Analysis.class, analysisId);
         }
 
-        AnalysisUtil.checkAnalysisOwnership(analysis, AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
 
         AnalysisDTO analysisDTO = AnalysisMapper.INSTANCE.analysisDtoFromAnalysis(analysis);
 
@@ -249,7 +252,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new NoSuchEntityException(Analysis.class, analysisId);
         }
 
-        AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis.get(), AnalysisAuthorizationManager.AccessType.READ);
 
         List<AnalysisStatusHistory> statusHistory = this.analysisService.getStatusHistory(analysisId);
         List<AnalysisStatusHistoryDTO> statusHistoryDTOs = AnalysisMapper.INSTANCE
@@ -266,7 +269,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
             throw new NoSuchEntityException(Analysis.class, analysisId);
         }
 
-        AnalysisUtil.checkAnalysisOwnership(analysis.get(), AnalysisUtil.AccessType.READ);
+        analysisAuthManager.checkAnalysisOwnership(analysis.get(), AnalysisAuthorizationManager.AccessType.READ);
 
         List<String> userRoles = SecurityUtils.getCurrentUserRoles();
         List<AnalysisSettingResolved> settings = this.analysisSettingService
