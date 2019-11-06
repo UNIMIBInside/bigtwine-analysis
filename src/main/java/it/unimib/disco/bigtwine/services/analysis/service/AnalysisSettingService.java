@@ -4,7 +4,9 @@ import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisDefaultSetting;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSetting;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSettingResolved;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisDefaultSettingRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
 import org.slf4j.Logger;
@@ -89,6 +91,17 @@ public class AnalysisSettingService {
     }
 
     /**
+     * Find settings by analysis type
+     * @param analysisType Type of the analysis
+     * @param inputType Input type of the analysis
+     * @return A list of settings for the given analysis type
+     */
+    public List<AnalysisSetting> findByAnalysisType(AnalysisType analysisType, AnalysisInputType inputType) {
+        return analysisSettingRepository
+            .findByAnalysis(analysisType, inputType);
+    }
+
+    /**
      * Delete the analysisSetting by id.
      *
      * @param id the id of the entity
@@ -98,24 +111,11 @@ public class AnalysisSettingService {
         analysisSettingRepository.deleteById(id);
     }
 
-    /**
-     * Restituisce le impostazioni predefinite per l'analisi e i ruoli utente indicati
-     *
-     * @param analysis L'analisi di cui si vogliono le impostazioni predefinite
-     * @param userRoles I ruoli utente con cui filtrare le impostazioni
-     * @return le impostazioni associate all'analisi
-     */
-    public List<AnalysisSettingResolved> resolveAnalysisSettings(Analysis analysis, List<String> userRoles, boolean includeHidden) {
-        boolean isAnalysisEditable = analysis.getStatus() == AnalysisStatus.READY;
-        List<AnalysisSetting> settings = this.findByAnalysis(analysis);
+    private List<AnalysisSettingResolved> doResolveAnalysisSettings(List<AnalysisSetting> settings, List<String> userRoles, boolean isAnalysisEditable) {
         List<AnalysisSettingResolved> resolvedSettings = new ArrayList<>();
         Set<String> distinctSettingNames = new HashSet<>();
 
         for (AnalysisSetting setting : settings) {
-            if (!includeHidden && !setting.isUserVisible()) {
-                continue;
-            }
-
             if (distinctSettingNames.contains(setting.getName())) {
                 continue;
             }
@@ -136,12 +136,35 @@ public class AnalysisSettingService {
                     .editable(isAnalysisEditable && defaultSetting.get().isUserCanOverride());
             }
 
-            if (analysis.getSettings() != null && analysis.getSettings().containsKey(setting.getName())) {
-                resolvedSetting.setCurrentValue(analysis.getSettings().get(setting.getName()));
-            }
-
             resolvedSettings.add(resolvedSetting);
             distinctSettingNames.add(setting.getName());
+        }
+
+        return resolvedSettings;
+    }
+
+    /**
+     * Restituisce le impostazioni predefinite per l'analisi e i ruoli utente indicati
+     *
+     * @param analysis L'analisi di cui si vogliono le impostazioni predefinite
+     * @param userRoles I ruoli utente con cui filtrare le impostazioni
+     * @return le impostazioni associate all'analisi
+     */
+    public List<AnalysisSettingResolved> resolveAnalysisSettings(Analysis analysis, List<String> userRoles, boolean includeHidden) {
+        boolean isAnalysisEditable = analysis.getStatus() == AnalysisStatus.READY;
+        List<AnalysisSetting> settings = this.findByAnalysis(analysis)
+            .stream()
+            .filter((setting) -> !setting.isGlobal() && (includeHidden || setting.isUserVisible()))
+            .collect(Collectors.toList());
+        List<AnalysisSettingResolved> resolvedSettings = this
+            .doResolveAnalysisSettings(settings, userRoles, isAnalysisEditable);
+
+        if (analysis.getSettings() != null) {
+            for (AnalysisSettingResolved resolvedSetting : resolvedSettings) {
+                if (analysis.getSettings().containsKey(resolvedSetting.getName())) {
+                    resolvedSetting.setCurrentValue(analysis.getSettings().get(resolvedSetting.getName()));
+                }
+            }
         }
 
         return resolvedSettings;
@@ -176,5 +199,51 @@ public class AnalysisSettingService {
         }
 
         analysis.setSettings(cleanedSettings);
+    }
+
+    public Object getGlobalSettingValue(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Object defaultValue) {
+        List<AnalysisSetting> settings = this
+            .findByAnalysisType(analysisType, inputType)
+            .stream()
+            .filter((setting) -> setting.isGlobal() && setting.getName().equals(name))
+            .collect(Collectors.toList());
+        List<AnalysisSettingResolved> resolvedSettings = this
+            .doResolveAnalysisSettings(settings, userRoles, false);
+
+        if (resolvedSettings.size() > 0 ) {
+            return resolvedSettings.get(0).getDefaultValue();
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public Integer getGlobalSettingInteger(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Integer defaultValue) {
+        Object value = this.getGlobalSettingValue(name, analysisType, inputType, userRoles, defaultValue);
+
+        try {
+            return (Integer)value;
+        } catch (ClassCastException e) {
+            return defaultValue;
+        }
+    }
+
+    public String getGlobalSettingString(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, String defaultValue) {
+        Object value = this.getGlobalSettingValue(name, analysisType, inputType, userRoles, defaultValue);
+
+        try {
+            return (String)value;
+        } catch (ClassCastException e) {
+            return defaultValue;
+        }
+    }
+
+    public Boolean getGlobalSettingBoolean(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Boolean defaultValue) {
+        Object value = this.getGlobalSettingValue(name, analysisType, inputType, userRoles, defaultValue);
+
+        try {
+            return (Boolean)value;
+        } catch (ClassCastException e) {
+            return defaultValue;
+        }
     }
 }

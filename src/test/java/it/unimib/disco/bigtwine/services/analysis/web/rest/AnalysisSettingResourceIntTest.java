@@ -54,6 +54,9 @@ public class AnalysisSettingResourceIntTest {
     private static final Boolean DEFAULT_USER_VISIBLE = false;
     private static final Boolean UPDATED_USER_VISIBLE = true;
 
+    private static final Boolean DEFAULT_GLOBAL = false;
+    private static final Boolean UPDATED_GLOBAL = true;
+
     private static final String DEFAULT_OPTIONS = "AAAAAAAAAA";
     private static final String UPDATED_OPTIONS = "BBBBBBBBBB";
 
@@ -108,6 +111,7 @@ public class AnalysisSettingResourceIntTest {
             .name(DEFAULT_NAME)
             .type(DEFAULT_TYPE)
             .userVisible(DEFAULT_USER_VISIBLE)
+            .global(DEFAULT_GLOBAL)
             .options(DEFAULT_OPTIONS);
         // Add required entity
         AnalysisType analysisType = AnalysisType.TWITTER_NEEL;
@@ -138,6 +142,7 @@ public class AnalysisSettingResourceIntTest {
         assertThat(testAnalysisSetting.getName()).isEqualTo(DEFAULT_NAME);
         assertThat(testAnalysisSetting.getType()).isEqualTo(DEFAULT_TYPE);
         assertThat(testAnalysisSetting.isUserVisible()).isEqualTo(DEFAULT_USER_VISIBLE);
+        assertThat(testAnalysisSetting.isGlobal()).isEqualTo(DEFAULT_GLOBAL);
         assertThat(testAnalysisSetting.getOptions()).isEqualTo(DEFAULT_OPTIONS);
     }
 
@@ -206,6 +211,7 @@ public class AnalysisSettingResourceIntTest {
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].userVisible").value(hasItem(DEFAULT_USER_VISIBLE.booleanValue())))
+            .andExpect(jsonPath("$.[*].global").value(hasItem(DEFAULT_GLOBAL.booleanValue())))
             .andExpect(jsonPath("$.[*].options").value(hasItem(DEFAULT_OPTIONS.toString())));
     }
 
@@ -255,6 +261,7 @@ public class AnalysisSettingResourceIntTest {
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
             .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
             .andExpect(jsonPath("$.userVisible").value(DEFAULT_USER_VISIBLE.booleanValue()))
+            .andExpect(jsonPath("$.global").value(DEFAULT_GLOBAL.booleanValue()))
             .andExpect(jsonPath("$.options").value(DEFAULT_OPTIONS.toString()));
     }
 
@@ -278,6 +285,7 @@ public class AnalysisSettingResourceIntTest {
             .name(UPDATED_NAME)
             .type(UPDATED_TYPE)
             .userVisible(UPDATED_USER_VISIBLE)
+            .global(UPDATED_GLOBAL)
             .options(UPDATED_OPTIONS);
 
         restAnalysisSettingMockMvc.perform(put("/api/analysis-settings")
@@ -292,6 +300,7 @@ public class AnalysisSettingResourceIntTest {
         assertThat(testAnalysisSetting.getName()).isEqualTo(UPDATED_NAME);
         assertThat(testAnalysisSetting.getType()).isEqualTo(UPDATED_TYPE);
         assertThat(testAnalysisSetting.isUserVisible()).isEqualTo(UPDATED_USER_VISIBLE);
+        assertThat(testAnalysisSetting.isGlobal()).isEqualTo(UPDATED_GLOBAL);
         assertThat(testAnalysisSetting.getOptions()).isEqualTo(UPDATED_OPTIONS);
     }
 

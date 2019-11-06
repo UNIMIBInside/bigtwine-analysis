@@ -1,4 +1,4 @@
-package it.unimib.disco.bigtwine.services.analysis.domain;
+package it.unimib.disco.bigtwine.services.analysis.config;
 
 public class AnalysisSettingConstants {
     public final static String MAX_EXECUTION_TIME = "max-execution-time";

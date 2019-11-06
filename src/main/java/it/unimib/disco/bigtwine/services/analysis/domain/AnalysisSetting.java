@@ -53,6 +53,9 @@ public class AnalysisSetting implements Serializable {
     @Field("user_visible")
     private Boolean userVisible;
 
+    @Field("is_global")
+    private Boolean global;
+
     /**
      * Each option on separated line with the following format: <value>:<name>
      */
@@ -133,6 +136,19 @@ public class AnalysisSetting implements Serializable {
 
     public void setUserVisible(Boolean userVisible) {
         this.userVisible = userVisible;
+    }
+
+    public Boolean isGlobal() {
+        return global;
+    }
+
+    public AnalysisSetting global(Boolean global) {
+        this.global = global;
+        return this;
+    }
+
+    public void setGlobal(Boolean global) {
+        this.global = global;
     }
 
     public String getOptions() {
@@ -279,6 +295,7 @@ public class AnalysisSetting implements Serializable {
             ", name='" + getName() + "'" +
             ", type='" + getType() + "'" +
             ", userVisible='" + isUserVisible() + "'" +
+            ", isGlobal='" + isGlobal() + "'" +
             ", options='" + getOptions() + "'" +
             "}";
     }

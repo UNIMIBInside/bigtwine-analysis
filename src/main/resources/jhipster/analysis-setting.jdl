@@ -15,6 +15,7 @@ entity AnalysisSetting {
     type AnalysisSettingType required
     description String
     userVisible Boolean
+    global Boolean
     /** Each option on separated line with the following format: <value>:<name>  */
     options TextBlob
 }

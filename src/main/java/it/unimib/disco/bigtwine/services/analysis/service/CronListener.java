@@ -1,8 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
 import it.unimib.disco.bigtwine.commons.messaging.CronTaskEvent;
-import it.unimib.disco.bigtwine.services.analysis.client.CronSchedulerServiceClient;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSettingConstants;
+import it.unimib.disco.bigtwine.services.analysis.config.AnalysisSettingConstants;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.CronEntryInfo;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;

@@ -33,6 +33,8 @@ public interface AnalysisSettingRepository extends MongoRepository<AnalysisSetti
 
     Optional<AnalysisSetting> findOneById(String id);
 
+    List<AnalysisSetting> findByNameAndGlobalIsTrue(String name);
+
     @Query("{$and: [{$or: [{analysis_type: null}, {analysis_type: ?0}]}, {$or: [{analysis_input_types: []}, {analysis_input_types: {$in: [ ?1 ]}}]}]}")
     List<AnalysisSetting> findByAnalysis(AnalysisType analysisType, AnalysisInputType inputType, Sort sort);
 
