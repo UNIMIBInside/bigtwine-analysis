@@ -7,10 +7,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.DocumentMapper;
 import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.service.DocumentService;
-import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
-import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthenticatedException;
-import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
-import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UploadFailedException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.*;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.DocumentDTO;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import org.apache.commons.fileupload.FileItemIterator;
@@ -58,21 +55,21 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     private void checkFileOwnership(Document doc) {
         String userId = analysisAuthManager.getCurrentUserIdentifier()
-            .orElseThrow(UnauthenticatedException::new);
+            .orElseThrow(UnauthorizedException::new);
         String docAnalysis = doc.getAnalysisId();
 
         if (StringUtils.isNotBlank(docAnalysis)) {
             Optional<Analysis> analysis = this.analysisService.findOne(docAnalysis);
 
             if (!(analysis.isPresent() && analysis.get().getOwner().getUid().equals(userId))) {
-                throw new UnauthorizedException(String.format(
+                throw new ForbiddenException(String.format(
                     "Only the owner of the analysis '%s' can access this document",
                     docAnalysis));
             }
         } else {
             String docUploader = doc.getUser() != null ? doc.getUser().getUid() : null;
             if (!userId.equals(docUploader)) {
-                throw new UnauthorizedException("Only the uploader can access this document");
+                throw new ForbiddenException("Only the uploader can access this document");
             }
         }
     }
@@ -105,7 +102,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
 
     @Override
     public ResponseEntity<DocumentDTO> uploadDocumentV1(String documentType, String analysisType, String category) {
-        String userId = SecurityUtils.getCurrentUserId().orElseThrow(UnauthenticatedException::new);
+        String userId = SecurityUtils.getCurrentUserId().orElseThrow(UnauthorizedException::new);
         String username = SecurityUtils.getCurrentUserLogin().orElse(null);
         HttpServletRequest request = (HttpServletRequest) this.request.getNativeRequest();
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
@@ -177,7 +174,7 @@ public class DocumentsApiDelegateImpl implements DocumentsApiDelegate {
     @Override
     public ResponseEntity<List<DocumentDTO>> listDocumentsMetaV1(Integer page, Integer pageSize, String documentType, String analysisType, String category) {
         String userId = analysisAuthManager.getCurrentUserIdentifier()
-            .orElseThrow(UnauthenticatedException::new);
+            .orElseThrow(UnauthorizedException::new);
 
         Pageable pageReq = PageRequest.of(
             page != null ? page : 0,

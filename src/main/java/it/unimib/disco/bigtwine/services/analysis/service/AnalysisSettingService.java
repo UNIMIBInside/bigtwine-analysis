@@ -125,7 +125,9 @@ public class AnalysisSettingService {
                 .editable(isAnalysisEditable)
                 .type(setting.getType())
                 .description(setting.getDescription())
-                .choices(setting.getChoices());
+                .choices(setting.getChoices())
+                .isAnalysisTypeRestricted(setting.getAnalysisType() != null)
+                .isInputTypeRestricted(setting.getAnalysisInputTypes() != null && setting.getAnalysisInputTypes().size() > 0);
 
             Optional<AnalysisDefaultSetting> defaultSetting = this.analysisDefaultSettingRepository
                 .findOneBySettingAndRoles(setting, userRoles);
@@ -133,7 +135,8 @@ public class AnalysisSettingService {
             if (defaultSetting.isPresent()) {
                 resolvedSetting
                     .defaultValue(defaultSetting.get().getDefaultValue())
-                    .editable(isAnalysisEditable && defaultSetting.get().isUserCanOverride());
+                    .editable(isAnalysisEditable && defaultSetting.get().isUserCanOverride())
+                    .isUserRolesRestricted(defaultSetting.get().getUserRoles() != null && defaultSetting.get().getUserRoles().size() > 0);
             }
 
             resolvedSettings.add(resolvedSetting);
@@ -201,7 +204,7 @@ public class AnalysisSettingService {
         analysis.setSettings(cleanedSettings);
     }
 
-    public Object getGlobalSettingValue(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Object defaultValue) {
+    public Optional<AnalysisSettingResolved> getGlobalSetting(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles) {
         List<AnalysisSetting> settings = this
             .findByAnalysisType(analysisType, inputType)
             .stream()
@@ -211,7 +214,18 @@ public class AnalysisSettingService {
             .doResolveAnalysisSettings(settings, userRoles, false);
 
         if (resolvedSettings.size() > 0 ) {
-            return resolvedSettings.get(0).getDefaultValue();
+            return Optional.of(resolvedSettings.get(0));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public Object getGlobalSettingValue(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Object defaultValue) {
+        Optional<AnalysisSettingResolved> resolvedSetting = this
+            .getGlobalSetting(name, analysisType, inputType, userRoles);
+
+        if (resolvedSetting.isPresent()) {
+            return resolvedSetting.get().getCurrentValue();
         } else {
             return defaultValue;
         }

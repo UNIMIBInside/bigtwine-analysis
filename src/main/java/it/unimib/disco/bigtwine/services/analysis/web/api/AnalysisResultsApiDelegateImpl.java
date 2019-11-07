@@ -9,8 +9,8 @@ import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMa
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.ForbiddenException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
-import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisExportDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultDTO;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.AnalysisResultsCount;
@@ -156,7 +156,7 @@ public class AnalysisResultsApiDelegateImpl implements AnalysisResultsApiDelegat
         boolean isOwner = analysisAuthManager.checkAnalysisOwnership(analysis, AnalysisAuthorizationManager.AccessType.READ);
 
         if (!isOwner) {
-            throw new UnauthorizedException("Only the analysis owner can start the export");
+            throw new ForbiddenException("Only the analysis owner can start the export");
         }
 
         AnalysisExport export = AnalysisMapper.INSTANCE.analysisExportFromAnalysisExportDTO(analysisExportDTO);

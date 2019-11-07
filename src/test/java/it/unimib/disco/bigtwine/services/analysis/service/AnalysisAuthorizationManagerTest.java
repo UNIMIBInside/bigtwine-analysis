@@ -7,7 +7,6 @@ import it.unimib.disco.bigtwine.services.analysis.WithMockCustomUserSecurityCont
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
 import it.unimib.disco.bigtwine.services.analysis.domain.User;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
-import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -11,6 +11,7 @@ import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisSettingService;
 import it.unimib.disco.bigtwine.services.analysis.service.DocumentService;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.BadRequestException;
+import it.unimib.disco.bigtwine.services.analysis.web.api.errors.ForbiddenException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.NoSuchEntityException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.errors.UnauthorizedException;
 import it.unimib.disco.bigtwine.services.analysis.web.api.model.*;
@@ -103,7 +104,11 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
 
             if ((newStatus == AnalysisStatus.CANCELLED || newStatus == AnalysisStatus.COMPLETED) &&
                 !analysisAuthManager.canTerminateAnalysis(analysis)) {
-                throw new UnauthorizedException();
+                throw new ForbiddenException("User not allowed to terminate analysis");
+            }
+
+            if (newStatus == AnalysisStatus.STARTED && !analysisAuthManager.canStartAnalysis(analysis)) {
+                throw new ForbiddenException("Max number of concurrent analysis started reached");
             }
 
             try {
@@ -144,7 +149,7 @@ public class AnalysesApiDelegateImpl implements AnalysesApiDelegate {
         Analysis a = AnalysisMapper.INSTANCE.analysisFromAnalysisDTO(analysis);
 
         if (!analysisAuthManager.canCreateAnalysis(a)) {
-            throw new UnauthorizedException();
+            throw new ForbiddenException("User not allowed to create analysis");
         }
 
         analysisSettingService.cleanAnalysisSettings(a, SecurityUtils.getCurrentUserRoles());

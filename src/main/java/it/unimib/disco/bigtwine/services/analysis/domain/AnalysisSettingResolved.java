@@ -12,6 +12,9 @@ public class AnalysisSettingResolved {
     private List<AnalysisSettingChoice> choices;
     private Object defaultValue;
     private Object currentValue;
+    private boolean isAnalysisTypeRestricted;
+    private boolean isInputTypeRestricted;
+    private boolean isUserRolesRestricted;
 
     public AnalysisSettingResolved() {
     }
@@ -107,15 +110,58 @@ public class AnalysisSettingResolved {
         return this;
     }
 
+    public boolean isAnalysisTypeRestricted() {
+        return isAnalysisTypeRestricted;
+    }
+
+    public AnalysisSettingResolved isAnalysisTypeRestricted(boolean isAnalysisTypeRestricted) {
+        this.setAnalysisTypeRestricted(isAnalysisTypeRestricted);
+        return this;
+    }
+
+    public void setAnalysisTypeRestricted(boolean isAnalysisTypeRestricted) {
+        this.isAnalysisTypeRestricted = isAnalysisTypeRestricted;
+    }
+
+    public boolean isInputTypeRestricted() {
+        return isInputTypeRestricted;
+    }
+
+    public AnalysisSettingResolved isInputTypeRestricted(boolean isInputTypeRestricted) {
+        this.setInputTypeRestricted(isInputTypeRestricted);
+        return this;
+    }
+
+    public void setInputTypeRestricted(boolean inputTypeRestricted) {
+        isInputTypeRestricted = inputTypeRestricted;
+    }
+
+    public boolean isUserRolesRestricted() {
+        return isUserRolesRestricted;
+    }
+
+    public AnalysisSettingResolved isUserRolesRestricted(boolean isUserRolesRestricted) {
+        this.setUserRolesRestricted(isUserRolesRestricted);
+        return this;
+    }
+
+    public void setUserRolesRestricted(boolean userRolesRestricted) {
+        isUserRolesRestricted = userRolesRestricted;
+    }
+
     @Override
     public String toString() {
         return "AnalysisSettingResolved{" +
             "name='" + name + '\'' +
             ", type=" + type +
             ", editable=" + editable +
+            ", description='" + description + '\'' +
             ", choices=" + choices +
             ", defaultValue=" + defaultValue +
             ", currentValue=" + currentValue +
+            ", isAnalysisTypeRestricted=" + isAnalysisTypeRestricted +
+            ", isInputTypeRestricted=" + isInputTypeRestricted +
+            ", isUserRolesRestricted=" + isUserRolesRestricted +
             '}';
     }
 }

@@ -1,6 +1,7 @@
 package it.unimib.disco.bigtwine.services.analysis.repository;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVisibility;
@@ -26,6 +27,9 @@ public interface AnalysisRepository extends MongoRepository<Analysis, String> {
     Page<Analysis> findByOwnerUidOrVisibility(String ownerId, AnalysisVisibility visibility, Pageable page);
     Page<Analysis> findByTypeAndVisibility(AnalysisType analysisType, AnalysisVisibility visibility, Pageable page);
     Page<Analysis> findByTypeAndOwnerUid(AnalysisType analysisType, String ownerId, Pageable page);
+    Long countByOwnerUidAndStatusAndTypeAndInputType(String ownerId, AnalysisStatus status, AnalysisType analysisType, AnalysisInputType inputType);
+    Long countByOwnerUidAndStatusAndType(String ownerId, AnalysisStatus status, AnalysisType analysisType);
+    Long countByOwnerUidAndStatus(String ownerId, AnalysisStatus status);
 
     @Query("{$and: [{'type' : ?1}, {$or: [{'owner.uid': ?1}, {'visibility': 'PUBLIC'}]}]}")
     Page<Analysis> findVisibleByType(String ownerId, AnalysisType analysisType, Pageable page);

@@ -11,6 +11,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisVis
 import it.unimib.disco.bigtwine.services.analysis.domain.mapper.AnalysisResultMapperLocator;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisResultsRepository;
+import it.unimib.disco.bigtwine.services.analysis.service.AnalysisAuthorizationManager;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisService;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,6 +52,9 @@ public class AnalysisResultsApiIntTest {
 
     @Autowired
     private AnalysisService analysisService;
+
+    @Autowired
+    private AnalysisAuthorizationManager analysisAuthManager;
 
     @Autowired
     private AnalysisRepository analysisRepository;
@@ -157,6 +160,7 @@ public class AnalysisResultsApiIntTest {
         AnalysisResultsApiDelegateImpl delegate = new AnalysisResultsApiDelegateImpl(
             null,
             analysisService,
+            analysisAuthManager,
             resultsRepository,
             resultMapperLocator,
             mongoTemplate);
