@@ -3,7 +3,6 @@ package it.unimib.disco.bigtwine.services.analysis.web.rest;
 import it.unimib.disco.bigtwine.services.analysis.AnalysisApp;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSetting;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
 import it.unimib.disco.bigtwine.services.analysis.service.AnalysisSettingService;
 import it.unimib.disco.bigtwine.services.analysis.web.rest.errors.ExceptionTranslator;
@@ -11,31 +10,29 @@ import it.unimib.disco.bigtwine.services.analysis.web.rest.errors.ExceptionTrans
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
 import static it.unimib.disco.bigtwine.services.analysis.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingVisibility;
 /**
  * Test class for the AnalysisSettingResource REST controller.
  *
@@ -48,26 +45,23 @@ public class AnalysisSettingResourceIntTest {
     private static final String DEFAULT_NAME = "sp";
     private static final String UPDATED_NAME = "v";
 
+    private static final String DEFAULT_LABEL = "AAAAAAAAAA";
+    private static final String UPDATED_LABEL = "BBBBBBBBBB";
+
+    private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
+    private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
+
     private static final AnalysisSettingType DEFAULT_TYPE = AnalysisSettingType.NUMBER;
     private static final AnalysisSettingType UPDATED_TYPE = AnalysisSettingType.STRING;
 
-    private static final Boolean DEFAULT_USER_VISIBLE = false;
-    private static final Boolean UPDATED_USER_VISIBLE = true;
-
-    private static final Boolean DEFAULT_GLOBAL = false;
-    private static final Boolean UPDATED_GLOBAL = true;
+    private static final AnalysisSettingVisibility DEFAULT_VISIBILITY = AnalysisSettingVisibility.GLOBAL;
+    private static final AnalysisSettingVisibility UPDATED_VISIBILITY = AnalysisSettingVisibility.HIDDEN;
 
     private static final String DEFAULT_OPTIONS = "AAAAAAAAAA";
     private static final String UPDATED_OPTIONS = "BBBBBBBBBB";
 
     @Autowired
     private AnalysisSettingRepository analysisSettingRepository;
-
-    @Mock
-    private AnalysisSettingRepository analysisSettingRepositoryMock;
-
-    @Mock
-    private AnalysisSettingService analysisSettingServiceMock;
 
     @Autowired
     private AnalysisSettingService analysisSettingService;
@@ -109,13 +103,11 @@ public class AnalysisSettingResourceIntTest {
     public static AnalysisSetting createEntity() {
         AnalysisSetting analysisSetting = new AnalysisSetting()
             .name(DEFAULT_NAME)
+            .label(DEFAULT_LABEL)
+            .description(DEFAULT_DESCRIPTION)
             .type(DEFAULT_TYPE)
-            .userVisible(DEFAULT_USER_VISIBLE)
-            .global(DEFAULT_GLOBAL)
+            .visibility(DEFAULT_VISIBILITY)
             .options(DEFAULT_OPTIONS);
-        // Add required entity
-        AnalysisType analysisType = AnalysisType.TWITTER_NEEL;
-        analysisSetting.setAnalysisType(analysisType);
         return analysisSetting;
     }
 
@@ -140,9 +132,10 @@ public class AnalysisSettingResourceIntTest {
         assertThat(analysisSettingList).hasSize(databaseSizeBeforeCreate + 1);
         AnalysisSetting testAnalysisSetting = analysisSettingList.get(analysisSettingList.size() - 1);
         assertThat(testAnalysisSetting.getName()).isEqualTo(DEFAULT_NAME);
+        assertThat(testAnalysisSetting.getLabel()).isEqualTo(DEFAULT_LABEL);
+        assertThat(testAnalysisSetting.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testAnalysisSetting.getType()).isEqualTo(DEFAULT_TYPE);
-        assertThat(testAnalysisSetting.isUserVisible()).isEqualTo(DEFAULT_USER_VISIBLE);
-        assertThat(testAnalysisSetting.isGlobal()).isEqualTo(DEFAULT_GLOBAL);
+        assertThat(testAnalysisSetting.getVisibility()).isEqualTo(DEFAULT_VISIBILITY);
         assertThat(testAnalysisSetting.getOptions()).isEqualTo(DEFAULT_OPTIONS);
     }
 
@@ -182,10 +175,44 @@ public class AnalysisSettingResourceIntTest {
     }
 
     @Test
+    public void checkLabelIsRequired() throws Exception {
+        int databaseSizeBeforeTest = analysisSettingRepository.findAll().size();
+        // set the field null
+        analysisSetting.setLabel(null);
+
+        // Create the AnalysisSetting, which fails.
+
+        restAnalysisSettingMockMvc.perform(post("/api/analysis-settings")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(analysisSetting)))
+            .andExpect(status().isBadRequest());
+
+        List<AnalysisSetting> analysisSettingList = analysisSettingRepository.findAll();
+        assertThat(analysisSettingList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
     public void checkTypeIsRequired() throws Exception {
         int databaseSizeBeforeTest = analysisSettingRepository.findAll().size();
         // set the field null
         analysisSetting.setType(null);
+
+        // Create the AnalysisSetting, which fails.
+
+        restAnalysisSettingMockMvc.perform(post("/api/analysis-settings")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(analysisSetting)))
+            .andExpect(status().isBadRequest());
+
+        List<AnalysisSetting> analysisSettingList = analysisSettingRepository.findAll();
+        assertThat(analysisSettingList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    public void checkVisibilityIsRequired() throws Exception {
+        int databaseSizeBeforeTest = analysisSettingRepository.findAll().size();
+        // set the field null
+        analysisSetting.setVisibility(null);
 
         // Create the AnalysisSetting, which fails.
 
@@ -209,45 +236,13 @@ public class AnalysisSettingResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(analysisSetting.getId())))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
+            .andExpect(jsonPath("$.[*].label").value(hasItem(DEFAULT_LABEL.toString())))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
-            .andExpect(jsonPath("$.[*].userVisible").value(hasItem(DEFAULT_USER_VISIBLE.booleanValue())))
-            .andExpect(jsonPath("$.[*].global").value(hasItem(DEFAULT_GLOBAL.booleanValue())))
+            .andExpect(jsonPath("$.[*].visibility").value(hasItem(DEFAULT_VISIBILITY.toString())))
             .andExpect(jsonPath("$.[*].options").value(hasItem(DEFAULT_OPTIONS.toString())));
     }
-
-    @SuppressWarnings({"unchecked"})
-    public void getAllAnalysisSettingsWithEagerRelationshipsIsEnabled() throws Exception {
-        AnalysisSettingResource analysisSettingResource = new AnalysisSettingResource(analysisSettingServiceMock);
-        when(analysisSettingServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-
-        MockMvc restAnalysisSettingMockMvc = MockMvcBuilders.standaloneSetup(analysisSettingResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setConversionService(createFormattingConversionService())
-            .setMessageConverters(jacksonMessageConverter).build();
-
-        restAnalysisSettingMockMvc.perform(get("/api/analysis-settings?eagerload=true"))
-        .andExpect(status().isOk());
-
-        verify(analysisSettingServiceMock, times(1)).findAllWithEagerRelationships(any());
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public void getAllAnalysisSettingsWithEagerRelationshipsIsNotEnabled() throws Exception {
-        AnalysisSettingResource analysisSettingResource = new AnalysisSettingResource(analysisSettingServiceMock);
-            when(analysisSettingServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-            MockMvc restAnalysisSettingMockMvc = MockMvcBuilders.standaloneSetup(analysisSettingResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setConversionService(createFormattingConversionService())
-            .setMessageConverters(jacksonMessageConverter).build();
-
-        restAnalysisSettingMockMvc.perform(get("/api/analysis-settings?eagerload=true"))
-        .andExpect(status().isOk());
-
-            verify(analysisSettingServiceMock, times(1)).findAllWithEagerRelationships(any());
-    }
-
+    
     @Test
     public void getAnalysisSetting() throws Exception {
         // Initialize the database
@@ -259,9 +254,10 @@ public class AnalysisSettingResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(analysisSetting.getId()))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
+            .andExpect(jsonPath("$.label").value(DEFAULT_LABEL.toString()))
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()))
             .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
-            .andExpect(jsonPath("$.userVisible").value(DEFAULT_USER_VISIBLE.booleanValue()))
-            .andExpect(jsonPath("$.global").value(DEFAULT_GLOBAL.booleanValue()))
+            .andExpect(jsonPath("$.visibility").value(DEFAULT_VISIBILITY.toString()))
             .andExpect(jsonPath("$.options").value(DEFAULT_OPTIONS.toString()));
     }
 
@@ -283,9 +279,10 @@ public class AnalysisSettingResourceIntTest {
         AnalysisSetting updatedAnalysisSetting = analysisSettingRepository.findById(analysisSetting.getId()).get();
         updatedAnalysisSetting
             .name(UPDATED_NAME)
+            .label(UPDATED_LABEL)
+            .description(UPDATED_DESCRIPTION)
             .type(UPDATED_TYPE)
-            .userVisible(UPDATED_USER_VISIBLE)
-            .global(UPDATED_GLOBAL)
+            .visibility(UPDATED_VISIBILITY)
             .options(UPDATED_OPTIONS);
 
         restAnalysisSettingMockMvc.perform(put("/api/analysis-settings")
@@ -298,9 +295,10 @@ public class AnalysisSettingResourceIntTest {
         assertThat(analysisSettingList).hasSize(databaseSizeBeforeUpdate);
         AnalysisSetting testAnalysisSetting = analysisSettingList.get(analysisSettingList.size() - 1);
         assertThat(testAnalysisSetting.getName()).isEqualTo(UPDATED_NAME);
+        assertThat(testAnalysisSetting.getLabel()).isEqualTo(UPDATED_LABEL);
+        assertThat(testAnalysisSetting.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testAnalysisSetting.getType()).isEqualTo(UPDATED_TYPE);
-        assertThat(testAnalysisSetting.isUserVisible()).isEqualTo(UPDATED_USER_VISIBLE);
-        assertThat(testAnalysisSetting.isGlobal()).isEqualTo(UPDATED_GLOBAL);
+        assertThat(testAnalysisSetting.getVisibility()).isEqualTo(UPDATED_VISIBILITY);
         assertThat(testAnalysisSetting.getOptions()).isEqualTo(UPDATED_OPTIONS);
     }
 

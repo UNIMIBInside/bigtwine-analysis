@@ -2,6 +2,8 @@ package it.unimib.disco.bigtwine.services.analysis.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import it.unimib.disco.bigtwine.services.analysis.config.Constants;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -38,6 +40,12 @@ public class AnalysisDefaultSetting implements Serializable {
     @Field("setting")
     @JsonIgnoreProperties("")
     private AnalysisSetting setting;
+
+    @Field("analysis_type")
+    private AnalysisType analysisType;
+
+    @Field("analysis_input_types")
+    private Set<AnalysisInputType> analysisInputTypes = new HashSet<>();
 
     @Field("user_roles")
     private Set<String> userRoles = new HashSet<>();
@@ -90,6 +98,19 @@ public class AnalysisDefaultSetting implements Serializable {
         this.priority = priority;
     }
 
+    public AnalysisType getAnalysisType() {
+        return analysisType;
+    }
+
+    public AnalysisDefaultSetting analysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
+        return this;
+    }
+
+    public void setAnalysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
+    }
+
     public AnalysisSetting getSetting() {
         return setting;
     }
@@ -101,6 +122,29 @@ public class AnalysisDefaultSetting implements Serializable {
 
     public void setSetting(AnalysisSetting analysisSetting) {
         this.setting = analysisSetting;
+    }
+
+    public Set<AnalysisInputType> getAnalysisInputTypes() {
+        return analysisInputTypes;
+    }
+
+    public AnalysisDefaultSetting analysisInputTypes(Set<AnalysisInputType> analysisInputTypes) {
+        this.analysisInputTypes = analysisInputTypes;
+        return this;
+    }
+
+    public AnalysisDefaultSetting addAnalysisInputTypes(AnalysisInputType analysisInputType) {
+        this.analysisInputTypes.add(analysisInputType);
+        return this;
+    }
+
+    public AnalysisDefaultSetting removeAnalysisInputTypes(AnalysisInputType analysisInputType) {
+        this.analysisInputTypes.remove(analysisInputType);
+        return this;
+    }
+
+    public void setAnalysisInputTypes(Set<AnalysisInputType> analysisInputTypes) {
+        this.analysisInputTypes = analysisInputTypes;
     }
 
     public Set<String> getUserRoles() {

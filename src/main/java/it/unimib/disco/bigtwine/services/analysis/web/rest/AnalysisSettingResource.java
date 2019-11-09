@@ -86,20 +86,14 @@ public class AnalysisSettingResource {
      * GET  /analysis-settings : get all the analysisSettings.
      *
      * @param pageable the pagination information
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many)
      * @return the ResponseEntity with status 200 (OK) and the list of analysisSettings in body
      */
     @GetMapping("/analysis-settings")
     @Timed
-    public ResponseEntity<List<AnalysisSetting>> getAllAnalysisSettings(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
+    public ResponseEntity<List<AnalysisSetting>> getAllAnalysisSettings(Pageable pageable) {
         log.debug("REST request to get a page of AnalysisSettings");
-        Page<AnalysisSetting> page;
-        if (eagerload) {
-            page = analysisSettingService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = analysisSettingService.findAll(pageable);
-        }
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, String.format("/api/analysis-settings?eagerload=%b", eagerload));
+        Page<AnalysisSetting> page = analysisSettingService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/analysis-settings");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 

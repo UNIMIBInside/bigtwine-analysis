@@ -7,21 +7,24 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModelProperty;
 import it.unimib.disco.bigtwine.services.analysis.config.Constants;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
-import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import javax.validation.constraints.*;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingType;
+
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingVisibility;
 
 /**
  * A AnalysisSetting.
@@ -39,27 +42,38 @@ public class AnalysisSetting implements Serializable {
      */
     @NotNull
     @Pattern(regexp = "[a-z0-9-]+")
-    @ApiModelProperty(value = "Setting name, should be alphanumeric and lowercase", required = true)
+    @ApiModelProperty(value = "Setting name, should be alphanumeric and lowercase, can contains dashes", required = true)
+    @Indexed(unique = true)
     @Field("name")
     private String name;
+
+    @NotNull
+    @Field("label")
+    private String label;
+
+    @Field("description")
+    private String description;
 
     @NotNull
     @Field("type")
     private AnalysisSettingType type;
 
-    @Field("description")
-    private String description;
-
-    @Field("user_visible")
-    private Boolean userVisible;
-
-    @Field("is_global")
-    private Boolean global;
+    /**
+     * Change how the user can interact with a setting
+     *
+     * GLOBAL: Setting not embedded into analyses and not visible to the user
+     * HIDDEN: Setting embedded into analyses but not visible to the user
+     * USER_VISIBLE: Setting embedded into analyses and visible to the user
+     */
+    @NotNull
+    @ApiModelProperty(value = "Change how the user can interact with a setting GLOBAL: Setting not embedded into analyses and not visible to the user HIDDEN: Setting embedded into analyses but not visible to the user USER_VISIBLE: Setting embedded into analyses and visible to the user", required = true)
+    @Field("visibility")
+    private AnalysisSettingVisibility visibility;
 
     /**
-     * Each option on separated line with the following format: <value>:<name>
+     * Each option pair on separated lines with the following format: <value>:<name>
      */
-    @ApiModelProperty(value = "Each option on separated line with the following format: <value>:<name>")
+    @ApiModelProperty(value = "Each option pair on separated lines with the following format: <value>:<name>")
     @Transient
     @JsonSerialize
     @JsonDeserialize
@@ -69,12 +83,6 @@ public class AnalysisSetting implements Serializable {
     @JsonIgnore
     @AccessType(AccessType.Type.PROPERTY)
     private List<AnalysisSettingChoice> choices = new ArrayList<>();
-
-    @Field("analysis_type")
-    private AnalysisType analysisType;
-
-    @Field("analysis_input_types")
-    private Set<AnalysisInputType> analysisInputTypes = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public String getId() {
@@ -98,6 +106,19 @@ public class AnalysisSetting implements Serializable {
         this.name = name;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public AnalysisSetting label(String label) {
+        this.label = label;
+        return this;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -107,9 +128,8 @@ public class AnalysisSetting implements Serializable {
         return this;
     }
 
-    public AnalysisSetting setDescription(String description) {
+    public void setDescription(String description) {
         this.description = description;
-        return this;
     }
 
     public AnalysisSettingType getType() {
@@ -125,30 +145,29 @@ public class AnalysisSetting implements Serializable {
         this.type = type;
     }
 
-    public Boolean isUserVisible() {
-        return userVisible;
+    public AnalysisSettingVisibility getVisibility() {
+        return visibility;
     }
 
-    public AnalysisSetting userVisible(Boolean userVisible) {
-        this.userVisible = userVisible;
+    public AnalysisSetting visibility(AnalysisSettingVisibility visibility) {
+        this.visibility = visibility;
         return this;
     }
 
-    public void setUserVisible(Boolean userVisible) {
-        this.userVisible = userVisible;
+    public void setVisibility(AnalysisSettingVisibility visibility) {
+        this.visibility = visibility;
     }
 
-    public Boolean isGlobal() {
-        return global;
+    public boolean isGlobal() {
+        return AnalysisSettingVisibility.GLOBAL.equals(this.visibility);
     }
 
-    public AnalysisSetting global(Boolean global) {
-        this.global = global;
-        return this;
+    public boolean isHidden() {
+        return AnalysisSettingVisibility.HIDDEN.equals(this.visibility);
     }
 
-    public void setGlobal(Boolean global) {
-        this.global = global;
+    public boolean isUserVisible() {
+        return AnalysisSettingVisibility.USER_VISIBLE.equals(this.visibility);
     }
 
     public String getOptions() {
@@ -156,49 +175,12 @@ public class AnalysisSetting implements Serializable {
     }
 
     public AnalysisSetting options(String options) {
-        this.setOptions(options);
+        this.options = options;
         return this;
     }
 
     public void setOptions(String options) {
         this.options = options;
-        this.rebuildChoices();
-    }
-
-    public AnalysisType getAnalysisType() {
-        return analysisType;
-    }
-
-    public AnalysisSetting analysisType(AnalysisType analysisType) {
-        this.analysisType = analysisType;
-        return this;
-    }
-
-    public void setAnalysisType(AnalysisType analysisType) {
-        this.analysisType = analysisType;
-    }
-
-    public Set<AnalysisInputType> getAnalysisInputTypes() {
-        return analysisInputTypes;
-    }
-
-    public AnalysisSetting analysisInputTypes(Set<AnalysisInputType> analysisInputTypes) {
-        this.analysisInputTypes = analysisInputTypes;
-        return this;
-    }
-
-    public AnalysisSetting addAnalysisInputTypes(AnalysisInputType analysisInputType) {
-        this.analysisInputTypes.add(analysisInputType);
-        return this;
-    }
-
-    public AnalysisSetting removeAnalysisInputTypes(AnalysisInputType analysisInputType) {
-        this.analysisInputTypes.remove(analysisInputType);
-        return this;
-    }
-
-    public void setAnalysisInputTypes(Set<AnalysisInputType> analysisInputTypes) {
-        this.analysisInputTypes = analysisInputTypes;
     }
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
@@ -293,9 +275,10 @@ public class AnalysisSetting implements Serializable {
         return "AnalysisSetting{" +
             "id=" + getId() +
             ", name='" + getName() + "'" +
+            ", label='" + getLabel() + "'" +
+            ", description='" + getDescription() + "'" +
             ", type='" + getType() + "'" +
-            ", userVisible='" + isUserVisible() + "'" +
-            ", isGlobal='" + isGlobal() + "'" +
+            ", visibility='" + getVisibility() + "'" +
             ", options='" + getOptions() + "'" +
             "}";
     }

@@ -9,6 +9,16 @@
             ]
         },
         {
+            "fieldName": "analysisType",
+            "fieldType": "AnalysisType",
+            "fieldValues": "TWITTER_NEEL"
+        },
+        {
+            "fieldName": "analysisInputTypes",
+            "fieldType": "AnalysisInputType",
+            "fieldValues": "QUERY,GEO_AREA,DATASET"
+        },
+        {
             "fieldName": "userRoles",
             "fieldType": "String"
         },
@@ -31,9 +41,9 @@
         }
     ],
     "changelogDate": "20191020160246",
-    "entityTableName": "analysis_default_setting",
+    "entityTableName": "analyses.default_setting",
     "dto": "no",
-    "pagination": "pagination",
+    "pagination": "no",
     "service": "no",
     "jpaMetamodelFiltering": false,
     "fluentMethods": true,

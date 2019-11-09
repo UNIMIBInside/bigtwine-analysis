@@ -1,13 +1,12 @@
 package it.unimib.disco.bigtwine.services.analysis.service;
 
-import it.unimib.disco.bigtwine.services.analysis.domain.Analysis;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisDefaultSetting;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSetting;
-import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSettingResolved;
+import it.unimib.disco.bigtwine.services.analysis.domain.*;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisSettingVisibility;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisDefaultSettingRepository;
+import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingCollectionRepository;
 import it.unimib.disco.bigtwine.services.analysis.repository.AnalysisSettingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +29,15 @@ public class AnalysisSettingService {
 
     private final AnalysisSettingRepository analysisSettingRepository;
     private final AnalysisDefaultSettingRepository analysisDefaultSettingRepository;
+    private final AnalysisSettingCollectionRepository settingCollectionRepository;
 
     public AnalysisSettingService(
         AnalysisSettingRepository analysisSettingRepository,
-        AnalysisDefaultSettingRepository analysisDefaultSettingRepository) {
+        AnalysisDefaultSettingRepository analysisDefaultSettingRepository,
+        AnalysisSettingCollectionRepository settingCollectionRepository) {
         this.analysisSettingRepository = analysisSettingRepository;
         this.analysisDefaultSettingRepository = analysisDefaultSettingRepository;
+        this.settingCollectionRepository = settingCollectionRepository;
     }
 
     /**
@@ -69,7 +71,6 @@ public class AnalysisSettingService {
         return analysisSettingRepository.findAllWithEagerRelationships(pageable);
     }
 
-
     /**
      * Get one analysisSetting by id.
      *
@@ -82,23 +83,48 @@ public class AnalysisSettingService {
     }
 
     /**
-     * Find settings by analysis
-     * @param analysis Analysis to filter
+     * Find settings by name
+     * @param name Name of the setting
      * @return A list of settings related to the analysis
      */
-    public List<AnalysisSetting> findByAnalysis(Analysis analysis) {
-        return analysisSettingRepository.findByAnalysis(analysis.getType(), analysis.getInput().getType());
+    public Optional<AnalysisSetting> findByName(String name) {
+        return analysisSettingRepository.findOneByName(name);
     }
 
     /**
-     * Find settings by analysis type
-     * @param analysisType Type of the analysis
-     * @param inputType Input type of the analysis
+     * Find settings by visibility
+     * @param visibility Type of visibility
      * @return A list of settings for the given analysis type
      */
-    public List<AnalysisSetting> findByAnalysisType(AnalysisType analysisType, AnalysisInputType inputType) {
+    public List<AnalysisSetting> findByVisibility(AnalysisSettingVisibility visibility) {
         return analysisSettingRepository
-            .findByAnalysis(analysisType, inputType);
+            .findByVisibility(visibility);
+    }
+
+    /**
+     * Find settings by analysis
+     * @param analysis Analysis to filter settings
+     * @return A list of settings for the given analysis type
+     */
+    public List<AnalysisSetting> findByAnalysis(Analysis analysis) {
+        return this.findByAnalysisType(analysis.getType(), analysis.getInput().getType());
+    }
+
+    /**
+     * Find settings by analysis
+     * @param type Analysis type to filter settings
+     * @param inputType Analysis input type to filter settings
+     * @return A list of settings for the given analysis type
+     */
+    public List<AnalysisSetting> findByAnalysisType(AnalysisType type, AnalysisInputType inputType) {
+        Optional<AnalysisSettingCollection> collection = settingCollectionRepository
+            .findOneByAnalysisTypeAndAnalysisInputType(type, inputType);
+
+        if (collection.isPresent()) {
+            return Arrays.asList(collection.get().getSettings().toArray(new AnalysisSetting[0]));
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -111,7 +137,12 @@ public class AnalysisSettingService {
         analysisSettingRepository.deleteById(id);
     }
 
-    private List<AnalysisSettingResolved> doResolveAnalysisSettings(List<AnalysisSetting> settings, List<String> userRoles, boolean isAnalysisEditable) {
+    private List<AnalysisSettingResolved> doResolveAnalysisSettings(
+        List<AnalysisSetting> settings,
+        AnalysisType analysisType,
+        AnalysisInputType analysisInputType,
+        List<String> userRoles,
+        boolean isAnalysisEditable) {
         List<AnalysisSettingResolved> resolvedSettings = new ArrayList<>();
         Set<String> distinctSettingNames = new HashSet<>();
 
@@ -125,18 +156,23 @@ public class AnalysisSettingService {
                 .editable(isAnalysisEditable)
                 .type(setting.getType())
                 .description(setting.getDescription())
-                .choices(setting.getChoices())
-                .isAnalysisTypeRestricted(setting.getAnalysisType() != null)
-                .isInputTypeRestricted(setting.getAnalysisInputTypes() != null && setting.getAnalysisInputTypes().size() > 0);
+                .choices(setting.getChoices());
+
 
             Optional<AnalysisDefaultSetting> defaultSetting = this.analysisDefaultSettingRepository
-                .findOneBySettingAndRoles(setting, userRoles);
+                .findOneBySettingAndRestrictions(
+                    setting,
+                    analysisType,
+                    analysisInputType,
+                    userRoles);
 
             if (defaultSetting.isPresent()) {
                 resolvedSetting
                     .defaultValue(defaultSetting.get().getDefaultValue())
                     .editable(isAnalysisEditable && defaultSetting.get().isUserCanOverride())
-                    .isUserRolesRestricted(defaultSetting.get().getUserRoles() != null && defaultSetting.get().getUserRoles().size() > 0);
+                    .isUserRolesRestricted(defaultSetting.get().getUserRoles() != null && defaultSetting.get().getUserRoles().size() > 0)
+                    .isAnalysisTypeRestricted(defaultSetting.get().getAnalysisType() != null)
+                    .isInputTypeRestricted(defaultSetting.get().getAnalysisInputTypes() != null && defaultSetting.get().getAnalysisInputTypes().size() > 0);
             }
 
             resolvedSettings.add(resolvedSetting);
@@ -160,7 +196,7 @@ public class AnalysisSettingService {
             .filter((setting) -> !setting.isGlobal() && (includeHidden || setting.isUserVisible()))
             .collect(Collectors.toList());
         List<AnalysisSettingResolved> resolvedSettings = this
-            .doResolveAnalysisSettings(settings, userRoles, isAnalysisEditable);
+            .doResolveAnalysisSettings(settings, analysis.getType(), analysis.getInput().getType(), userRoles, isAnalysisEditable);
 
         if (analysis.getSettings() != null) {
             for (AnalysisSettingResolved resolvedSetting : resolvedSettings) {
@@ -205,19 +241,16 @@ public class AnalysisSettingService {
     }
 
     public Optional<AnalysisSettingResolved> getGlobalSetting(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles) {
-        List<AnalysisSetting> settings = this
-            .findByAnalysisType(analysisType, inputType)
-            .stream()
-            .filter((setting) -> setting.isGlobal() && setting.getName().equals(name))
-            .collect(Collectors.toList());
-        List<AnalysisSettingResolved> resolvedSettings = this
-            .doResolveAnalysisSettings(settings, userRoles, false);
-
-        if (resolvedSettings.size() > 0 ) {
-            return Optional.of(resolvedSettings.get(0));
-        } else {
+        AnalysisSetting setting = this.findByName(name).orElse(null);
+        if (setting == null || !setting.isGlobal()) {
+            log.debug("getGlobalSetting: requested setting is not global : {}", name);
             return Optional.empty();
         }
+
+        List<AnalysisSettingResolved> resolvedSettings = this
+            .doResolveAnalysisSettings(Collections.singletonList(setting), analysisType, inputType, userRoles, false);
+
+        return Optional.of(resolvedSettings.get(0));
     }
 
     public Object getGlobalSettingValue(String name, AnalysisType analysisType, AnalysisInputType inputType, List<String> userRoles, Object defaultValue) {

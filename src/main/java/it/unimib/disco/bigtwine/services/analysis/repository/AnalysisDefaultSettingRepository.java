@@ -2,6 +2,8 @@ package it.unimib.disco.bigtwine.services.analysis.repository;
 
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisDefaultSetting;
 import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisSetting;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisInputType;
+import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisType;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Spring Data MongoDB repository for the AnalysisDefaultSetting entity.
@@ -28,10 +31,24 @@ public interface AnalysisDefaultSettingRepository extends MongoRepository<Analys
     @Query("{'id': ?0}")
     Optional<AnalysisDefaultSetting> findOneWithEagerRelationships(String id);
 
-    @Query("{$and:[{'setting.$id': ?0}, {$or:[{user_roles:[]}, {user_roles:{$in: ?1}}]}]}")
-    Optional<AnalysisDefaultSetting> findOneBySettingAndRoles(ObjectId settingId, List<String> roles, Sort sort);
+    @Query("{$and: [" +
+            "{'setting.$id': ?0}, " +
+            "{$or: [{analysis_type: null}, {analysis_type: ?1}]}," +
+            "{$or: [{analysis_input_types: []}, {analysis_input_types: {$in: [ ?2 ]}}]}," +
+            "{$or: [{user_roles: []}, {user_roles: {$in: ?3}}]}" +
+        "]}")
+    Optional<AnalysisDefaultSetting> findOneBySettingAndRestrictions(
+        ObjectId settingId,
+        AnalysisType analysisType,
+        AnalysisInputType inputType,
+        List<String> roles,
+        Sort sort
+    );
 
-    default Optional<AnalysisDefaultSetting> findOneBySettingAndRoles(AnalysisSetting setting, List<String> roles) {
-        return findOneBySettingAndRoles(new ObjectId(setting.getId()), roles, Sort.by(Sort.Direction.DESC, "priority"));
+    default Optional<AnalysisDefaultSetting> findOneBySettingAndRestrictions(AnalysisSetting setting, AnalysisType analysisType, AnalysisInputType inputType, List<String> roles) {
+        return findOneBySettingAndRestrictions(
+            new ObjectId(setting.getId()),
+            analysisType, inputType, roles,
+            Sort.by(Sort.Direction.DESC, "priority"));
     }
 }
