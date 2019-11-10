@@ -680,6 +680,8 @@ components:
       properties:
         name:
           type: string
+        label:
+          type: string
         type:
           $ref: '#/components/schemas/AnalysisSettingTypeEnum'
         editable:

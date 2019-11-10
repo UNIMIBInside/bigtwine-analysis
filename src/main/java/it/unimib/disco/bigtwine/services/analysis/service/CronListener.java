@@ -6,6 +6,7 @@ import it.unimib.disco.bigtwine.services.analysis.domain.AnalysisStatusHistory;
 import it.unimib.disco.bigtwine.services.analysis.domain.CronEntryInfo;
 import it.unimib.disco.bigtwine.services.analysis.domain.enumeration.AnalysisStatus;
 import it.unimib.disco.bigtwine.services.analysis.messaging.CronTaskConsumerChannel;
+import it.unimib.disco.bigtwine.services.analysis.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.data.domain.PageRequest;
@@ -26,12 +27,15 @@ public class CronListener {
     private String serviceName;
     private final CronEntryRegistry cronEntryRegistry;
     private final AnalysisService analysisService;
+    private final AnalysisSettingService settingService;
 
     public CronListener(
         CronEntryRegistry cronEntryRegistry,
-        AnalysisService analysisService) {
+        AnalysisService analysisService,
+        AnalysisSettingService settingService) {
         this.cronEntryRegistry = cronEntryRegistry;
         this.analysisService = analysisService;
+        this.settingService = settingService;
     }
 
     @PostConstruct
@@ -73,14 +77,13 @@ public class CronListener {
         Pageable page = PageRequest.of(task, pageSize, Sort.by(Sort.Direction.ASC, "id"));
 
         this.analysisService.findByStatus(AnalysisStatus.STARTED, page).forEach((analysis) -> {
-            Object maxExeTimeO = analysis.getSettings().get(AnalysisSettingConstants.MAX_EXECUTION_TIME);
-
-            long maxExeTime = AnalysisSettingConstants.DEFAULT_MAX_EXECUTION_TIME;
-            if (maxExeTimeO instanceof Long) {
-                maxExeTime = (Long)maxExeTimeO;
-            } else if (maxExeTimeO instanceof Integer) {
-                maxExeTime = ((Integer)maxExeTimeO).longValue();
-            }
+            int maxExeTime = settingService.getGlobalSettingInteger(
+                AnalysisSettingConstants.MAX_EXECUTION_TIME,
+                analysis.getType(),
+                analysis.getInput().getType(),
+                SecurityUtils.getCurrentUserRoles(),
+                AnalysisSettingConstants.DEFAULT_MAX_EXECUTION_TIME
+            );
 
             if (maxExeTime > 0) {
                 int historySize = analysis.getStatusHistory().size();

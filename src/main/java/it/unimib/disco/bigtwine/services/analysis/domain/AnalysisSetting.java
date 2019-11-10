@@ -79,6 +79,9 @@ public class AnalysisSetting implements Serializable {
     @JsonDeserialize
     private String options;
 
+    @Transient
+    private boolean _needsRebuildOptions;
+
     @Field("choices")
     @JsonIgnore
     @AccessType(AccessType.Type.PROPERTY)
@@ -171,16 +174,21 @@ public class AnalysisSetting implements Serializable {
     }
 
     public String getOptions() {
+        if (this._needsRebuildOptions) {
+            this.rebuildOptions();
+        }
+
         return options;
     }
 
     public AnalysisSetting options(String options) {
-        this.options = options;
+        this.setOptions(options);
         return this;
     }
 
     public void setOptions(String options) {
         this.options = options;
+        this.rebuildChoices();
     }
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
@@ -195,7 +203,18 @@ public class AnalysisSetting implements Serializable {
 
     public void setChoices(List<AnalysisSettingChoice> choices) {
         this.choices = choices;
-        this.rebuildOptions();
+        this._needsRebuildOptions = true;
+    }
+
+    public AnalysisSetting addChoice(AnalysisSettingChoice choice) {
+        if (this.choices == null) {
+            this.choices = new ArrayList<>();
+        }
+
+        this.choices.add(choice);
+        this._needsRebuildOptions = true;
+
+        return this;
     }
 
     private void rebuildChoices() {
@@ -248,6 +267,7 @@ public class AnalysisSetting implements Serializable {
         } else {
             this.options = "";
         }
+        this._needsRebuildOptions = false;
     }
 
     @Override

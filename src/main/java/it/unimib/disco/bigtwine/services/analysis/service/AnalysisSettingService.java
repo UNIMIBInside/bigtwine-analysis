@@ -153,6 +153,7 @@ public class AnalysisSettingService {
 
             AnalysisSettingResolved resolvedSetting = new AnalysisSettingResolved()
                 .name(setting.getName())
+                .label(setting.getLabel())
                 .editable(isAnalysisEditable)
                 .type(setting.getType())
                 .description(setting.getDescription())

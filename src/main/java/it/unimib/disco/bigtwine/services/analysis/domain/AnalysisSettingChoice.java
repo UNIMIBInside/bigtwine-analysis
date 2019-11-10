@@ -12,6 +12,11 @@ public class AnalysisSettingChoice {
     public AnalysisSettingChoice() {
     }
 
+    public AnalysisSettingChoice(@NotNull String name, @NotNull Object value) {
+        this.name = name;
+        this.value = value;
+    }
+
     public String getName() {
         return name;
     }

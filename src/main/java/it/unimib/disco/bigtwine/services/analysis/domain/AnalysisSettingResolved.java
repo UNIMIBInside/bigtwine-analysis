@@ -6,6 +6,7 @@ import java.util.List;
 
 public class AnalysisSettingResolved {
     private String name;
+    private String label;
     private AnalysisSettingType type;
     private boolean editable;
     private String description;
@@ -29,6 +30,19 @@ public class AnalysisSettingResolved {
 
     public AnalysisSettingResolved name(String name) {
         this.setName(name);
+        return this;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public AnalysisSettingResolved label(String label) {
+        this.setLabel(label);
         return this;
     }
 
@@ -153,6 +167,7 @@ public class AnalysisSettingResolved {
     public String toString() {
         return "AnalysisSettingResolved{" +
             "name='" + name + '\'' +
+            ", label=" + label +
             ", type=" + type +
             ", editable=" + editable +
             ", description='" + description + '\'' +
