@@ -10,6 +10,7 @@ import it.unimib.disco.bigtwine.services.analysis.config.Constants;
 import it.unimib.disco.bigtwine.services.analysis.security.AuthoritiesConstants;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -71,6 +72,23 @@ public class TokenProvider {
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(","));
 
+        String authDetails = null;
+        if (authentication.getDetails() != null) {
+            if (authentication.getDetails() instanceof String) {
+                authDetails = (String)authentication.getDetails();
+            }else if (authentication.getDetails() instanceof Map) {
+                List<NameValuePair> pairs = new ArrayList<>();
+                @SuppressWarnings("unchecked")
+                Map<Object, Object> details = (Map<Object, Object>) authentication.getDetails();
+
+                for (Map.Entry<Object, Object> pair : details.entrySet()) {
+                    pairs.add(new BasicNameValuePair(pair.getKey().toString(), pair.getValue().toString()));
+                }
+
+                authDetails = URLEncodedUtils.format(pairs, "UTF-8");
+            }
+        }
+
         long now = (new Date()).getTime();
         Date validity;
         if (rememberMe) {
@@ -82,6 +100,7 @@ public class TokenProvider {
         return Jwts.builder()
             .setSubject(authentication.getName())
             .claim(AUTHORITIES_KEY, authorities)
+            .claim(DETAILS_KEY, authDetails)
             .signWith(key, SignatureAlgorithm.HS512)
             .setExpiration(validity)
             .compact();
@@ -90,7 +109,10 @@ public class TokenProvider {
     public String createSystemToken() {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN));
-        Authentication authentication = new UsernamePasswordAuthenticationToken(Constants.SYSTEM_ACCOUNT, null, authorities);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(Constants.SYSTEM_ACCOUNT, null, authorities);
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("user_id", Constants.SYSTEM_ACCOUNT);
+        authentication.setDetails(userDetails);
 
         return this.createToken(authentication, false);
     }
