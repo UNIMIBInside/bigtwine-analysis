@@ -14,7 +14,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Spring Data MongoDB repository for the AnalysisDefaultSetting entity.
@@ -37,7 +36,7 @@ public interface AnalysisDefaultSettingRepository extends MongoRepository<Analys
             "{$or: [{analysis_input_types: []}, {analysis_input_types: {$in: [ ?2 ]}}]}," +
             "{$or: [{user_roles: []}, {user_roles: {$in: ?3}}]}" +
         "]}")
-    Optional<AnalysisDefaultSetting> findOneBySettingAndRestrictions(
+    List<AnalysisDefaultSetting> findBySettingAndRestrictions(
         ObjectId settingId,
         AnalysisType analysisType,
         AnalysisInputType inputType,
@@ -46,9 +45,15 @@ public interface AnalysisDefaultSettingRepository extends MongoRepository<Analys
     );
 
     default Optional<AnalysisDefaultSetting> findOneBySettingAndRestrictions(AnalysisSetting setting, AnalysisType analysisType, AnalysisInputType inputType, List<String> roles) {
-        return findOneBySettingAndRestrictions(
+        List<AnalysisDefaultSetting> defaults = findBySettingAndRestrictions(
             new ObjectId(setting.getId()),
             analysisType, inputType, roles,
             Sort.by(Sort.Direction.DESC, "priority"));
+
+        if (defaults.size() > 0) {
+            return Optional.of(defaults.get(0));
+        } else {
+            return Optional.empty();
+        }
     }
 }
