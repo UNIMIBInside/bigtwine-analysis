@@ -22,6 +22,7 @@ plugins {
     id "net.ltgt.apt-idea" version "0.19"
     id "net.ltgt.apt" version "0.19"
     id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id "com.github.hierynomus.license" version "0.15.0"
     //jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
 }
 
@@ -43,6 +44,11 @@ dependencyManagement {
     mavenBom 'io.github.jhipster:jhipster-dependencies:' + jhipster_dependencies_version
     //jhipster-needle-gradle-dependency-management - JHipster will add additional dependencies management here
   }
+}
+
+downloadLicenses {
+    dependencyConfiguration = 'compile'
+    includeProjectDependencies = true
 }
 
 defaultTasks 'bootRun'
